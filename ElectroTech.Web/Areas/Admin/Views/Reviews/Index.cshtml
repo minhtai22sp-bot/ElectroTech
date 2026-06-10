@@ -1,0 +1,237 @@
+﻿@{
+    ViewData["Title"] = "Quản lý đánh giá";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-display font-black text-slate-900 tracking-tight">
+            Quản lý đánh giá
+        </h1>
+        <p class="text-sm text-slate-500 font-medium mt-1">
+            Duyệt, ẩn và xóa đánh giá sản phẩm
+        </p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-2">
+        @foreach (var tab in new[] {
+        ("all",      "Tất cả",     "bg-slate-100 text-slate-600"),
+        ("approved", "Đã duyệt",   "bg-green-100 text-green-700"),
+        ("pending",  "Chờ duyệt",  "bg-amber-100 text-amber-700"),
+        })
+        {
+            <button onclick="filterTab('@tab.Item1')"
+                    id="tab-@tab.Item1"
+                    class="px-4 py-1.5 rounded-lg text-xs font-bold
+                           transition-all cursor-pointer border-none
+                           @tab.Item3">
+                @tab.Item2
+            </button>
+        }
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white border border-slate-200/50 rounded-2xl
+                shadow-sm overflow-hidden">
+        <table id="reviewsTable"
+               class="w-full text-left text-xs text-slate-600">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/60
+                           text-[11px] font-bold text-slate-500
+                           uppercase select-none">
+                    <th class="px-5 py-4">Sản phẩm</th>
+                    <th class="px-5 py-4 text-center">Sao</th>
+                    <th class="px-5 py-4">Nội dung</th>
+                    <th class="px-5 py-4 text-center">Trạng thái</th>
+                    <th class="px-5 py-4">Ngày</th>
+                    <th class="px-5 py-4 text-right"
+                        data-orderable="false">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium"></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        var table;
+        var currentFilter = 'all';
+
+        $(document).ready(function () {
+            table = $('#reviewsTable').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: '@Url.Action("LoadAll", "Reviews", new { area = "Admin" })',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                },
+                columns: [
+                    {
+                        data: 'productName',
+                        render: function (d) {
+                            return `<span class="font-semibold text-slate-900
+                                                max-w-[160px] block truncate"
+                                          title="${d}">${d}</span>`;
+                        }
+                    },
+                    {
+                        data: 'rating',
+                        className: 'text-center',
+                        render: function (d) {
+                            var stars = '';
+                            for (var i = 1; i <= 5; i++) {
+                                stars += `<span style="color:${i <= d ? '#f59e0b' : '#e5e7eb'};
+                                                      font-size:13px;">★</span>`;
+                            }
+                            return `<div class="flex justify-center gap-0.5">${stars}</div>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (d, t, row) {
+                            var title = row.title
+                                ? `<p class="font-bold text-slate-800 text-xs mb-0.5">
+                                       ${row.title}</p>` : '';
+                            var comment = row.comment || '—';
+                            if (comment.length > 80)
+                                comment = comment.substring(0, 80) + '...';
+                            return `<div class="max-w-[280px]">
+                                        ${title}
+                                        <p class="text-slate-500 text-xs">${comment}</p>
+                                    </div>`;
+                        }
+                    },
+                    {
+                        data: 'isApproved',
+                        className: 'text-center',
+                        render: function (d) {
+                            return d
+                                ? `<span class="px-2.5 py-1 rounded-full text-[10px]
+                                                font-bold bg-green-100 text-green-700">
+                                       ✓ Đã duyệt
+                                   </span>`
+                                : `<span class="px-2.5 py-1 rounded-full text-[10px]
+                                                font-bold bg-amber-100 text-amber-700">
+                                       ⏳ Chờ duyệt
+                                   </span>`;
+                        }
+                    },
+                    { data: 'createdOn' },
+                    {
+                        data: null,
+                        className: 'text-right',
+                        render: function (d, t, row) {
+                            var approveBtn = !row.isApproved
+                                ? `<button onclick="approveReview(${row.id})"
+                                           class="px-3 py-1.5 bg-green-50 border
+                                                  border-green-200 rounded-lg
+                                                  text-green-700 text-[11px] font-bold
+                                                  hover:bg-green-100 cursor-pointer
+                                                  border-none transition-colors">
+                                       ✓ Duyệt
+                                   </button>` : '';
+
+                            var rejectBtn = row.isApproved
+                                ? `<button onclick="rejectReview(${row.id})"
+                                           class="px-3 py-1.5 bg-amber-50 border
+                                                  border-amber-200 rounded-lg
+                                                  text-amber-700 text-[11px] font-bold
+                                                  hover:bg-amber-100 cursor-pointer
+                                                  border-none transition-colors">
+                                       Ẩn
+                                   </button>` : '';
+
+                            var deleteBtn =
+                                `<button onclick="deleteReview(${row.id})"
+                                         class="px-3 py-1.5 bg-red-50 border
+                                                border-red-200 rounded-lg
+                                                text-red-600 text-[11px] font-bold
+                                                hover:bg-red-100 cursor-pointer
+                                                border-none transition-colors">
+                                     Xóa
+                                 </button>`;
+
+                            return `<div class="flex items-center justify-end gap-2">
+                                        ${approveBtn}${rejectBtn}${deleteBtn}
+                                    </div>`;
+                        }
+                    }
+                ],
+                language: {
+                    processing: 'Đang tải...',
+                    search: 'Tìm kiếm:',
+                    lengthMenu: 'Hiển thị _MENU_ dòng',
+                    info: '_START_ – _END_ / _TOTAL_ đánh giá',
+                    infoEmpty: 'Không có dữ liệu',
+                    zeroRecords: 'Không tìm thấy kết quả',
+                    paginate: { first: 'Đầu', last: 'Cuối', next: 'Sau', previous: 'Trước' }
+                },
+                order: [[4, 'desc']]
+            });
+        });
+
+        function filterTab(filter) {
+            currentFilter = filter;
+
+            // Update tab styles
+            document.querySelectorAll('[id^="tab-"]').forEach(b => {
+                b.style.opacity = '0.5';
+            });
+            document.getElementById('tab-' + filter).style.opacity = '1';
+
+            // Filter table
+            if (filter === 'all') {
+                table.column(3).search('').draw();
+            } else if (filter === 'approved') {
+                table.column(3).search('Đã duyệt').draw();
+            } else {
+                table.column(3).search('Chờ duyệt').draw();
+            }
+        }
+
+        async function approveReview(id) {
+            var res = await $.post({
+                url: '/Admin/Reviews/Approve',
+                data: { id },
+                headers: { 'RequestVerificationToken': token }
+            });
+            if (res.success) table.ajax.reload(null, false);
+            else alert(res.message);
+        }
+
+        async function rejectReview(id) {
+            var res = await $.post({
+                url: '/Admin/Reviews/Reject',
+                data: { id },
+                headers: { 'RequestVerificationToken': token }
+            });
+            if (res.success) table.ajax.reload(null, false);
+            else alert(res.message);
+        }
+
+        function deleteReview(id) {
+            if (!confirm('Xóa đánh giá này?')) return;
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Admin/Reviews/Delete';
+            form.innerHTML =
+                `<input name="id" value="${id}" />
+                 <input name="__RequestVerificationToken" value="${token}" />`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+    @Html.AntiForgeryToken()
+}

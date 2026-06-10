@@ -1,16 +1,14 @@
 ﻿using Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Interfaces
+namespace Interfaces;
+
+public interface IReviewRepository
 {
-    public interface IReviewRepository
-    {
-        Task<List<Review>> GetByProductIdAsync(int productId);
-        Task<bool> HasReviewedAsync(int productId, Guid userId);
-        Task AddAsync(Review review);
-    }
+    Task<List<Review>> GetByProductIdAsync(int productId);
+    Task<List<Review>> GetAllAsync();                     
+    Task<Review?> GetByIdAsync(int id);                
+    Task<bool> HasReviewedAsync(int productId, Guid userId);
+    Task AddAsync(Review review);
+    Task UpdateAsync(Review review);          
+    Task DeleteAsync(int id);                  
 }
