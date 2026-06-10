@@ -1,0 +1,472 @@
+﻿@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+                Quản lý đơn hàng
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Xem và cập nhật trạng thái đơn hàng
+            </p>
+        </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex flex-wrap gap-2">
+        @foreach (var tab in new (string Val, string Label, string Cls)[]
+        {
+        ("",          "Tất cả",       "bg-slate-100 text-slate-600 hover:bg-slate-200"),
+        ("Pending",   "Chờ xác nhận", "bg-amber-100 text-amber-700 hover:bg-amber-200"),
+        ("Confirmed", "Đã xác nhận",  "bg-blue-100 text-blue-700 hover:bg-blue-200"),
+        ("Shipping",  "Đang giao",    "bg-violet-100 text-violet-700 hover:bg-violet-200"),
+        ("Delivered", "Đã giao",      "bg-green-100 text-green-700 hover:bg-green-200"),
+        ("Cancelled", "Đã hủy",       "bg-red-100 text-red-700 hover:bg-red-200"),
+        })
+        {
+            <button onclick="filterStatus('@tab.Val')"
+                    id="tab-@tab.Val"
+                    class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all
+                           cursor-pointer border-none @tab.Cls">
+                @tab.Label
+            </button>
+        }
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
+        <table id="ordersTable" class="w-full text-left text-xs text-slate-600">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/60 text-[11px]
+                           font-bold text-slate-400 uppercase tracking-wide select-none">
+                    <th class="px-5 py-4">Mã đơn</th>
+                    <th class="px-5 py-4">Khách hàng</th>
+                    <th class="px-5 py-4">Thanh toán</th>
+                    <th class="px-5 py-4">Tổng tiền</th>
+                    <th class="px-5 py-4 text-center">Trạng thái</th>
+                    <th class="px-5 py-4 text-center">Thanh toán</th>
+                    <th class="px-5 py-4">Ngày đặt</th>
+                    <th class="px-5 py-4 text-right" data-orderable="false">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── Modal cập nhật ── -->
+<div id="statusModal"
+     class="fixed inset-0 z-[9999] hidden items-center justify-center
+            bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg mx-4
+                shadow-[0_32px_64px_rgba(0,0,0,0.2)] animate-in">
+
+        <!-- Modal header -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-extrabold text-slate-900">Cập nhật đơn hàng</h3>
+            <button onclick="closeModal()"
+                    class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg
+                           border-none cursor-pointer text-slate-500 text-base
+                           transition-colors flex items-center justify-center">
+                ✕
+            </button>
+        </div>
+
+        <!-- Order info -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-6">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Đơn hàng</p>
+            <p id="modalOrderId" class="text-base font-extrabold text-slate-900"></p>
+        </div>
+
+        <!-- Order status -->
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            Trạng thái đơn hàng
+        </p>
+        <div class="grid grid-cols-2 gap-2 mb-5">
+            @foreach (var s in new (string Val, string Label, string SelCls)[]
+            {
+            ("Pending",   "⏳ Chờ xác nhận", "peer-checked:border-amber-400 peer-checked:bg-amber-50"),
+            ("Confirmed", "✅ Đã xác nhận",  "peer-checked:border-blue-400 peer-checked:bg-blue-50"),
+            ("Shipping",  "🚚 Đang giao",    "peer-checked:border-violet-400 peer-checked:bg-violet-50"),
+            ("Delivered", "📦 Đã giao",      "peer-checked:border-green-400 peer-checked:bg-green-50"),
+            ("Cancelled", "❌ Đã hủy",       "peer-checked:border-red-400 peer-checked:bg-red-50"),
+            })
+            {
+                <label id="slabel-@s.Val"
+                       class="relative flex items-center gap-3 p-3 rounded-xl
+                              border-2 border-slate-200 cursor-pointer
+                              hover:border-slate-300 transition-all">
+                    <input type="radio" name="orderStatus" value="@s.Val"
+                           class="peer sr-only"
+                           onchange="selectStatus(this.value)" />
+                    <div class="w-4 h-4 rounded-full border-2 border-slate-300
+                                flex items-center justify-center flex-shrink-0
+                                status-radio-dot" data-for="@s.Val">
+                        <div class="w-2 h-2 rounded-full hidden radio-fill"></div>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-700">@s.Label</span>
+                </label>
+            }
+        </div>
+
+        <!-- Payment status -->
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            Trạng thái thanh toán
+        </p>
+        <div class="flex gap-2 mb-7">
+            @foreach (var p in new (string Val, string Label)[]
+            {
+            ("Unpaid",    "⏳ Chưa TT"),
+            ("Paid",      "✅ Đã TT"),
+            ("Cancelled", "❌ Đã hủy"),
+            })
+            {
+                <label id="plabel-@p.Val"
+                       class="flex-1 flex items-center gap-2 p-3 rounded-xl
+                              border-2 border-slate-200 cursor-pointer
+                              hover:border-slate-300 transition-all justify-center">
+                    <input type="radio" name="payStatus" value="@p.Val" class="sr-only"
+                           onchange="selectPayment(this.value)" />
+                    <span class="text-xs font-bold text-slate-700">@p.Label</span>
+                </label>
+            }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 justify-end pt-2 border-t border-slate-100">
+            <button onclick="closeModal()"
+                    class="px-5 py-2.5 border border-slate-200 rounded-xl bg-white
+                           text-slate-500 font-semibold text-sm hover:bg-slate-50
+                           cursor-pointer transition-colors">
+                Hủy
+            </button>
+            <button onclick="saveStatus()"
+                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl
+                           text-white font-bold text-sm border-none cursor-pointer
+                           transition-colors flex items-center gap-2">
+                💾 Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        /* Override DataTables default styles */
+        #ordersTable_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+
+            #ordersTable_wrapper .dataTables_filter input:focus {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+            }
+
+        #ordersTable_wrapper .dataTables_length select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        #ordersTable_wrapper .dataTables_info,
+        #ordersTable_wrapper .dataTables_length,
+        #ordersTable_wrapper .dataTables_filter {
+            font-size: 12px;
+            color: #94a3b8;
+            padding: 12px 20px;
+        }
+
+        #ordersTable_wrapper .dataTables_paginate {
+            padding: 12px 20px;
+        }
+
+            #ordersTable_wrapper .dataTables_paginate .paginate_button {
+                border-radius: 8px !important;
+                font-size: 12px !important;
+                padding: 4px 10px !important;
+            }
+
+                #ordersTable_wrapper .dataTables_paginate .paginate_button.current {
+                    background: #3b82f6 !important;
+                    border-color: #3b82f6 !important;
+                    color: white !important;
+                }
+
+        #ordersTable tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+        #ordersTable thead th {
+            border-bottom: none !important;
+        }
+
+        #ordersTable td, #ordersTable th {
+            white-space: nowrap;
+        }
+
+        #ordersTable_wrapper {
+            overflow-x: auto;
+        }
+    </style>
+
+    <script>
+        var token = '';
+        var currentOrder = null;
+        var currentFilter = '';
+        var table;
+
+        const statusMap = {
+            'Pending': { label: 'Chờ xác nhận', tw: 'bg-amber-100 text-amber-700', dot: '#f59e0b' },
+            'Confirmed': { label: 'Đã xác nhận', tw: 'bg-blue-100 text-blue-700', dot: '#3b82f6' },
+            'Shipping': { label: 'Đang giao', tw: 'bg-violet-100 text-violet-700', dot: '#8b5cf6' },
+            'Delivered': { label: 'Đã giao', tw: 'bg-green-100 text-green-700', dot: '#22c55e' },
+            'Cancelled': { label: 'Đã hủy', tw: 'bg-red-100 text-red-700', dot: '#ef4444' },
+        };
+
+        const payMap = {
+            'Unpaid': { label: 'Chưa TT', tw: 'bg-amber-100 text-amber-700' },
+            'Paid': { label: 'Đã TT', tw: 'bg-green-100 text-green-700' },
+            'Cancelled': { label: 'Đã hủy', tw: 'bg-red-100 text-red-700' },
+        };
+
+        // Dot colors for modal radio labels
+        const sLabelColors = {
+            'Pending': { border: '#f59e0b', bg: '#fffbeb', dot: '#f59e0b' },
+            'Confirmed': { border: '#3b82f6', bg: '#eff6ff', dot: '#3b82f6' },
+            'Shipping': { border: '#8b5cf6', bg: '#f5f3ff', dot: '#8b5cf6' },
+            'Delivered': { border: '#22c55e', bg: '#f0fdf4', dot: '#22c55e' },
+            'Cancelled': { border: '#ef4444', bg: '#fef2f2', dot: '#ef4444' },
+        };
+        const pLabelColors = {
+            'Unpaid': { border: '#f59e0b', bg: '#fffbeb' },
+            'Paid': { border: '#22c55e', bg: '#f0fdf4' },
+            'Cancelled': { border: '#ef4444', bg: '#fef2f2' },
+        };
+
+        function badge(map, key) {
+            const s = map[key] || { label: key, tw: 'bg-slate-100 text-slate-500' };
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
+                                         text-[10px] font-bold ${s.tw}">${s.label}</span>`;
+        }
+
+        $(document).ready(function () {
+            token = $('input[name="__RequestVerificationToken"]').first().val();
+            table = $('#ordersTable').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: '@Url.Action("LoadAll", "Orders", new { area = "Admin" })',
+                    type: 'POST',
+                    data: function (d) { d.__RequestVerificationToken = token; d.status = currentFilter; }
+                },
+                columns: [
+                    {
+                        data: 'orderCode',
+                        render: (d, t, row) =>
+                            `<span class="font-mono font-extrabold text-slate-800 text-xs">
+                                        #${d || row.OrderCode || 'ET' + String(row.id).padStart(6, '0')}
+                                     </span>`
+                    },
+                    {
+                        data: 'fullName',
+                        render: (d, t, row) =>
+                            `<div class="space-y-0.5">
+                                        <p class="font-bold text-slate-900 text-xs">${d || '—'}</p>
+                                        <p class="text-slate-400 text-[11px]">${row.phone || ''}</p>
+                                        <p class="text-slate-400 text-[11px]">${row.email || ''}</p>
+                                     </div>`
+                    },
+                    {
+                        data: 'paymentMethod',
+                        render: d => d === 'COD'
+                            ? `<span class="text-[11px] font-bold text-slate-500">🚚 COD</span>`
+                            : `<span class="text-[11px] font-bold text-slate-500">🏦 Bank</span>`
+                    },
+                    {
+                        data: 'totalAmount',
+                        render: d =>
+                            `<span class="font-extrabold text-slate-900 text-xs">
+                                        ${new Intl.NumberFormat('vi-VN').format(d)}₫
+                                     </span>`
+                    },
+                    { data: 'status', className: 'text-center', render: d => badge(statusMap, d) },
+                    { data: 'paymentStatus', className: 'text-center', render: d => badge(payMap, d) },
+                    {
+                        data: 'createdOn',
+                        render: d => `<span class="text-slate-500 text-[11px]">${d}</span>`
+                    },
+                    {
+                        data: null,
+                        className: 'text-right',
+                        render: (d, t, row) =>
+                            `<div class="flex items-center justify-end gap-2">
+                                        <a href="/Admin/Orders/Detail/${row.id}"
+                                           class="px-3 py-1.5 bg-blue-50 border border-blue-200
+                                                  rounded-lg text-blue-600 text-[11px] font-bold
+                                                  hover:bg-blue-100 transition-colors no-underline">
+                                            Chi tiết
+                                        </a>
+                                        <button onclick='openModal(${JSON.stringify(row)})'
+                                                class="px-3 py-1.5 bg-slate-50 border border-slate-200
+                                                       rounded-lg text-slate-600 text-[11px] font-bold
+                                                       hover:bg-slate-100 cursor-pointer
+                                                       transition-colors">
+                                            Cập nhật
+                                        </button>
+                                     </div>`
+                    }
+                ],
+                language: {
+                    processing: 'Đang tải...',
+                    search: 'Tìm kiếm:',
+                    lengthMenu: 'Hiển thị _MENU_ dòng',
+                    info: '_START_ – _END_ / _TOTAL_ đơn hàng',
+                    infoEmpty: 'Không có dữ liệu',
+                    zeroRecords: 'Không tìm thấy kết quả',
+                    paginate: { first: 'Đầu', last: 'Cuối', next: 'Sau ›', previous: '‹ Trước' }
+                },
+                order: [[6, 'desc']],
+                columnDefs: [
+                    { targets: 0, width: '110px' },
+                    { targets: 1, width: '180px' },
+                    { targets: 2, width: '80px' },
+                    { targets: 3, width: '120px' },
+                    { targets: 4, width: '110px' },
+                    { targets: 5, width: '100px' },
+                    { targets: 6, width: '130px' },
+                    { targets: 7, width: '150px' },
+                ],
+                scrollX: false,
+                autoWidth: false
+            });
+        });
+
+        function filterStatus(status) {
+            currentFilter = status;
+            table.ajax.reload();
+            document.querySelectorAll('[id^="tab-"]').forEach(b => b.style.opacity = '0.5');
+            const active = document.getElementById('tab-' + status);
+            if (active) active.style.opacity = '1';
+        }
+
+        function openModal(order) {
+            currentOrder = order;
+            document.getElementById('modalOrderId').textContent =
+                '#' + (order.orderCode || 'ET' + String(order.id).padStart(6, '0')) + ' — ' + (order.fullName || '');
+
+            // Reset all labels
+            document.querySelectorAll('[id^="slabel-"]').forEach(l => {
+                l.style.borderColor = '#e2e8f0';
+                l.style.background = 'white';
+                l.querySelector('.radio-fill').style.display = 'none';
+                l.querySelector('.status-radio-dot').style.borderColor = '#cbd5e1';
+            });
+            document.querySelectorAll('[id^="plabel-"]').forEach(l => {
+                l.style.borderColor = '#e2e8f0';
+                l.style.background = 'white';
+            });
+
+            selectStatus(order.status);
+            selectPayment(order.paymentStatus);
+
+            const modal = document.getElementById('statusModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('statusModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentOrder = null;
+        }
+
+        function selectStatus(value) {
+            document.querySelectorAll('[id^="slabel-"]').forEach(l => {
+                l.style.borderColor = '#e2e8f0';
+                l.style.background = 'white';
+                l.querySelector('.radio-fill').style.display = 'none';
+                l.querySelector('.status-radio-dot').style.borderColor = '#cbd5e1';
+            });
+            const label = document.getElementById('slabel-' + value);
+            const colors = sLabelColors[value];
+            if (label && colors) {
+                label.style.borderColor = colors.border;
+                label.style.background = colors.bg;
+                const dot = label.querySelector('.status-radio-dot');
+                const fill = label.querySelector('.radio-fill');
+                dot.style.borderColor = colors.dot;
+                fill.style.display = 'block';
+                fill.style.background = colors.dot;
+                const radio = label.querySelector('input');
+                if (radio) radio.checked = true;
+            }
+        }
+
+        function selectPayment(value) {
+            document.querySelectorAll('[id^="plabel-"]').forEach(l => {
+                l.style.borderColor = '#e2e8f0';
+                l.style.background = 'white';
+                l.querySelector('span').style.opacity = '0.6';
+            });
+            const label = document.getElementById('plabel-' + value);
+            const colors = pLabelColors[value];
+            if (label && colors) {
+                label.style.borderColor = colors.border;
+                label.style.background = colors.bg;
+                label.querySelector('span').style.opacity = '1';
+                const radio = label.querySelector('input');
+                if (radio) radio.checked = true;
+            }
+        }
+
+        async function saveStatus() {
+            if (!currentOrder) return;
+            const newStatus = document.querySelector('input[name="orderStatus"]:checked')?.value;
+            const newPayment = document.querySelector('input[name="payStatus"]:checked')?.value;
+            try {
+                if (newStatus && newStatus !== currentOrder.status) {
+                    await $.ajax({
+                        url: '/Admin/Orders/UpdateStatus',
+                        type: 'POST',
+                        data: { id: currentOrder.id, status: newStatus, __RequestVerificationToken: token }
+                    });
+                }
+                if (newPayment && newPayment !== currentOrder.paymentStatus) {
+                    await $.ajax({
+                        url: '/Admin/Orders/UpdatePayment',
+                        type: 'POST',
+                        data: { id: currentOrder.id, paymentStatus: newPayment, __RequestVerificationToken: token }
+                    });
+                }
+                closeModal();
+                table.ajax.reload(null, false);
+            } catch (err) {
+                alert('Lỗi: ' + err.message);
+            }
+        }
+
+        // Close on backdrop click
+        $(document).ready(function () {
+            document.getElementById('statusModal').addEventListener('click', function (e) {
+                if (e.target === this) closeModal();
+            });
+        });
+    </script>
+
+}

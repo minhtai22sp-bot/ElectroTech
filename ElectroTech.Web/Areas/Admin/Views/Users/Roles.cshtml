@@ -1,0 +1,408 @@
+﻿@{
+    ViewData["Title"] = "Phân quyền người dùng";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Phân quyền người dùng</h1>
+        <p class="text-sm text-slate-500 mt-1">Gán và thu hồi vai trò cho từng tài khoản.</p>
+    </div>
+
+    <!-- Table card -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <table id="rolesTable" class="w-full text-sm text-left">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Người dùng
+                    </th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Email
+                    </th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Vai trò hiện tại
+                    </th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right"
+                        data-orderable="false">
+                        Thao tác
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Overlay -->
+<div id="roleModal"
+     class="fixed inset-0 z-[9999] hidden items-center justify-center px-4"
+     style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);">
+
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+            <h3 class="text-lg font-black text-slate-900">Phân quyền tài khoản</h3>
+            <button onclick="closeModal()"
+                    class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200
+                           text-slate-500 flex items-center justify-center
+                           border-none cursor-pointer transition-colors text-base">
+                ✕
+            </button>
+        </div>
+
+        <div class="px-6 py-5">
+
+            <!-- User info -->
+            <div class="flex items-center gap-3 bg-slate-50 border border-slate-200
+                        rounded-xl px-4 py-3 mb-5">
+                <div id="modalAvatar"
+                     class="w-11 h-11 bg-indigo-100 rounded-full flex items-center
+                            justify-content font-black text-indigo-700 text-sm
+                            flex-shrink-0 flex items-center justify-center">
+                </div>
+                <div class="min-w-0">
+                    <p id="modalName" class="font-bold text-slate-900 text-sm truncate"></p>
+                    <p id="modalEmail" class="text-slate-400 text-xs truncate"></p>
+                </div>
+            </div>
+
+            <!-- Role label -->
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                Chọn vai trò
+            </p>
+
+            <!-- Role options -->
+            <div class="space-y-2.5 mb-6">
+
+                <!-- SuperAdmin -->
+                <label id="label-SuperAdmin"
+                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
+                              border-2 border-slate-200 cursor-pointer transition-all
+                              hover:border-violet-300 hover:bg-violet-50"
+                       onclick="toggleLabel(this,'#7c3aed')">
+                    <input type="checkbox" name="roles" value="SuperAdmin"
+                           class="w-4 h-4 cursor-pointer accent-violet-600 flex-shrink-0" />
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 bg-violet-100 text-violet-700
+                                         text-xs font-bold rounded-full">
+                                SuperAdmin
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 m-0">
+                            Toàn quyền — quản lý mọi tính năng hệ thống
+                        </p>
+                    </div>
+                    <span class="text-xl flex-shrink-0">👑</span>
+                </label>
+
+                <!-- Admin -->
+                <label id="label-Admin"
+                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
+                              border-2 border-slate-200 cursor-pointer transition-all
+                              hover:border-blue-300 hover:bg-blue-50"
+                       onclick="toggleLabel(this,'#2563eb')">
+                    <input type="checkbox" name="roles" value="Admin"
+                           class="w-4 h-4 cursor-pointer accent-blue-600 flex-shrink-0" />
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700
+                                         text-xs font-bold rounded-full">
+                                Admin
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 m-0">
+                            Quản trị viên — quản lý sản phẩm, đơn hàng, người dùng
+                        </p>
+                    </div>
+                    <span class="text-xl flex-shrink-0">🛡️</span>
+                </label>
+
+                <!-- Customer -->
+                <label id="label-Customer"
+                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
+                              border-2 border-slate-200 cursor-pointer transition-all
+                              hover:border-green-300 hover:bg-green-50"
+                       onclick="toggleLabel(this,'#16a34a')">
+                    <input type="checkbox" name="roles" value="Customer"
+                           class="w-4 h-4 cursor-pointer accent-green-600 flex-shrink-0" />
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700
+                                         text-xs font-bold rounded-full">
+                                Customer
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 m-0">
+                            Khách hàng — mua hàng, xem đơn hàng
+                        </p>
+                    </div>
+                    <span class="text-xl flex-shrink-0">🛒</span>
+                </label>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeModal()"
+                        class="px-5 py-2.5 border border-slate-200 rounded-xl
+                               text-slate-500 font-semibold text-sm hover:bg-slate-50
+                               transition-colors cursor-pointer bg-white">
+                    Hủy
+                </button>
+                <button onclick="saveRoles()"
+                        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl
+                               text-white font-bold text-sm transition-colors
+                               cursor-pointer border-none">
+                    💾 Lưu phân quyền
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        /* Override DataTables default styles */
+        #rolesTable_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+
+            #rolesTable_wrapper .dataTables_filter input:focus {
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 2px rgba(147,197,253,0.3);
+            }
+
+        #rolesTable_wrapper .dataTables_length select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        #rolesTable_wrapper .dataTables_info {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        #rolesTable_paginate .paginate_button {
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+        }
+
+            #rolesTable_paginate .paginate_button.current {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
+                color: white !important;
+            }
+
+        #rolesTable tbody tr:hover {
+            background: #f8fafc;
+        }
+    </style>
+
+    <script>
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        var currentUser = null;
+
+        $(document).ready(function () {
+            $('#rolesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '@Url.Action("LoadAllRoles", "Users", new { area = "Admin" })',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                },
+                columns: [
+                    {
+                        data: 'fullName',
+                        render: function (data, type, row) {
+                            var initials = (data || 'U').substring(0, 2).toUpperCase();
+                            return '<div class="flex items-center gap-3">' +
+                                '<div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center ' +
+                                'justify-center font-black text-indigo-700 text-xs flex-shrink-0">' +
+                                initials + '</div>' +
+                                '<span class="font-semibold text-slate-800">' + (data || '—') + '</span>' +
+                                '</div>';
+                        }
+                    },
+                    {
+                        data: 'email',
+                        defaultContent: '—',
+                        render: function (data) {
+                            return '<span class="text-slate-500 text-xs">' + (data || '—') + '</span>';
+                        }
+                    },
+                    {
+                        data: 'roles',
+                        render: function (data) {
+                            if (!data)
+                                return '<span class="text-slate-300 text-xs italic">Chưa có vai trò</span>';
+                            return data.split(', ').map(function (r) {
+                                var bg = r === 'SuperAdmin' ? 'bg-violet-100 text-violet-700' :
+                                    r === 'Admin' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-green-100 text-green-700';
+                                return '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold ' + bg + ' mr-1">' + r + '</span>';
+                            }).join('');
+                        }
+                    },
+                    {
+                        data: null,
+                        className: 'text-right',
+                        render: function (data, type, row) {
+                            return '<button onclick=\'openModal(' + JSON.stringify(row).replace(/'/g, "&#39;") + ')\' ' +
+                                'class="inline-flex items-center gap-1.5 px-3 py-1.5 ' +
+                                'bg-blue-50 hover:bg-blue-100 text-blue-600 ' +
+                                'text-xs font-bold rounded-lg transition-colors ' +
+                                'border border-blue-100 cursor-pointer">' +
+                                '🔑 Phân quyền</button>';
+                        }
+                    }
+                ],
+                language: {
+                    processing: '<div class="text-slate-400 text-sm py-4">Đang tải...</div>',
+                    search: '',
+                    searchPlaceholder: 'Tìm kiếm...',
+                    lengthMenu: 'Hiển thị _MENU_ dòng',
+                    info: 'Hiển thị _START_–_END_ / _TOTAL_',
+                    infoEmpty: 'Không có dữ liệu',
+                    zeroRecords: 'Không tìm thấy kết quả',
+                    paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+                }
+            });
+        });
+
+        function openModal(user) {
+            currentUser = user;
+            var name = user.fullName || user.email || 'User';
+            document.getElementById('modalName').textContent = name;
+            document.getElementById('modalEmail').textContent = user.email || '';
+            document.getElementById('modalAvatar').textContent = name.substring(0, 2).toUpperCase();
+
+            ['SuperAdmin', 'Admin', 'Customer'].forEach(function (role) {
+                var label = document.getElementById('label-' + role);
+                var cb = label.querySelector('input');
+                cb.checked = false;
+                label.style.borderColor = '#e2e8f0';
+                label.style.background = 'white';
+            });
+
+            var currentRoles = (user.roles || '').split(', ').map(function (r) { return r.trim(); });
+            currentRoles.forEach(function (role) {
+                var label = document.getElementById('label-' + role);
+                if (!label) return;
+                var cb = label.querySelector('input');
+                cb.checked = true;
+                var color = role === 'SuperAdmin' ? '#7c3aed' :
+                    role === 'Admin' ? '#2563eb' : '#16a34a';
+                label.style.borderColor = color;
+                label.style.background = color + '15';
+            });
+
+            var modal = document.getElementById('roleModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            var modal = document.getElementById('roleModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentUser = null;
+        }
+
+        function toggleLabel(label, color) {
+            setTimeout(function () {
+                var cb = label.querySelector('input');
+                label.style.borderColor = cb.checked ? color : '#e2e8f0';
+                label.style.background = cb.checked ? color + '15' : 'white';
+            }, 0);
+        }
+
+        async function saveRoles() {
+            if (!currentUser) return;
+
+            var selected = Array.from(
+                document.querySelectorAll('input[name="roles"]:checked')
+            ).map(function (cb) { return cb.value; });
+
+            var currentRoles = (currentUser.roles || '')
+                .split(', ').map(function (r) { return r.trim(); }).filter(Boolean);
+
+            var toAdd = selected.filter(function (r) { return !currentRoles.includes(r); });
+            var toRemove = currentRoles.filter(function (r) { return !selected.includes(r); });
+
+            try {
+                for (var i = 0; i < toAdd.length; i++) {
+                    var res = await fetch('/Admin/Users/AssignRole', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: 'id=' + encodeURIComponent(currentUser.id) +
+                            '&role=' + encodeURIComponent(toAdd[i])
+                    });
+                    var data = await res.json();
+                    if (!data.success) { showToast('Lỗi: ' + data.message, 'red'); return; }
+                }
+
+                for (var j = 0; j < toRemove.length; j++) {
+                    var res2 = await fetch('/Admin/Users/RemoveRole', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: 'id=' + encodeURIComponent(currentUser.id) +
+                            '&role=' + encodeURIComponent(toRemove[j])
+                    });
+                    var data2 = await res2.json();
+                    if (!data2.success) { showToast('Lỗi: ' + data2.message, 'red'); return; }
+                }
+
+                closeModal();
+                $('#rolesTable').DataTable().ajax.reload(null, false);
+                showToast('✅ Phân quyền thành công!', 'green');
+
+            } catch (err) {
+                showToast('Lỗi: ' + err.message, 'red');
+            }
+        }
+
+        function showToast(msg, color) {
+            var t = document.createElement('div');
+            t.style.cssText =
+                'position:fixed;bottom:24px;right:24px;z-index:99999;' +
+                'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;' +
+                'background:' + (color === 'green' ? '#dcfce7' : '#fee2e2') + ';' +
+                'color:' + (color === 'green' ? '#16a34a' : '#dc2626') + ';' +
+                'border:1px solid ' + (color === 'green' ? '#86efac' : '#fca5a5') + ';' +
+                'box-shadow:0 8px 24px rgba(0,0,0,0.1);transition:opacity .3s;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function () { t.style.opacity = '0'; }, 3000);
+            setTimeout(function () { t.remove(); }, 3400);
+        }
+
+        document.getElementById('roleModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+
+    @Html.AntiForgeryToken()
+}

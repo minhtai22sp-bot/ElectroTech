@@ -1,0 +1,12 @@
+﻿.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+Logs/
+**/packages/
+node_modules/
+**/node_modules/
+appsettings.Development.json
+Thumbs.db
+.DS_Store

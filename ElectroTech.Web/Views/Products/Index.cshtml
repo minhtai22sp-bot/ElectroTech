@@ -1,0 +1,729 @@
+﻿@using Entities.ViewModel
+@model Library.PaginatedList<ProductIndexModel>
+
+@{
+    var categories = ViewBag.Categories as List<Entities.Categories> ?? new();
+    var currentCat = ViewBag.CategoryId as int? ?? 0;
+    var currentQ = ViewBag.SearchQuery as string ?? "";
+    var currentSort = ViewBag.SortBy as string ?? "";
+    var totalCount = Model?.TotalItemCount ?? 0;
+}
+
+<style>
+    :root {
+        --bg: #f0efed;
+        --card: #ffffff;
+        --orange: #f97316;
+        --black: #111111;
+        --muted: #6b7280;
+        --border: #e2e0dc;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .pl {
+        background: var(--bg);
+        min-height: 100vh;
+        font-family: 'DM Sans', sans-serif;
+        color: var(--black);
+    }
+
+    /* ── Page header ── */
+    .pl-head {
+        background: var(--black);
+        padding: 52px 0 44px;
+    }
+
+    .pl-head-in {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 48px;
+    }
+
+    .pl-eyebrow {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .28em;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin: 0 0 10px;
+    }
+
+    .pl-h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(2.4rem, 4vw, 3.6rem);
+        font-weight: 900;
+        line-height: .92;
+        letter-spacing: -.03em;
+        color: #fff;
+        margin: 0 0 14px;
+    }
+
+        .pl-h1 span {
+            color: var(--orange);
+        }
+
+    .pl-sub {
+        font-size: 13px;
+        color: #6b7280;
+        max-width: 500px;
+        line-height: 1.65;
+        margin: 0;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+
+    .toolbar-in {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 48px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 58px;
+    }
+
+    .search-box {
+        flex: 1;
+        max-width: 340px;
+        position: relative;
+    }
+
+        .search-box .s-ico {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 9px 12px 9px 38px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--black);
+            background: var(--bg);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+            .search-box input:focus {
+                border-color: var(--orange);
+                box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+            }
+
+            .search-box input::placeholder {
+                color: #aaa;
+            }
+
+    .sort-box select {
+        padding: 9px 32px 9px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--black);
+        background: var(--bg);
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 12px;
+        outline: none;
+        transition: border-color .2s;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+        .sort-box select:focus {
+            border-color: var(--orange);
+        }
+
+    .tb-count {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+        .tb-count strong {
+            color: var(--black);
+            font-weight: 800;
+        }
+
+    /* ── Layout ── */
+    .pl-layout {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 28px 48px 72px;
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+        position: sticky;
+        top: 74px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sb-card {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+    }
+
+    .sb-label {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .2em;
+        color: var(--muted);
+        margin: 0 0 10px;
+    }
+
+    .cat-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+        .cat-list li a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--black);
+            text-decoration: none;
+            transition: background .15s, color .15s;
+        }
+
+            .cat-list li a:hover {
+                background: var(--bg);
+            }
+
+        .cat-list li.act a {
+            background: #fff4ee;
+            color: var(--orange);
+            font-weight: 700;
+        }
+
+        .cat-list li a .n {
+            font-size: 10px;
+            color: var(--muted);
+            background: var(--bg);
+            padding: 1px 7px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .cat-list li.act a .n {
+            background: rgba(249,115,22,.12);
+            color: var(--orange);
+        }
+
+    .clear-link {
+        display: block;
+        text-align: center;
+        padding: 7px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-decoration: none;
+        margin-top: 8px;
+        transition: all .2s;
+    }
+
+        .clear-link:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+    /* ── Product grid ── */
+    .prod-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .pc {
+        background: var(--card);
+        border-radius: 16px;
+        overflow: hidden;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        border: 1.5px solid var(--border);
+        transition: transform .22s ease, box-shadow .22s ease, border-color .22s;
+    }
+
+        .pc:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 40px rgba(0,0,0,.1);
+            border-color: #d0cec9;
+        }
+
+    .pc-img {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        background: #ebebea;
+    }
+
+        .pc-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .4s ease;
+        }
+
+    .pc:hover .pc-img img {
+        transform: scale(1.05);
+    }
+
+    .pc-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        padding: 4px 11px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+    }
+
+    .b-new {
+        background: var(--orange);
+        color: #fff;
+    }
+
+    .b-sale {
+        background: var(--black);
+        color: #fff;
+    }
+
+    .b-sold {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .pc-body {
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .pc-brand {
+        font-size: 10px;
+        color: var(--muted);
+        margin: 0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+    }
+
+    .pc-name {
+        font-family: 'Syne', sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        color: var(--black);
+        margin: 0 0 3px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .pc-stars {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+    }
+
+    .pc-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1.5px solid var(--border);
+    }
+
+    .pc-price {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 900;
+        color: var(--orange);
+    }
+
+    .pc-orig {
+        font-size: 10px;
+        color: #aaa;
+        text-decoration: line-through;
+        margin-top: 1px;
+    }
+
+    .pc-cart {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        flex-shrink: 0;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--black);
+        transition: all .2s;
+    }
+
+    .pc:hover .pc-cart {
+        background: var(--black);
+        border-color: var(--black);
+        color: #fff;
+    }
+
+    /* ── Empty ── */
+    .empty {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 80px 0;
+        color: var(--muted);
+    }
+
+        .empty .ico {
+            font-size: 52px;
+            display: block;
+            margin-bottom: 12px;
+            color: #d1d5db;
+        }
+
+    /* ── Pagination ── */
+    .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 36px;
+        flex-wrap: wrap;
+    }
+
+    .pg {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 9px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        color: var(--black);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .15s;
+    }
+
+        .pg:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .pg.cur {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .pg.off {
+            opacity: .3;
+            pointer-events: none;
+        }
+</style>
+
+<div class="pl">
+
+    <!-- Header -->
+    <div class="pl-head">
+        <div class="pl-head-in">
+            <p class="pl-eyebrow">Explore the collection</p>
+            <h1 class="pl-h1">
+                Tất cả <span>Sản phẩm</span>
+            </h1>
+            <p class="pl-sub">
+                @if (currentCat > 0)
+                {
+                    var ac = categories.FirstOrDefault(c => c.Id == currentCat);
+                    if (ac != null)
+                    {
+                        <text>Danh mục: <strong style="color:#fff;">@ac.Name</strong></text>
+                    }
+                }
+                else if (!string.IsNullOrEmpty(currentQ))
+                {
+                    <text>Kết quả cho: <strong style="color:#fff;">"@currentQ"</strong></text>
+                }
+                else
+                {
+                    <text>Khám phá đầy đủ các sản phẩm công nghệ hiệu suất cao.</text>
+                }
+            </p>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-in">
+            <form method="get" asp-action="Index" asp-controller="Products" class="search-box">
+                @if (currentCat > 0)
+                {
+                    <input type="hidden" name="categoryId" value="@currentCat" />
+                }
+                <span class="material-symbols-outlined s-ico">search</span>
+                <input type="text" name="q" value="@currentQ" placeholder="Tìm sản phẩm..." />
+            </form>
+
+            <div class="sort-box">
+                <form method="get" asp-action="Index" asp-controller="Products" id="sf">
+                    @if (currentCat > 0)
+                    {
+                        <input type="hidden" name="categoryId" value="@currentCat" />
+                    }
+                    @if (!string.IsNullOrEmpty(currentQ))
+                    {
+                        <input type="hidden" name="q" value="@currentQ" />
+                    }
+                    <select name="sortBy" onchange="document.getElementById('sf').submit()">
+                        <option value="" selected="@(currentSort == ""          )">Mặc định</option>
+                        <option value="price_asc" selected="@(currentSort == "price_asc" )">Giá thấp → cao</option>
+                        <option value="price_desc" selected="@(currentSort == "price_desc")">Giá cao → thấp</option>
+                        <option value="newest" selected="@(currentSort == "newest"    )">Mới nhất</option>
+                        <option value="rating" selected="@(currentSort == "rating"    )">Đánh giá cao</option>
+                    </select>
+                </form>
+            </div>
+
+            <span class="tb-count"><strong>@totalCount</strong> sản phẩm</span>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="pl-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sb-card">
+                <p class="sb-label">Danh mục</p>
+                <ul class="cat-list">
+                    <li class="@(currentCat == 0 ? "act" : "")">
+                        <a asp-action="Index" asp-controller="Products"
+                           asp-route-q="@currentQ" asp-route-sortBy="@currentSort">
+                            <span>Tất cả</span>
+                            <span class="n">@totalCount</span>
+                        </a>
+                    </li>
+                    @foreach (var cat in categories)
+                    {
+                        <li class="@(currentCat == cat.Id ? "act" : "")">
+                            <a asp-action="Index" asp-controller="Products"
+                               asp-route-categoryId="@cat.Id"
+                               asp-route-q="@currentQ" asp-route-sortBy="@currentSort">
+                                <span>@cat.Name</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+                @if (currentCat > 0 || !string.IsNullOrEmpty(currentQ))
+                {
+                    <a asp-action="Index" asp-controller="Products" class="clear-link">✕ Xóa bộ lọc</a>
+                }
+            </div>
+
+            <div class="sb-card">
+                <p class="sb-label">Tình trạng</p>
+                <ul class="cat-list">
+                    <li>
+                        <a asp-action="Index" asp-controller="Products"
+                           asp-route-categoryId="@currentCat"
+                           asp-route-q="@currentQ" asp-route-inStock="true">
+                            <span>Còn hàng</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-action="Index" asp-controller="Products"
+                           asp-route-categoryId="@currentCat" asp-route-q="@currentQ">
+                            <span>Tất cả</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Grid -->
+        <div>
+            @if (Model != null && Model.Items.Any())
+            {
+                <div class="prod-grid">
+                    @foreach (var item in Model.Items)
+                    {
+                        <a class="pc" asp-controller="Products" asp-action="Detail" asp-route-id="@item.Id">
+                            <div class="pc-img">
+                                @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
+                                {
+                                    <img src="@item.ThumbnailUrl" alt="@item.Name" />
+                                }
+                                else
+                                {
+                                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                                        <span class="material-symbols-outlined" style="font-size:40px;color:#ccc;">image_not_supported</span>
+                                    </div>
+                                }
+                                @if (item.Stock <= 0)
+                                {
+                                    <span class="pc-badge b-sold">Hết hàng</span>
+                                }
+                                else if (item.OriginalPrice.HasValue && item.OriginalPrice > item.Price)
+                                {
+                                    var d = (int)Math.Round((1 - (double)item.Price / (double)item.OriginalPrice.Value) * 100);
+                                    <span class="pc-badge b-sale">-@d%</span>
+                                }
+                                else if (item.IsFeatured)
+                                {
+                                    <span class="pc-badge b-new">New</span>
+                                }
+                            </div>
+                            <div class="pc-body">
+                                @if (!string.IsNullOrEmpty(item.Brand))
+                                {
+                                    <p class="pc-brand">@item.Brand</p>
+                                }
+                                <h4 class="pc-name">@item.Name</h4>
+                                <div class="pc-stars">
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        var sc = s <= (int)Math.Round(item.Rating) ? "#f59e0b" : "#e5e7eb";
+                                        <span style="font-size:12px;color:@sc;">★</span>
+                                    }
+                                    <span style="color:#9ca3af;font-size:10px;margin-left:4px;">@item.Rating.ToString("0.0")</span>
+                                </div>
+                                <div class="pc-foot">
+                                    <div>
+                                        <div class="pc-price">@item.Price.ToString("N0")₫</div>
+                                        @if (item.OriginalPrice.HasValue && item.OriginalPrice > item.Price)
+                                        {
+                                            <div class="pc-orig">@item.OriginalPrice.Value.ToString("N0")₫</div>
+                                        }
+                                    </div>
+                                    <div class="pc-cart">
+                                        <span class="material-symbols-outlined" style="font-size:15px;">shopping_cart</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.PageCount > 1)
+                {
+                    <div class="pager">
+                        @if (Model.HasPreviousPage)
+                        {
+                            <a class="pg" asp-action="Index" asp-controller="Products"
+                               asp-route-page="@(Model.CurrentPage - 1)"
+                               asp-route-categoryId="@currentCat"
+                               asp-route-q="@currentQ"
+                               asp-route-sortBy="@currentSort">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pg off"><span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span></span>
+                        }
+
+                        @for (int p = 1; p <= Model.PageCount; p++)
+                        {
+                            if (p == Model.CurrentPage)
+                            {
+                                <span class="pg cur">@p</span>
+                            }
+                            else if (p == 1 || p == Model.PageCount || Math.Abs(p - Model.CurrentPage) <= 2)
+                            {
+                                <a class="pg" asp-action="Index" asp-controller="Products"
+                                   asp-route-page="@p" asp-route-categoryId="@currentCat"
+                                   asp-route-q="@currentQ" asp-route-sortBy="@currentSort">@p</a>
+                            }
+                            else if (Math.Abs(p - Model.CurrentPage) == 3)
+                            {
+                                <span class="pg off">…</span>
+                            }
+                        }
+
+                        @if (Model.HasNextPage)
+                        {
+                            <a class="pg" asp-action="Index" asp-controller="Products"
+                               asp-route-page="@(Model.CurrentPage + 1)"
+                               asp-route-categoryId="@currentCat"
+                               asp-route-q="@currentQ"
+                               asp-route-sortBy="@currentSort">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pg off"><span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span></span>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty">
+                    <span class="material-symbols-outlined ico">inventory_2</span>
+                    <p>Không tìm thấy sản phẩm nào.</p>
+                    <a asp-action="Index" asp-controller="Products"
+                       style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:10px;background:var(--orange);color:#fff;font-weight:700;font-size:13px;text-decoration:none;margin-top:12px;">
+                        Xem tất cả →
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

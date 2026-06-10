@@ -1,0 +1,667 @@
+﻿@using Entities
+@model List<CartItem>
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = null;
+    var total = Model?.Sum(i => i.Subtotal) ?? 0;
+    var count = Model?.Sum(i => i.Quantity) ?? 0;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ElectroTech | Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        headline: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Fix input text visible on dark bg */
+        input, textarea, select {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background-color: #1e1e1e !important;
+        }
+
+            input::placeholder, textarea::placeholder {
+                color: #6b7280 !important;
+                -webkit-text-fill-color: #6b7280 !important;
+            }
+
+            input:-webkit-autofill,
+            input:-webkit-autofill:hover,
+            input:-webkit-autofill:focus {
+                -webkit-text-fill-color: #ffffff !important;
+                box-shadow: inset 0 0 0px 1000px #1e1e1e !important;
+            }
+
+            select option {
+                background: #1e1e1e;
+                color: #ffffff;
+            }
+
+        .select-wrap {
+            position: relative;
+        }
+
+            .select-wrap::after {
+                content: '▾';
+                position: absolute;
+                right: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #6b7280;
+                pointer-events: none;
+            }
+
+            .select-wrap.loading::after {
+                content: '⟳';
+                animation: spin-sel 0.8s linear infinite;
+            }
+
+        @@keyframes spin-sel {
+            to {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        .payment-card {
+            padding: 18px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #201f1f;
+        }
+
+            .payment-card:hover {
+                background: #2a2a2a;
+            }
+
+            .payment-card.active {
+                border-color: rgba(173,199,255,0.5);
+                background: #252525;
+            }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#131313] text-[#e5e2e1]">
+
+    <!-- Header -->
+    <header class="bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-50
+                   border-b border-white/5">
+        <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+            <a asp-controller="Home" asp-action="Index"
+               class="font-headline text-2xl font-bold tracking-tighter text-white uppercase">
+                ElectroTech
+            </a>
+            <div class="flex items-center gap-2 text-blue-400">
+                <span class="material-symbols-outlined text-lg">lock</span>
+                <span class="text-sm">Thanh toán bảo mật</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 md:px-6 py-12">
+        <h1 class="font-headline text-4xl md:text-5xl font-bold tracking-tighter mb-12 text-white">
+            Thanh toán
+        </h1>
+
+        <form asp-controller="Checkout" asp-action="PlaceOrder"
+              method="post" id="checkoutForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="paymentMethod" id="paymentMethodInput" value="COD" />
+            <input type="hidden" name="shippingAddress" id="shippingAddressInput" />
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+                <!-- ── LEFT ─────────────────────────────────────────── -->
+                <div class="lg:col-span-7 space-y-12">
+
+                    <!-- Step 1: Liên hệ -->
+                    <section class="space-y-6">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-600 text-white
+                                         flex items-center justify-center
+                                         font-headline font-bold text-sm flex-shrink-0">
+                                01
+                            </span>
+                            <h2 class="font-headline text-lg font-bold uppercase
+                                       tracking-widest text-zinc-300">
+                                Thông tin liên hệ
+                            </h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- Họ tên - full width -->
+                            <div class="md:col-span-2 flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Họ và tên *
+                                </label>
+                                <input name="fullName" type="text" required
+                                       placeholder="Nguyễn Văn A"
+                                    
+                                       class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                              px-4 py-3 text-sm outline-none
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                              transition-all" />
+                            </div>
+
+                            <!-- Điện thoại -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Số điện thoại *
+                                </label>
+                                <input name="phone" type="tel" required
+                                       placeholder="0912 345 678"
+                                       class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                              px-4 py-3 text-sm outline-none
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                              transition-all" />
+                            </div>
+
+                            <!-- Email -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Email nhận xác nhận *
+                                </label>
+                                <input name="email" type="email" required
+                                       placeholder="example@gmail.com"
+                                       value="@(User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "")"
+                                       class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                              px-4 py-3 text-sm outline-none
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                              transition-all" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 2: Địa chỉ -->
+                    <section class="space-y-6">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-600 text-white
+                                         flex items-center justify-center
+                                         font-headline font-bold text-sm flex-shrink-0">
+                                02
+                            </span>
+                            <h2 class="font-headline text-lg font-bold uppercase
+                                       tracking-widest text-zinc-300">
+                                Địa chỉ giao hàng
+                            </h2>
+                        </div>
+
+                        <div class="space-y-4">
+
+                            <!-- Tỉnh -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Tỉnh / Thành phố *
+                                </label>
+                                <div class="select-wrap" id="wrap-tinh">
+                                    <select id="sel-tinh" onchange="loadHuyen(this)"
+                                            class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                                   px-4 py-3 text-sm outline-none appearance-none
+                                                   focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                   transition-all cursor-pointer">
+                                        <option value="">-- Chọn tỉnh / thành phố --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Huyện -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Quận / Huyện *
+                                </label>
+                                <div class="select-wrap" id="wrap-huyen">
+                                    <select id="sel-huyen" disabled onchange="loadXa(this)"
+                                            class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                                   px-4 py-3 text-sm outline-none appearance-none
+                                                   focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                   transition-all cursor-pointer
+                                                   disabled:opacity-40 disabled:cursor-not-allowed">
+                                        <option value="">-- Chọn quận / huyện --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Xã -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Phường / Xã *
+                                </label>
+                                <div class="select-wrap" id="wrap-xa">
+                                    <select id="sel-xa" disabled onchange="updateAddress()"
+                                            class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                                   px-4 py-3 text-sm outline-none appearance-none
+                                                   focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                   transition-all cursor-pointer
+                                                   disabled:opacity-40 disabled:cursor-not-allowed">
+                                        <option value="">-- Chọn phường / xã --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Số nhà -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Số nhà, tên đường *
+                                </label>
+                                <input type="text" id="inp-sonha"
+                                       placeholder="VD: 123 Nguyễn Huệ"
+                                       oninput="updateAddress()"
+                                       class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                              px-4 py-3 text-sm outline-none
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                              transition-all" />
+                            </div>
+
+                            <!-- Preview -->
+                            <div id="address-preview" class="hidden">
+                                <p class="text-xs uppercase tracking-widest text-zinc-500 mb-2">
+                                    Địa chỉ đầy đủ
+                                </p>
+                                <div class="bg-[#0e0e0e] border border-[#414754] rounded-lg
+                                            px-4 py-3 text-sm text-[#e5e2e1] leading-relaxed">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500
+                                                 align-middle mr-1">location_on</span>
+                                    <span id="address-text"></span>
+                                </div>
+                            </div>
+
+                            <!-- Ghi chú -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs uppercase tracking-widest text-zinc-500">
+                                    Ghi chú
+                                </label>
+                                <textarea name="note" rows="3"
+                                          placeholder="Yêu cầu đặc biệt, hướng dẫn giao hàng..."
+                                          class="w-full bg-[#1e1e1e] border border-[#2e2e2e] rounded-lg
+                                                 px-4 py-3 text-sm outline-none resize-none
+                                                 focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                 transition-all"></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 3: Thanh toán -->
+                    <section class="space-y-6">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-600 text-white
+                                         flex items-center justify-center
+                                         font-headline font-bold text-sm flex-shrink-0">
+                                03
+                            </span>
+                            <h2 class="font-headline text-lg font-bold uppercase
+                                       tracking-widest text-zinc-300">
+                                Phương thức thanh toán
+                            </h2>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- COD -->
+                            <div class="payment-card active" id="pay-COD"
+                                 onclick="selectPayment('COD')">
+                                <div class="flex items-center gap-3">
+                                    <div id="radio-COD"
+                                         class="w-5 h-5 rounded-full border-4
+                                                border-blue-400 bg-blue-900
+                                                flex-shrink-0"></div>
+                                    <div>
+                                        <p class="font-bold text-white text-sm">
+                                            Thanh toán khi nhận hàng (COD)
+                                        </p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">
+                                            Trả tiền mặt khi nhận được hàng
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-zinc-400">
+                                    local_shipping
+                                </span>
+                            </div>
+
+                            <!-- Bank -->
+                            <div class="payment-card" id="pay-BankTransfer"
+                                 onclick="selectPayment('BankTransfer')">
+                                <div class="flex items-center gap-3">
+                                    <div id="radio-BankTransfer"
+                                         class="w-5 h-5 rounded-full border-2
+                                                border-zinc-600 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="font-semibold text-zinc-400 text-sm">
+                                            Chuyển khoản ngân hàng
+                                        </p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">
+                                            Chuyển khoản trước khi giao hàng
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-zinc-600">
+                                    account_balance
+                                </span>
+                            </div>
+
+                            <!-- VNPay -->
+                            <div class="payment-card" id="pay-VNPay"
+                                 onclick="selectPayment('VNPay')">
+                                <div class="flex items-center gap-3">
+                                    <div id="radio-VNPay"
+                                         class="w-5 h-5 rounded-full border-2
+                                                border-zinc-600 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="font-semibold text-zinc-400 text-sm">VNPay</p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">
+                                            Thanh toán qua cổng VNPay
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-zinc-600">qr_code</span>
+                            </div>
+
+                            <!-- MoMo -->
+                            <div class="payment-card" id="pay-MoMo"
+                                 onclick="selectPayment('MoMo')">
+                                <div class="flex items-center gap-3">
+                                    <div id="radio-MoMo"
+                                         class="w-5 h-5 rounded-full border-2
+                                                border-zinc-600 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="font-semibold text-zinc-400 text-sm">MoMo</p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">Ví điện tử MoMo</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-zinc-600">
+                                    account_balance_wallet
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ── RIGHT: Order Summary ────────────────────────── -->
+                <div class="lg:col-span-5">
+                    <div class="sticky top-24 space-y-4">
+                        <div class="bg-[#201f1f]/80 backdrop-blur-xl rounded-2xl p-8
+                                    border border-white/5 shadow-2xl">
+
+                            <h2 class="font-headline text-2xl font-bold mb-6
+                                       flex items-center justify-between">
+                                <span>Đơn hàng</span>
+                                <span class="text-xs font-normal text-green-400
+                                             bg-green-400/10 px-3 py-1 rounded-full
+                                             uppercase tracking-wider">
+                                    @count sản phẩm
+                                </span>
+                            </h2>
+
+                            <!-- Items -->
+                            <div class="space-y-5 mb-6 max-h-72 overflow-y-auto
+                                        pr-1 scrollbar-thin">
+                                @foreach (var item in Model ?? new List<CartItem>())
+                                {
+                                    <div class="flex gap-4">
+                                        <div class="w-16 h-16 rounded-lg bg-zinc-900
+                                                    overflow-hidden flex-shrink-0
+                                                    border border-white/5">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@item.ImageUrl"
+                                                     alt="@item.ProductName"
+                                                     class="w-full h-full object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-full h-full flex items-center
+                                                            justify-center">
+                                                    <span class="material-symbols-outlined
+                                                                 text-zinc-600 text-sm">
+                                                        image_not_supported
+                                                    </span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="flex-grow flex flex-col justify-center min-w-0">
+                                            <h4 class="font-semibold text-white text-sm
+                                                       leading-tight truncate">
+                                                @item.ProductName
+                                            </h4>
+                                            <p class="text-xs text-zinc-500 mt-1">
+                                                SL: @item.Quantity
+                                            </p>
+                                            <p class="text-sm font-bold text-blue-400 mt-1">
+                                                @item.Subtotal.ToString("N0")đ
+                                            </p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Totals -->
+                            <div class="space-y-3 pt-5 border-t border-white/5">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-zinc-500">Tạm tính</span>
+                                    <span>@total.ToString("N0")đ</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-zinc-500">Phí vận chuyển</span>
+                                    <span class="text-green-400 font-semibold text-xs
+                                                 uppercase tracking-wider">
+                                        Miễn phí
+                                    </span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-zinc-500">Thuế</span>
+                                    <span>0đ</span>
+                                </div>
+                                <div class="flex justify-between items-end pt-3
+                                            border-t border-white/5">
+                                    <span class="font-headline font-bold text-base
+                                                 uppercase tracking-tight">
+                                        Tổng cộng
+                                    </span>
+                                    <span class="font-headline font-bold text-3xl text-white">
+                                        @total.ToString("N0")đ
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <button type="submit" id="placeOrderBtn"
+                                    class="w-full mt-7 py-4 rounded-xl font-headline
+                                           font-bold text-base uppercase tracking-widest
+                                           bg-gradient-to-r from-blue-600 to-blue-400
+                                           text-white hover:from-blue-500 hover:to-blue-300
+                                           active:scale-[0.98] transition-all
+                                           hover:shadow-[0_0_24px_rgba(96,165,250,0.4)]
+                                           cursor-pointer border-none">
+                                Đặt hàng ngay
+                            </button>
+
+                            <div class="mt-5 flex items-center justify-center
+                                        gap-2 text-zinc-500">
+                                <span class="material-symbols-outlined text-sm">
+                                    verified_user
+                                </span>
+                                <span class="text-[10px] uppercase tracking-widest">
+                                    Giao dịch mã hoá 256-bit
+                                </span>
+                            </div>
+                        </div>
+
+                        <a asp-controller="Cart" asp-action="Index"
+                           class="flex items-center justify-center gap-2 text-sm
+                                  text-zinc-500 hover:text-zinc-300 transition-colors">
+                            <span class="material-symbols-outlined text-sm">arrow_back</span>
+                            Quay lại giỏ hàng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <footer class="bg-zinc-950 border-t border-white/5 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row
+                    justify-between items-center gap-4">
+            <div class="font-headline font-bold text-white tracking-tighter">
+                ElectroTech
+            </div>
+            <p class="text-xs text-zinc-500">
+                &copy; @DateTime.Now.Year ElectroTech. All rights reserved.
+            </p>
+            <div class="flex gap-6">
+                <a href="#" class="text-xs text-zinc-500 hover:text-blue-400 transition-colors">
+                    Privacy Policy
+                </a>
+                <a href="#" class="text-xs text-zinc-500 hover:text-blue-400 transition-colors">
+                    Terms of Service
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const API = 'https://provinces.open-api.vn/api';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('wrap-tinh').classList.add('loading');
+            try {
+                const res = await fetch(`${API}/p/`);
+                const list = await res.json();
+                const sel = document.getElementById('sel-tinh');
+                list.forEach(p => sel.appendChild(new Option(p.name, p.code)));
+            } catch (e) {
+                console.error('Lỗi load tỉnh:', e);
+            } finally {
+                document.getElementById('wrap-tinh').classList.remove('loading');
+            }
+        });
+
+        async function loadHuyen(sel) {
+            const code = sel.value;
+            const selH = document.getElementById('sel-huyen');
+            const selX = document.getElementById('sel-xa');
+            resetSelect(selH, '-- Chọn quận / huyện --');
+            resetSelect(selX, '-- Chọn phường / xã --');
+            selH.disabled = selX.disabled = true;
+            updateAddress();
+            if (!code) return;
+            document.getElementById('wrap-huyen').classList.add('loading');
+            try {
+                const res = await fetch(`${API}/p/${code}?depth=2`);
+                const data = await res.json();
+                data.districts.forEach(d => selH.appendChild(new Option(d.name, d.code)));
+                selH.disabled = false;
+            } catch (e) { console.error(e); }
+            finally { document.getElementById('wrap-huyen').classList.remove('loading'); }
+        }
+
+        async function loadXa(sel) {
+            const code = sel.value;
+            const selX = document.getElementById('sel-xa');
+            resetSelect(selX, '-- Chọn phường / xã --');
+            selX.disabled = true;
+            updateAddress();
+            if (!code) return;
+            document.getElementById('wrap-xa').classList.add('loading');
+            try {
+                const res = await fetch(`${API}/d/${code}?depth=2`);
+                const data = await res.json();
+                data.wards.forEach(w => selX.appendChild(new Option(w.name, w.code)));
+                selX.disabled = false;
+            } catch (e) { console.error(e); }
+            finally { document.getElementById('wrap-xa').classList.remove('loading'); }
+        }
+
+        function updateAddress() {
+            const tinh = document.getElementById('sel-tinh');
+            const huyen = document.getElementById('sel-huyen');
+            const xa = document.getElementById('sel-xa');
+            const soNha = document.getElementById('inp-sonha').value.trim();
+
+            const parts = [
+                soNha,
+                xa.selectedIndex > 0 ? xa.options[xa.selectedIndex].text : '',
+                huyen.selectedIndex > 0 ? huyen.options[huyen.selectedIndex].text : '',
+                tinh.selectedIndex > 0 ? tinh.options[tinh.selectedIndex].text : '',
+            ].filter(Boolean);
+
+            const full = parts.join(', ');
+            document.getElementById('shippingAddressInput').value = full;
+            document.getElementById('address-text').textContent = full;
+            document.getElementById('address-preview').classList.toggle('hidden', !full);
+        }
+
+        function resetSelect(sel, placeholder) {
+            sel.innerHTML = '';
+            sel.appendChild(new Option(placeholder, ''));
+        }
+
+        const payMethods = ['COD', 'BankTransfer', 'VNPay', 'MoMo'];
+
+        function selectPayment(method) {
+            payMethods.forEach(m => {
+                const card = document.getElementById('pay-' + m);
+                const radio = document.getElementById('radio-' + m);
+                card.classList.remove('active');
+                radio.className = 'w-5 h-5 rounded-full border-2 border-zinc-600 flex-shrink-0';
+                card.querySelector('p').className =
+                    'font-semibold text-zinc-400 text-sm';
+            });
+            const card = document.getElementById('pay-' + method);
+            const radio = document.getElementById('radio-' + method);
+            card.classList.add('active');
+            radio.className =
+                'w-5 h-5 rounded-full border-4 border-blue-400 bg-blue-900 flex-shrink-0';
+            card.querySelector('p').className = 'font-bold text-white text-sm';
+            document.getElementById('paymentMethodInput').value = method;
+        }
+
+        document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+            const tinh = document.getElementById('sel-tinh').value;
+            const huyen = document.getElementById('sel-huyen').value;
+            const xa = document.getElementById('sel-xa').value;
+            const soNha = document.getElementById('inp-sonha').value.trim();
+
+            if (!tinh || !huyen || !xa || !soNha) {
+                e.preventDefault();
+                alert('Vui lòng chọn đầy đủ địa chỉ giao hàng.');
+                return;
+            }
+
+            const btn = document.getElementById('placeOrderBtn');
+            btn.textContent = 'Đang xử lý...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,824 @@
+﻿@model Entities.ViewModel.EditProductViewModel
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<form asp-action="Edit" asp-controller="Product"
+      asp-area="Admin" method="post" id="productForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id" />
+
+    <div class="space-y-6">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-display font-black text-slate-900 tracking-tight">
+                    Sửa sản phẩm
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">
+                    ID: #@Model.Id — @Model.Name
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <a asp-action="Index" asp-controller="Product" asp-area="Admin"
+                   class="px-4 py-2 border border-slate-200 rounded-xl text-slate-500
+                          font-semibold text-sm hover:bg-slate-50 transition-colors">
+                    ← Hủy
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl
+                               text-white font-bold text-sm transition-colors
+                               border-none cursor-pointer">
+                    💾 Lưu thay đổi
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+
+            <!-- LEFT -->
+            <div class="col-span-2 space-y-6">
+
+                <!-- Thông tin cơ bản -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-5">
+                        📋 Thông tin cơ bản
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4">
+
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">
+                                Tên sản phẩm *
+                            </label>
+                            <input type="text" name="Name" value="@Model.Name"
+                                   class="w-full px-4 py-2.5 border border-slate-200
+                                          rounded-xl text-sm text-slate-900
+                                          focus:outline-none focus:border-blue-400
+                                          focus:ring-1 focus:ring-blue-400 transition-all" />
+                            <span asp-validation-for="Name"
+                                  class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Mã SKU</label>
+                            <input type="text" name="Code" value="@Model.Code"
+                                   class="w-full px-4 py-2.5 border border-slate-200
+                                          rounded-xl text-sm font-mono text-slate-900
+                                          focus:outline-none focus:border-blue-400
+                                          focus:ring-1 focus:ring-blue-400 transition-all" />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Thương hiệu</label>
+                            <input type="text" name="Brand" value="@Model.Brand"
+                                   class="w-full px-4 py-2.5 border border-slate-200
+                                          rounded-xl text-sm text-slate-900
+                                          focus:outline-none focus:border-blue-400
+                                          focus:ring-1 focus:ring-blue-400 transition-all" />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Danh mục *</label>
+                            <select name="CategoryId"
+                                    class="w-full px-4 py-2.5 border border-slate-200
+                                           rounded-xl text-sm text-slate-900
+                                           focus:outline-none focus:border-blue-400
+                                           focus:ring-1 focus:ring-blue-400 transition-all">
+                                <option value="">-- Chọn danh mục --</option>
+                                @foreach (var cat in ViewBag.Categories
+                                as List<Entities.Categories> ?? new())
+                                {
+                                    <option value="@cat.Id"
+                                    @(cat.Id == Model.CategoryId ? "selected" : "")>
+                                        @cat.Name
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId"
+                                  class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Tồn kho</label>
+                            <input type="number" name="Stock" value="@Model.Stock" min="0"
+                                   class="w-full px-4 py-2.5 border border-slate-200
+                                          rounded-xl text-sm text-slate-900
+                                          focus:outline-none focus:border-blue-400
+                                          focus:ring-1 focus:ring-blue-400 transition-all" />
+                        </div>
+
+                        <!-- Giá bán -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Giá bán *</label>
+                            <div class="relative">
+                                <input type="text" name="PriceInput"
+                                       value="@Model.PriceInput"
+                                       inputmode="numeric"
+                                       oninput="formatPrice(this)"
+                                       class="w-full px-4 py-2.5 pr-8 border border-slate-200
+                                              rounded-xl text-sm text-slate-900
+                                              focus:outline-none focus:border-blue-400
+                                              focus:ring-1 focus:ring-blue-400 transition-all" />
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2
+                                             text-xs text-slate-400 font-bold">₫</span>
+                            </div>
+                        </div>
+
+                        <!-- Giá gốc -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">
+                                Giá gốc
+                                <span class="text-slate-400 font-normal normal-case">
+                                    (gạch ngang)
+                                </span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" name="OriginalPriceInput"
+                                       value="@Model.OriginalPriceInput"
+                                       inputmode="numeric"
+                                       oninput="formatPrice(this)"
+                                       class="w-full px-4 py-2.5 pr-8 border border-slate-200
+                                              rounded-xl text-sm text-slate-900
+                                              focus:outline-none focus:border-blue-400
+                                              focus:ring-1 focus:ring-blue-400 transition-all" />
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2
+                                             text-xs text-slate-400 font-bold">₫</span>
+                            </div>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">Mô tả sản phẩm</label>
+                            <textarea name="Description" rows="4"
+                                      class="w-full px-4 py-2.5 border border-slate-200
+                                             rounded-xl text-sm text-slate-900
+                                             focus:outline-none focus:border-blue-400
+                                             focus:ring-1 focus:ring-blue-400
+                                             transition-all resize-y">@Model.Description</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông số kỹ thuật -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-bold text-slate-900">
+                            ⚙️ Thông số kỹ thuật
+                        </h2>
+                        <button type="button" onclick="addSpec()"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50
+                                       border border-blue-200 rounded-lg text-blue-600
+                                       text-xs font-bold hover:bg-blue-100
+                                       transition-colors cursor-pointer">
+                            + Thêm thông số
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-100">
+                        <span class="text-xs text-slate-400 font-semibold self-center">
+                            Preset:
+                        </span>
+                        @foreach (var p in new[] {
+                        ("phone","📱 Smartphone"),("laptop","💻 Laptop"),
+                        ("tablet","📟 Tablet"),("headphone","🎧 Tai nghe")
+                        })
+                        {
+                            <button type="button" onclick="loadPreset('@p.Item1')"
+                                    class="px-3 py-1 bg-blue-50 hover:bg-blue-100
+                                           border border-blue-200 rounded-lg text-blue-600
+                                           text-xs font-semibold cursor-pointer">
+                                @p.Item2
+                            </button>
+                        }
+                        <span class="text-slate-200 self-center">|</span>
+                        @foreach (var g in new[] {
+                        "Overview","Display","Performance",
+                        "Camera","Battery and Charging","Connectivity","Design"
+                        })
+                        {
+                            <button type="button" onclick="addSpecGroup('@g')"
+                                    class="px-3 py-1 bg-slate-50 hover:bg-slate-100
+                                           border border-slate-200 rounded-lg
+                                           text-slate-500 text-xs font-medium cursor-pointer">
+                                @g
+                            </button>
+                        }
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 px-3 mb-1">
+                        <div class="col-span-3 text-[10px] font-bold text-slate-400 uppercase">Nhóm</div>
+                        <div class="col-span-4 text-[10px] font-bold text-slate-400 uppercase">Thuộc tính</div>
+                        <div class="col-span-4 text-[10px] font-bold text-slate-400 uppercase">Giá trị</div>
+                    </div>
+
+                    <div id="specsContainer" class="space-y-2"></div>
+                    <p id="noSpecsMsg"
+                       class="text-center text-slate-400 text-sm py-10
+                              border-2 border-dashed border-slate-100 rounded-xl mt-2"
+                       style="display:none;">
+                        Chọn Preset hoặc bấm "+ Thêm thông số"
+                    </p>
+                </div>
+
+                <!-- Hình ảnh bổ sung -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-bold text-slate-900">
+                            🖼️ Hình ảnh bổ sung
+                        </h2>
+                        <span class="text-xs text-slate-400">
+                            Click ô ảnh để upload
+                        </span>
+                    </div>
+                    <div id="imagesContainer" class="flex flex-wrap gap-3 min-h-[6rem]"></div>
+                    <p id="noImagesMsg" class="hidden text-center text-slate-400 text-sm py-8
+                              border-2 border-dashed border-slate-100 rounded-xl mt-3">
+                        Chưa có ảnh bổ sung
+                    </p>
+                </div>
+            </div>
+
+            <!-- RIGHT Sidebar -->
+            <div class="space-y-6">
+
+                <!-- Ảnh đại diện -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">
+                        🖼️ Ảnh đại diện
+                    </h2>
+
+                    <div id="thumbnailPreview"
+                         onclick="document.getElementById('thumbnailFileInput').click()"
+                         class="w-full aspect-square bg-slate-50 border-2 border-dashed
+                                border-slate-200 rounded-xl mb-4 flex items-center
+                                justify-center overflow-hidden cursor-pointer
+                                hover:border-blue-400 transition-colors">
+                        @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                        {
+                            <img src="@Model.ThumbnailUrl" alt="Thumbnail"
+                                 class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="text-center text-slate-400">
+                                <div class="text-4xl mb-2">📷</div>
+                                <div class="text-xs">Click để chọn ảnh</div>
+                            </div>
+                        }
+                    </div>
+
+                    <input type="file" id="thumbnailFileInput"
+                           accept="image/*" class="hidden"
+                           onchange="uploadThumbnail(this)" />
+
+                    <div class="relative mb-2">
+                        <input type="text" name="ThumbnailUrl" id="thumbnailUrlInput"
+                               value="@Model.ThumbnailUrl"
+                               placeholder="URL ảnh hoặc upload từ máy"
+                               oninput="previewThumbnail(this.value)"
+                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl
+                                      text-xs text-slate-900 focus:outline-none
+                                      focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                                      transition-all pr-20" />
+                        <button type="button"
+                                onclick="document.getElementById('thumbnailFileInput').click()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2
+                                       px-2.5 py-1 bg-blue-50 hover:bg-blue-100
+                                       border border-blue-200 rounded-lg text-blue-600
+                                       text-[10px] font-bold cursor-pointer transition-colors">
+                            📁 Upload
+                        </button>
+                    </div>
+
+                    <div id="thumbnailStatus" class="hidden">
+                        <div class="flex items-center gap-2 p-2 bg-blue-50
+                                    rounded-lg border border-blue-200">
+                            <div style="animation:spin 1s linear infinite;font-size:14px;">⏳</div>
+                            <span id="thumbnailStatusText"
+                                  class="text-xs text-blue-600 font-medium">
+                                Đang tải lên...
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-2 text-center">
+                        JPG, PNG, WebP — tối đa 5MB
+                    </p>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-5">
+                        📌 Trạng thái
+                    </h2>
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">Kích hoạt</p>
+                                <p class="text-xs text-slate-400">Hiển thị trên store</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="IsActive" value="true"
+                                @(Model.IsActive ? "checked" : "")
+                                       class="sr-only peer" />
+                                <div class="w-11 h-6 bg-slate-200 rounded-full
+                                            peer peer-checked:bg-blue-600
+                                            after:content-[''] after:absolute
+                                            after:top-[2px] after:left-[2px]
+                                            after:bg-white after:rounded-full
+                                            after:h-5 after:w-5 after:transition-all
+                                            peer-checked:after:translate-x-full
+                                            cursor-pointer"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">Nổi bật</p>
+                                <p class="text-xs text-slate-400">Hiển thị trang chủ</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="IsFeatured" value="true"
+                                @(Model.IsFeatured ? "checked" : "")
+                                       class="sr-only peer" />
+                                <div class="w-11 h-6 bg-slate-200 rounded-full
+                                            peer peer-checked:bg-orange-500
+                                            after:content-[''] after:absolute
+                                            after:top-[2px] after:left-[2px]
+                                            after:bg-white after:rounded-full
+                                            after:h-5 after:w-5 after:transition-all
+                                            peer-checked:after:translate-x-full
+                                            cursor-pointer"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tóm tắt -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">📊 Tóm tắt</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2
+                                    border-b border-slate-100">
+                            <span class="text-sm text-slate-500">Thông số</span>
+                            <span id="specCount"
+                                  class="font-bold bg-blue-50 text-blue-600
+                                         px-2.5 py-0.5 rounded-full text-xs">
+                                @Model.Specs.Count
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-sm text-slate-500">Hình ảnh</span>
+                            <span id="imageCount"
+                                  class="font-bold bg-green-50 text-green-600
+                                         px-2.5 py-0.5 rounded-full text-xs">
+                                @Model.ImageUrls.Count
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ FIX: Xóa - dùng form riêng NGOÀI form Edit, không lồng nhau -->
+                <div class="bg-white border border-red-100 rounded-2xl p-4">
+                    <p class="text-xs text-slate-500 mb-3 text-center">
+                        Xóa sản phẩm này vĩnh viễn
+                    </p>
+                    <button type="button" onclick="confirmDelete()"
+                            class="w-full py-2.5 bg-red-50 hover:bg-red-100
+                                   border border-red-200 rounded-xl text-red-600
+                                   font-bold text-sm transition-colors cursor-pointer">
+                        🗑️ Xóa sản phẩm
+                    </button>
+                </div>
+
+                <button type="submit" form="productForm"
+                        class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-xl
+                               text-white font-bold text-sm transition-colors
+                               border-none cursor-pointer flex items-center
+                               justify-center gap-2">
+                    💾 Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ✅ FIX: Form Delete tách ra NGOÀI form Edit hoàn toàn -->
+<form id="deleteForm"
+      asp-action="Delete" asp-controller="Product"
+      asp-area="Admin" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+</form>
+
+@section Scripts {
+    <style>
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        var specIndex = 0;
+        var imageIndex = 0;
+        var token = '';
+
+        const existingSpecs = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+        Model.Specs.Select(s => new
+        {
+            groupName = s.GroupName,
+            specKey = s.SpecKey,
+            specValue = s.SpecValue
+        })
+        )
+        );
+
+        const existingImages = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(Model.ImageUrls)
+        );
+
+        document.addEventListener('DOMContentLoaded', function () {
+            token = document.querySelector(
+                'input[name="__RequestVerificationToken"]')?.value ?? '';
+
+            // ✅ FIX: Reindex specs & images liên tục trước khi submit
+            document.getElementById('productForm').addEventListener('submit', function () {
+                // 1. Reindex Specs[]
+                var specRows = document.getElementById('specsContainer').children;
+                Array.from(specRows).forEach(function (row, newIdx) {
+                    row.querySelectorAll('input[name]').forEach(function (input) {
+                        input.name = input.name.replace(/Specs\[\d+\]/, 'Specs[' + newIdx + ']');
+                    });
+                });
+
+                // 2. Reindex ImageUrls[]
+                var imgItems = document.getElementById('imagesContainer').children;
+                var imgIdx = 0;
+                Array.from(imgItems).forEach(function (el) {
+                    var hidden = el.querySelector('input[type=hidden]');
+                    if (hidden && hidden.value) {
+                        hidden.name = 'ImageUrls[' + imgIdx++ + ']';
+                    }
+                });
+
+                // 3. Strip dấu phẩy trong giá
+                ['PriceInput', 'OriginalPriceInput'].forEach(function (name) {
+                    var el = document.querySelector('[name="' + name + '"]');
+                    if (el) el.value = el.value.replace(/,/g, '');
+                });
+            });
+
+            // Datalist gợi ý nhóm spec
+            var dl = document.createElement('datalist');
+            dl.id = 'groupList';
+            ['Overview', 'Display', 'Performance', 'Camera',
+                'Battery and Charging', 'Connectivity', 'Design', 'Audio', 'Features']
+                .forEach(function (g) {
+                    var o = document.createElement('option');
+                    o.value = g;
+                    dl.appendChild(o);
+                });
+            document.body.appendChild(dl);
+
+            // Load specs & images hiện có
+            existingSpecs.forEach(function (s) {
+                addSpecRow(s.groupName, s.specKey, s.specValue);
+            });
+            existingImages.forEach(function (url) {
+                if (url) addExistingImage(url);
+            });
+
+            addImage();
+            updateCounts();
+        });
+
+        // ✅ FIX: Confirm delete dùng form riêng tách biệt
+        function confirmDelete() {
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                document.getElementById('deleteForm').submit();
+            }
+        }
+
+        // ── Format giá ───────────────────────────────────────────────────────────
+        function formatPrice(input) {
+            var raw = input.value.replace(/[^0-9]/g, '');
+            input.value = raw ? parseInt(raw, 10).toLocaleString('en-US') : '';
+        }
+
+        // ── Presets ───────────────────────────────────────────────────────────────
+        var presets = {
+            phone: [
+                { group: 'Overview', key: 'Brand', value: '' },
+                { group: 'Overview', key: 'Model', value: '' },
+                { group: 'Overview', key: 'Operating System', value: '' },
+                { group: 'Display', key: 'Screen Size', value: '' },
+                { group: 'Display', key: 'Resolution', value: '' },
+                { group: 'Display', key: 'Refresh Rate', value: '' },
+                { group: 'Performance', key: 'Processor', value: '' },
+                { group: 'Performance', key: 'RAM', value: '' },
+                { group: 'Performance', key: 'Storage', value: '' },
+                { group: 'Camera', key: 'Rear Camera', value: '' },
+                { group: 'Camera', key: 'Front Camera', value: '' },
+                { group: 'Battery and Charging', key: 'Battery Capacity', value: '' },
+                { group: 'Battery and Charging', key: 'Charging Technology', value: '' },
+                { group: 'Connectivity', key: '5G / 4G', value: '' },
+                { group: 'Connectivity', key: 'WiFi', value: '' },
+                { group: 'Connectivity', key: 'Bluetooth', value: '' },
+                { group: 'Design', key: 'Dimensions', value: '' },
+                { group: 'Design', key: 'Weight', value: '' },
+                { group: 'Design', key: 'Colors', value: '' }
+            ],
+            laptop: [
+                { group: 'Overview', key: 'Brand', value: '' },
+                { group: 'Overview', key: 'Model', value: '' },
+                { group: 'Overview', key: 'Operating System', value: '' },
+                { group: 'Display', key: 'Screen Size', value: '' },
+                { group: 'Display', key: 'Resolution', value: '' },
+                { group: 'Display', key: 'Panel Type', value: '' },
+                { group: 'Performance', key: 'CPU', value: '' },
+                { group: 'Performance', key: 'RAM', value: '' },
+                { group: 'Performance', key: 'Storage', value: '' },
+                { group: 'Performance', key: 'GPU', value: '' },
+                { group: 'Battery and Charging', key: 'Battery Capacity', value: '' },
+                { group: 'Connectivity', key: 'Ports', value: '' },
+                { group: 'Connectivity', key: 'WiFi', value: '' },
+                { group: 'Design', key: 'Weight', value: '' }
+            ],
+            tablet: [
+                { group: 'Overview', key: 'Brand', value: '' },
+                { group: 'Display', key: 'Screen Size', value: '' },
+                { group: 'Display', key: 'Resolution', value: '' },
+                { group: 'Performance', key: 'Processor', value: '' },
+                { group: 'Performance', key: 'RAM', value: '' },
+                { group: 'Performance', key: 'Storage', value: '' },
+                { group: 'Camera', key: 'Rear Camera', value: '' },
+                { group: 'Battery and Charging', key: 'Battery Capacity', value: '' },
+                { group: 'Connectivity', key: 'Connectivity', value: '' }
+            ],
+            headphone: [
+                { group: 'Overview', key: 'Type', value: '' },
+                { group: 'Overview', key: 'Connection', value: '' },
+                { group: 'Audio', key: 'Driver Size', value: '' },
+                { group: 'Audio', key: 'Frequency Response', value: '' },
+                { group: 'Audio', key: 'Impedance', value: '' },
+                { group: 'Features', key: 'Noise Cancellation (ANC)', value: '' },
+                { group: 'Features', key: 'Battery Life', value: '' },
+                { group: 'Features', key: 'Water Resistance', value: '' },
+                { group: 'Design', key: 'Weight', value: '' }
+            ]
+        };
+
+        function loadPreset(type) {
+            if (!confirm('Thay thế tất cả thông số hiện tại bằng preset?')) return;
+            if (!presets[type]) return;
+            document.getElementById('specsContainer').innerHTML = '';
+            specIndex = 0;
+            presets[type].forEach(function (s) { addSpecRow(s.group, s.key, s.value); });
+            updateCounts();
+        }
+
+        function addSpec() { addSpecRow('', '', ''); }
+        function addSpecGroup(group) { addSpecRow(group, '', ''); }
+
+        function addSpecRow(group, key, value) {
+            var i = specIndex++;
+            var div = document.createElement('div');
+            div.id = 'spec-' + i;
+            div.className = 'grid grid-cols-12 gap-2 items-center p-2.5 bg-slate-50 ' +
+                'rounded-xl border border-slate-100 group hover:border-slate-200 transition-colors';
+            div.innerHTML =
+                '<div class="col-span-3">' +
+                '<input type="text" name="Specs[' + i + '].GroupName" value="' + h(group) + '" ' +
+                'placeholder="Group" list="groupList" ' +
+                'class="w-full px-3 py-2 border border-slate-200 rounded-lg ' +
+                'text-xs text-slate-700 bg-white focus:outline-none focus:border-blue-400 transition-all" /></div>' +
+                '<div class="col-span-4">' +
+                '<input type="text" name="Specs[' + i + '].SpecKey" value="' + h(key) + '" ' +
+                'placeholder="Attribute" ' +
+                'class="w-full px-3 py-2 border border-slate-200 rounded-lg ' +
+                'text-xs text-slate-700 bg-white focus:outline-none focus:border-blue-400 transition-all" /></div>' +
+                '<div class="col-span-4">' +
+                '<input type="text" name="Specs[' + i + '].SpecValue" value="' + h(value) + '" ' +
+                'placeholder="Value" ' +
+                'class="w-full px-3 py-2 border border-slate-200 rounded-lg ' +
+                'text-xs text-slate-700 bg-white focus:outline-none focus:border-blue-400 transition-all" /></div>' +
+                '<div class="col-span-1 flex justify-center">' +
+                '<button type="button" onclick="removeSpec(' + i + ')" ' +
+                'class="w-7 h-7 bg-red-50 hover:bg-red-100 rounded-lg text-red-400 ' +
+                'border-none cursor-pointer font-bold text-base transition-colors ' +
+                'opacity-0 group-hover:opacity-100">×</button></div>';
+            document.getElementById('specsContainer').appendChild(div);
+            updateCounts();
+        }
+
+        function removeSpec(i) {
+            document.getElementById('spec-' + i)?.remove();
+            updateCounts();
+        }
+
+        // ── Images ────────────────────────────────────────────────────────────────
+        function addExistingImage(url) {
+            var i = imageIndex++;
+            var div = document.createElement('div');
+            div.id = 'image-' + i;
+            div.className = 'relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 ' +
+                'border-2 border-solid border-blue-200 bg-slate-50 cursor-pointer ' +
+                'hover:border-blue-400 transition-colors group';
+            div.innerHTML =
+                '<input type="file" id="fileInput-' + i + '" accept="image/*" class="hidden" ' +
+                'onchange="uploadImageFile(this,' + i + ')" />' +
+                '<input type="hidden" name="ImageUrls[' + i + ']" id="urlInput-' + i + '" value="' + h(url) + '" />' +
+                '<div id="imgPreview-' + i + '" class="w-full h-full">' +
+                '<img src="' + h(url) + '" class="w-full h-full object-cover" ' +
+                'onclick="triggerImgUpload(' + i + ')" /></div>' +
+                '<button type="button" id="removeBtn-' + i + '" onclick="removeImage(' + i + ')" ' +
+                'class="absolute top-1 right-1 w-5 h-5 bg-red-500 hover:bg-red-600 ' +
+                'text-white rounded-full text-xs font-bold border-none cursor-pointer ' +
+                'flex items-center justify-center z-10">×</button>' +
+                '<div id="spinner-' + i + '" class="absolute inset-0 bg-white/70 hidden items-center justify-center text-blue-500 text-2xl">⏳</div>';
+            document.getElementById('imagesContainer').appendChild(div);
+            updateCounts();
+        }
+
+        function addImage() {
+            var i = imageIndex++;
+            var div = document.createElement('div');
+            div.id = 'image-' + i;
+            div.className = 'relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 ' +
+                'border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer ' +
+                'hover:border-blue-400 transition-colors group';
+            div.innerHTML =
+                '<input type="file" id="fileInput-' + i + '" accept="image/*" class="hidden" ' +
+                'onchange="uploadImageFile(this,' + i + ')" />' +
+                '<input type="hidden" name="ImageUrls[' + i + ']" id="urlInput-' + i + '" />' +
+                '<div id="imgPreview-' + i + '" onclick="triggerImgUpload(' + i + ')" ' +
+                'class="w-full h-full flex flex-col items-center justify-center text-slate-300 select-none">' +
+                '<span class="text-3xl leading-none">📷</span>' +
+                '<span class="text-[10px] text-slate-400 mt-1 font-medium">Thêm ảnh</span></div>' +
+                '<button type="button" id="removeBtn-' + i + '" onclick="removeImage(' + i + ')" ' +
+                'class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full ' +
+                'text-xs font-bold border-none cursor-pointer hidden items-center justify-center z-10">×</button>' +
+                '<div id="spinner-' + i + '" class="absolute inset-0 bg-white/70 hidden items-center justify-center text-blue-500 text-2xl">⏳</div>';
+            document.getElementById('imagesContainer').appendChild(div);
+            updateCounts();
+        }
+
+        function removeImage(i) {
+            document.getElementById('image-' + i)?.remove();
+            ensureEmptySlot();
+            updateCounts();
+        }
+
+        function triggerImgUpload(i) {
+            document.getElementById('fileInput-' + i)?.click();
+        }
+
+        function ensureEmptySlot() {
+            var container = document.getElementById('imagesContainer');
+            var empties = Array.from(container.children).filter(function (el) {
+                var hidden = el.querySelector('input[type=hidden]');
+                return hidden && !hidden.value;
+            });
+            if (empties.length === 0) addImage();
+        }
+
+        async function uploadImageFile(input, i) {
+            var file = input.files[0];
+            if (!file) return;
+            var spinner = document.getElementById('spinner-' + i);
+            var preview = document.getElementById('imgPreview-' + i);
+            var urlInput = document.getElementById('urlInput-' + i);
+            var removeBtn = document.getElementById('removeBtn-' + i);
+            if (spinner) { spinner.classList.remove('hidden'); spinner.classList.add('flex'); }
+            var fd = new FormData();
+            fd.append('file', file);
+            try {
+                var res = await fetch('/Admin/Product/UploadImage', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                    body: fd
+                });
+                var data = await res.json();
+                if (spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                if (data.success) {
+                    urlInput.value = data.url;
+                    preview.innerHTML = '<img src="' + data.url + '" class="w-full h-full object-cover" onclick="triggerImgUpload(' + i + ')" />';
+                    if (removeBtn) { removeBtn.classList.remove('hidden'); removeBtn.classList.add('flex'); }
+                    var wrapper = document.getElementById('image-' + i);
+                    if (wrapper) {
+                        wrapper.classList.replace('border-dashed', 'border-solid');
+                        wrapper.classList.replace('border-slate-200', 'border-blue-200');
+                    }
+                    addImage();
+                } else {
+                    if (preview) preview.innerHTML = '<span class="text-red-400 text-2xl">❌</span>';
+                    alert('Upload thất bại: ' + data.message);
+                }
+            } catch (err) {
+                if (spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                if (preview) preview.innerHTML = '<span class="text-red-400 text-2xl">❌</span>';
+                alert('Lỗi: ' + err.message);
+            } finally { input.value = ''; }
+        }
+
+        // ── Thumbnail ─────────────────────────────────────────────────────────────
+        async function uploadThumbnail(input) {
+            var file = input.files[0];
+            if (!file) return;
+            var preview = document.getElementById('thumbnailPreview');
+            var urlInput = document.getElementById('thumbnailUrlInput');
+            var status = document.getElementById('thumbnailStatus');
+            var statusTxt = document.getElementById('thumbnailStatusText');
+            preview.innerHTML =
+                '<div style="text-align:center;color:#3b82f6;">' +
+                '<div style="font-size:32px;animation:spin 1s linear infinite;">⏳</div>' +
+                '<div style="font-size:11px;margin-top:6px;">Đang tải lên...</div></div>';
+            if (status) status.classList.remove('hidden');
+            if (statusTxt) statusTxt.textContent = 'Đang upload ' + file.name + '...';
+            var fd = new FormData();
+            fd.append('file', file);
+            try {
+                var res = await fetch('/Admin/Product/UploadImage', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                    body: fd
+                });
+                var data = await res.json();
+                if (status) status.classList.add('hidden');
+                if (data.success) {
+                    urlInput.value = data.url;
+                    previewThumbnail(data.url);
+                    showToast('✓ Upload thành công: ' + file.name, 'green');
+                } else {
+                    preview.innerHTML =
+                        '<div class="text-center text-red-400 p-4">' +
+                        '<div class="text-3xl mb-2">❌</div>' +
+                        '<div class="text-xs">' + data.message + '</div></div>';
+                }
+            } catch (err) {
+                if (status) status.classList.add('hidden');
+                preview.innerHTML =
+                    '<div class="text-center text-red-400 p-4">' +
+                    '<div class="text-3xl mb-2">❌</div>' +
+                    '<div class="text-xs">Lỗi kết nối</div></div>';
+            } finally { input.value = ''; }
+        }
+
+        function previewThumbnail(url) {
+            var preview = document.getElementById('thumbnailPreview');
+            if (!preview) return;
+            preview.innerHTML = url
+                ? '<img src="' + url + '" class="w-full h-full object-cover" />'
+                : '<div class="text-center text-slate-400"><div class="text-4xl mb-2">📷</div><div class="text-xs">Click để chọn ảnh</div></div>';
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+        function updateCounts() {
+            var container = document.getElementById('imagesContainer');
+            var filled = Array.from(container.children).filter(function (el) {
+                var hidden = el.querySelector('input[type=hidden]');
+                return hidden && hidden.value;
+            }).length;
+            var sc = document.getElementById('specsContainer').children.length;
+            document.getElementById('specCount').textContent = sc;
+            document.getElementById('imageCount').textContent = filled;
+            document.getElementById('noSpecsMsg').style.display = sc > 0 ? 'none' : 'block';
+            document.getElementById('noImagesMsg').classList.add('hidden');
+        }
+
+        function h(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function showToast(msg, color) {
+            var t = document.createElement('div');
+            t.style.cssText =
+                'position:fixed;bottom:24px;right:24px;z-index:9999;' +
+                'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;' +
+                'background:' + (color === 'green' ? '#dcfce7' : '#fee2e2') + ';' +
+                'color:' + (color === 'green' ? '#16a34a' : '#dc2626') + ';' +
+                'border:1px solid ' + (color === 'green' ? '#86efac' : '#fca5a5') + ';' +
+                'box-shadow:0 8px 24px rgba(0,0,0,0.1);transition:opacity .3s;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function () { t.style.opacity = '0'; }, 3000);
+            setTimeout(function () { t.remove(); }, 3400);
+        }
+    </script>
+}

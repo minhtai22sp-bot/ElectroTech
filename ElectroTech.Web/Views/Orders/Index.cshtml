@@ -1,0 +1,346 @@
+﻿@using Entities
+@using Enums
+@model List<Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+
+    var steps = new (OrderStatus Status, string Icon, string Label)[]
+    {
+        (OrderStatus.Pending,    "pending",        "Chờ xác nhận"),
+        (OrderStatus.Confirmed,  "verified",       "Đã xác nhận"),
+        (OrderStatus.Processing, "manufacturing",  "Đang xử lý"),
+        (OrderStatus.Shipped,    "local_shipping", "Đang giao"),
+        (OrderStatus.Delivered,  "inventory",      "Đã giao"),
+    };
+
+    int StepIndex(OrderStatus s) => s switch
+    {
+        OrderStatus.Pending => 0,
+        OrderStatus.Confirmed => 1,
+        OrderStatus.Processing => 2,
+        OrderStatus.Shipped => 3,
+        OrderStatus.Delivered => 4,
+        _ => -1
+    };
+
+    var tabs = new (string Val, string Label, string Cls)[]
+    {
+        ("all",        "Tất cả",       ""),
+        ("Pending",    "Chờ xác nhận", "amber"),
+        ("Confirmed",  "Đã xác nhận",  "blue"),
+        ("Processing", "Đang xử lý",   "orange"),
+        ("Shipped",    "Đang giao",    "violet"),
+        ("Delivered",  "Đã giao",      "green"),
+        ("Cancelled",  "Đã hủy",       "red"),
+    };
+
+    int CountOf(string val) => val == "all"
+        ? Model.Count
+        : Model.Count(o => o.Status.ToString() == val);
+}
+
+<main class="pt-24 pb-20 min-h-screen">
+    <div class="max-w-4xl mx-auto px-6 md:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <p class="text-[11px] font-bold uppercase tracking-[.25em] text-[#adc7ff] mb-3">
+                Tài khoản của bạn
+            </p>
+            <h1 class="text-4xl font-black text-white tracking-tight mb-2">
+                Đơn hàng của tôi
+            </h1>
+            <p class="text-zinc-500 text-sm">@Model.Count đơn hàng</p>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="flex gap-2 flex-wrap mb-8">
+            @foreach (var tab in tabs)
+            {
+                var count = CountOf(tab.Val);
+                if (count == 0 && tab.Val != "all") continue;
+
+                var activeCls = tab.Cls switch
+                {
+                    "amber" => "bg-amber-400/15 text-amber-400 border-amber-400/30",
+                    "blue" => "bg-blue-400/15 text-blue-400 border-blue-400/30",
+                    "orange" => "bg-orange-400/15 text-orange-400 border-orange-400/30",
+                    "violet" => "bg-violet-400/15 text-violet-400 border-violet-400/30",
+                    "green" => "bg-green-400/15 text-green-400 border-green-400/30",
+                    "red" => "bg-red-400/15 text-red-400 border-red-400/30",
+                    _ => "bg-[#adc7ff]/15 text-[#adc7ff] border-[#adc7ff]/30",
+                };
+
+                <button onclick="filterOrders('@tab.Val')"
+                        id="tab-@tab.Val"
+                        data-active-cls="@activeCls"
+                        class="tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                               text-xs font-bold border transition-all cursor-pointer
+                               bg-white/[0.04] text-zinc-500 border-white/[0.06]
+                               hover:text-zinc-300 hover:bg-white/[0.07]">
+                    @tab.Label
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full
+                                 bg-white/[0.06] font-bold min-w-[18px] text-center">
+                        @count
+                    </span>
+                </button>
+            }
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="flex flex-col items-center justify-center py-32 text-center">
+                <div class="w-24 h-24 rounded-2xl bg-white/5 border border-white/10
+                            flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-zinc-600" style="font-size:44px;">shopping_bag</span>
+                </div>
+                <p class="text-white font-bold text-xl mb-2">Chưa có đơn hàng nào</p>
+                <p class="text-zinc-500 text-sm mb-8">Hãy khám phá các sản phẩm và đặt hàng ngay!</p>
+                <a asp-controller="Products" asp-action="Index"
+                   class="inline-flex items-center gap-2 px-7 py-3.5
+                          bg-gradient-to-r from-[#adc7ff] to-[#7ca4f4]
+                          text-[#0d1b3e] font-bold rounded-xl
+                          hover:shadow-[0_0_24px_rgba(173,199,255,0.4)]
+                          transition-all active:scale-95 text-sm">
+                    <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                    Mua sắm ngay
+                </a>
+            </div>
+        }
+        else
+        {
+            <div id="emptyFilter" class="hidden flex-col items-center justify-center py-20 text-center">
+                <span class="material-symbols-outlined text-zinc-700 mb-4" style="font-size:48px;">
+                    filter_list_off
+                </span>
+                <p class="text-zinc-500 text-sm">Không có đơn hàng nào trong mục này</p>
+            </div>
+
+            <div id="orderList" class="flex flex-col gap-4">
+                @foreach (var order in Model.OrderByDescending(o => o.CreatedOn))
+                {
+                    var statusCls = order.Status switch
+                    {
+                        OrderStatus.Pending => "bg-amber-400/10 text-amber-400 border-amber-400/25",
+                        OrderStatus.Confirmed => "bg-blue-400/10 text-blue-400 border-blue-400/25",
+                        OrderStatus.Processing => "bg-orange-400/10 text-orange-400 border-orange-400/25",
+                        OrderStatus.Shipped => "bg-violet-400/10 text-violet-400 border-violet-400/25",
+                        OrderStatus.Delivered => "bg-green-400/10 text-green-400 border-green-400/25",
+                        OrderStatus.Cancelled => "bg-red-400/10 text-red-400 border-red-400/25",
+                        _ => "bg-zinc-400/10 text-zinc-400 border-zinc-400/25"
+                    };
+                    var statusLabel = order.Status switch
+                    {
+                        OrderStatus.Pending => "⏳ Chờ xác nhận",
+                        OrderStatus.Confirmed => "✅ Đã xác nhận",
+                        OrderStatus.Processing => "⚙️ Đang xử lý",
+                        OrderStatus.Shipped => "🚚 Đang giao",
+                        OrderStatus.Delivered => "📦 Đã giao",
+                        OrderStatus.Cancelled => "❌ Đã hủy",
+                        _ => order.Status.ToString()
+                    };
+                    var paymentLabel = order.PaymentMethod switch
+                    {
+                        PaymentMethod.COD => "COD",
+                        PaymentMethod.BankTransfer => "Chuyển khoản",
+                        PaymentMethod.VNPay => "VNPay",
+                        PaymentMethod.MoMo => "MoMo",
+                        _ => order.PaymentMethod.ToString()
+                    };
+                    var paymentIcon = order.PaymentMethod == PaymentMethod.COD ? "local_shipping" : "account_balance";
+                    var currentStep = StepIndex(order.Status);
+                    var isCancelled = order.Status == OrderStatus.Cancelled;
+                    var isDelivered = order.Status == OrderStatus.Delivered;
+                    var pct = currentStep > 0 ? (int)((double)currentStep / (steps.Length - 1) * 100) : 0;
+
+                    <div class="order-card group relative bg-[#16161a] rounded-2xl border border-white/[0.06]
+                                hover:border-[#adc7ff]/20 hover:-translate-y-0.5
+                                hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)]
+                                transition-all duration-200 overflow-hidden"
+                         data-status="@order.Status.ToString()">
+
+                        <div class="absolute top-0 left-0 right-0 h-[2px]
+                                    bg-gradient-to-r from-transparent via-[#adc7ff]/20 to-transparent
+                                    opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                        <div class="p-6">
+                            <!-- Top row -->
+                            <div class="flex justify-between items-start mb-5 gap-4 flex-wrap">
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-600 mb-1.5">
+                                        Mã đơn hàng
+                                    </p>
+                                    <p class="text-base font-black text-white font-mono tracking-tight">
+                                        #@order.OrderCode
+                                    </p>
+                                    <p class="text-[11px] text-zinc-600 mt-1">
+                                        @order.CreatedOn.ToString("HH:mm — dd/MM/yyyy")
+                                    </p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold border @statusCls">
+                                    @statusLabel
+                                </span>
+                            </div>
+
+                            <!-- Progress Tracker -->
+                            @if (!isCancelled)
+                            {
+                                <div class="mb-5">
+                                    <div class="relative flex items-start justify-between">
+                                        <div class="absolute h-[2px] bg-white/[0.06]"
+                                             style="top:15px; left:10%; right:10%;"></div>
+                                        <div class="absolute h-[2px] bg-gradient-to-r from-[#adc7ff] to-[#7ca4f4] transition-all duration-700"
+                                             style="top:15px; left:10%; width:calc(@(pct)% * 0.8);"></div>
+
+                                        @for (int i = 0; i < steps.Length; i++)
+                                        {
+                                            var step = steps[i];
+                                            var isDone = currentStep > i;
+                                            var isCurrent = currentStep == i;
+                                            var dotBg = isDone ? "background:#adc7ff;border-color:#adc7ff;" :
+                                            isCurrent ? "background:#1a2a4a;border-color:#adc7ff;box-shadow:0 0 12px rgba(173,199,255,0.4);" :
+                                            "background:#111114;border-color:rgba(255,255,255,0.08);";
+                                            var iconCl = isDone ? "#0d1b3e" : isCurrent ? "#adc7ff" : "#3f3f46";
+                                            var lblCl = isDone ? "text-zinc-500" : isCurrent ? "text-[#adc7ff] font-bold" : "text-zinc-700";
+                                            var fillVal = isDone ? "1" : "0";
+
+                                            <div class="relative flex flex-col items-center gap-2 z-10" style="width:20%">
+                                                <div class="w-[30px] h-[30px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300"
+                                                     style="@dotBg">
+                                                    <span class="material-symbols-outlined"
+                                                          style="font-size:13px;color:@iconCl;font-variation-settings:'FILL' @fillVal;">
+                                                        @(isDone ? "check" : step.Icon)
+                                                    </span>
+                                                </div>
+                                                <p class="text-[9px] text-center leading-tight px-0.5 @lblCl transition-colors">
+                                                    @step.Label
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-5 flex items-center gap-3 px-4 py-3 bg-red-500/5 border border-red-500/15 rounded-xl">
+                                    <span class="material-symbols-outlined text-red-400 text-[18px]">cancel</span>
+                                    <p class="text-xs text-red-400 font-semibold">Đơn hàng đã bị hủy</p>
+                                </div>
+                            }
+
+                            <!-- Thumbnails -->
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                <div class="flex gap-2 mb-5 flex-wrap">
+                                    @foreach (var item in order.OrderItems.Take(4))
+                                    {
+                                        <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[#0e0e0e] border border-white/[0.06]">
+                                            @if (!string.IsNullOrEmpty(item.ProductImage))
+                                            {
+                                                <img src="@item.ProductImage" alt="@item.ProductName" class="w-full h-full object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-full h-full flex items-center justify-center">
+                                                    <span class="material-symbols-outlined text-zinc-700" style="font-size:20px;">inventory_2</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    @if (order.OrderItems.Count > 4)
+                                    {
+                                        <div class="w-14 h-14 rounded-xl bg-white/5 border border-white/[0.06] flex items-center justify-center flex-shrink-0">
+                                            <span class="text-xs font-bold text-zinc-500">+@(order.OrderItems.Count - 4)</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <!-- Bottom row -->
+                            <div class="flex justify-between items-center pt-4 border-t border-white/[0.05] flex-wrap gap-3">
+                                <div class="flex items-center gap-4 text-[11px] text-zinc-500">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined" style="font-size:14px;">@paymentIcon</span>
+                                        @paymentLabel
+                                    </span>
+                                    <span class="w-px h-3 bg-zinc-700"></span>
+                                    <span>@(order.OrderItems?.Count ?? 0) sản phẩm</span>
+                                </div>
+
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <span class="font-black text-xl text-white">@order.TotalAmount.ToString("N0")₫</span>
+
+                                    <!-- Nút xem chi tiết -->
+                                    <a asp-controller="Orders" asp-action="Detail" asp-route-id="@order.Id"
+                                       class="inline-flex items-center gap-1.5 px-4 py-2
+                                              bg-[#adc7ff]/10 border border-[#adc7ff]/20
+                                              hover:bg-[#adc7ff]/20 hover:border-[#adc7ff]/40
+                                              rounded-xl text-[#adc7ff] text-xs font-bold transition-all">
+                                        Xem chi tiết
+                                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                    </a>
+
+                                    <!-- Nút đánh giá — chỉ hiện khi đã giao -->
+                                    @if (isDelivered)
+                                    {
+                                        <a asp-controller="Reviews" asp-action="Create" asp-route-orderId="@order.Id"
+                                           class="inline-flex items-center gap-1.5 px-4 py-2
+                                                  bg-amber-400/10 border border-amber-400/25
+                                                  hover:bg-amber-400/20 hover:border-amber-400/50
+                                                  rounded-xl text-amber-400 text-xs font-bold transition-all">
+                                            <span class="material-symbols-outlined text-[14px]"
+                                                  style="font-variation-settings:'FILL' 1;">star</span>
+                                            Đánh giá
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</main>
+
+<script>
+    var activeTab = 'all';
+
+    function filterOrders(status) {
+        activeTab = status;
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove(...btn.dataset.activeCls.split(' '));
+            btn.classList.add('bg-white/[0.04]', 'text-zinc-500', 'border-white/[0.06]');
+        });
+        const active = document.getElementById('tab-' + status);
+        if (active) {
+            active.classList.remove('bg-white/[0.04]', 'text-zinc-500', 'border-white/[0.06]');
+            active.dataset.activeCls.split(' ').forEach(c => active.classList.add(c));
+        }
+
+        const cards = document.querySelectorAll('.order-card');
+        let visible = 0;
+        cards.forEach(card => {
+            const match = status === 'all' || card.dataset.status === status;
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        const empty = document.getElementById('emptyFilter');
+        const list = document.getElementById('orderList');
+        if (empty && list) {
+            if (visible === 0) {
+                empty.classList.remove('hidden');
+                empty.classList.add('flex');
+                list.classList.add('hidden');
+            } else {
+                empty.classList.add('hidden');
+                empty.classList.remove('flex');
+                list.classList.remove('hidden');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => filterOrders('all'));
+</script>

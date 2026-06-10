@@ -1,0 +1,82 @@
+.nmpd-wrapper {display: none;}
+.nmpd-target {cursor: pointer;}
+.nmpd-grid {position:absolute; left:50px; top:50px; z-index:5000; -khtml-user-select: none; padding:10px; width: initial;}
+.nmpd-overlay {z-index:4999;}
+input.nmpd-display {text-align: right;}
+.nmpd-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+    opacity: .5;
+    filter: alpha(opacity=50);
+    z-index: 4999;
+}
+:root {
+    --main-bg-color: brown;
+    --p-surface-critical: #fed3d1;
+    --p-surface-critical-subdued: #fff4f4;
+    --p-border-width-1: 0.0625rem;
+    --p-border-subdued: #c9cccf;
+    --p-border-critical: #fd5749;
+    --bs-dropdown-link-color: #5d596c;
+    --sposviet-bg: #f8f8fb;
+    --sposviet-color: #0c70b8;
+    --sposviet-bgpopup: #f4f6f8;
+    --sposviet-bgtheadtable: #dcf4fc;
+    --sposviet-bgtabheader: #00a1b8;
+    --sposviet-bordertheadtd: #c5e7f2;
+    --sposviet-borderinput: #e4e7ea;
+    --sposviet-bgheaderPopup: #f3f3f3;
+    --p-width-300: 0.75rem;
+    --p-text-md-font-size: 0.88rem;
+    --title-text-md-font-size: 1rem;
+}
+.nmpd-wrapper{
+ 
+}
+    .nmpd-wrapper table {
+        border-collapse: inherit;
+        border-spacing: 0;
+        box-shadow: 0 5px 15px rgba(0,0,0,.5);
+        border-radius: 10px;
+        background-color: #fff;
+        margin-bottom: 0px;
+        border: none;
+    }
+        .nmpd-wrapper table td input {
+            width: 100%;
+            border: 1px solid #dbdbdb;
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-size:20px;
+            font-weight:bold
+        }
+        .nmpd-wrapper table td button.numero {
+            background-color: var(--sposviet-color);
+            color: #fff;
+        }
+        .nmpd-wrapper table td button:not(.numero) {
+            background-color: #f0f0f0;
+        }
+        .nmpd-wrapper table td button:hover {
+            cursor:pointer;
+        }
+        .nmpd-wrapper table td button {
+            border: none;
+            width: 100%;
+            height: 100%;
+            padding: 10px 20px;
+            background-color: #fff;
+            font-size: 18px;
+            border-radius: 3px;
+           
+        }
+        .nmpd-wrapper table td {
+            padding: 5px;
+            border:none;
+        }
+        

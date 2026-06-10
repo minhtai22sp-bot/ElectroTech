@@ -1,0 +1,343 @@
+﻿@model Entities.ViewModel.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ElectroTech | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#4a8eff',
+                            'blue-hover': '#3a7aee',
+                            'blue-glow': '#adc7ff',
+                            black: '#000000',
+                            charcoal: '#121212',
+                            elevated: '#1a1a1a',
+                            border: '#222222',
+                            'border-active': '#4a8eff',
+                            'gray-light': '#e5e2e1',
+                            'gray-dim': '#777777'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #e5e2e1;
+            overflow-x: hidden;
+        }
+
+        .grid-background {
+            background-image: linear-gradient(rgba(26,26,26,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.45) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .kinetic-glow {
+            box-shadow: 0 0 25px 3px rgba(74,142,255,0.12);
+        }
+
+        .kinetic-glow-pulse {
+            animation: pulse-glow 5s ease-in-out infinite alternate;
+        }
+
+        @@keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 15px 1px rgba(74,142,255,0.08);
+            }
+
+            100% {
+                box-shadow: 0 0 35px 5px rgba(74,142,255,0.20);
+            }
+        }
+
+        .light-ray {
+            background: radial-gradient(circle at 50% 50%, rgba(74,142,255,0.07) 0%, transparent 70%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #070707;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #222222;
+            border-radius: 3px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #4a8eff;
+            }
+
+        .field-error {
+            color: #ffb4ab;
+            font-size: 11px;
+            margin-top: 3px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #1c1b1b;
+            border: 1px solid #414754;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+            .input-field::placeholder {
+                color: rgba(173,199,255,0.3);
+            }
+
+            .input-field:focus {
+                border-color: #4a8eff;
+                box-shadow: 0 0 0 1px #4a8eff;
+            }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Background -->
+    <div class="absolute inset-0 pointer-events-none z-0 bg-black">
+        <div class="absolute inset-0 grid-background opacity-20"></div>
+        <div id="radial-glow-light" class="absolute inset-0 z-0 transition-all duration-300 opacity-90 light-ray"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]
+                    rounded-full filter blur-[120px] pointer-events-none animate-pulse"
+             style="background: rgba(74,142,255,0.05); animation-duration:10s;"></div>
+    </div>
+
+    <main class="relative z-10 flex-grow flex items-center justify-center py-10 w-full px-4 md:px-8">
+        <div class="w-full max-w-[480px] py-4">
+
+            <!-- Brand -->
+            <div class="mb-8 text-center">
+                <a asp-controller="Home" asp-action="Index"
+                   class="text-[28px] font-extrabold tracking-[-0.05em] uppercase select-none"
+                   style="color: #adc7ff;">
+                    ELECTROTECH
+                </a>
+            </div>
+
+            <!-- Card -->
+            <div class="backdrop-blur-xl border border-white/10 rounded-xl p-8 md:p-10 kinetic-glow kinetic-glow-pulse"
+                 style="background: rgba(18,18,18,0.85);">
+
+                <header class="mb-8">
+                    <h2 class="text-2xl md:text-3xl font-semibold text-white tracking-tight mb-1.5">
+                        Welcome Back
+                    </h2>
+                    <p class="text-sm" style="color: rgba(173,199,255,0.6);">
+                        Access your premium performance ecosystem.
+                    </p>
+                </header>
+
+                <!-- Server error -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="mb-6 p-3 rounded flex items-center gap-3 text-xs"
+                         style="background: rgba(127,29,29,0.4); border: 1px solid rgba(153,27,27,0.6); color: #fca5a5;">
+                        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0" style="color:#f87171;"></i>
+                        <span>@Html.ValidationSummary(false, "", new { @class = "text-xs" })</span>
+                    </div>
+                }
+
+                <form asp-action="Login" asp-controller="Account" method="post"
+                      class="space-y-6" id="form-login">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Email -->
+                    <div class="space-y-2">
+                        <label asp-for="Email"
+                               class="text-xs font-mono font-bold tracking-wider uppercase block"
+                               id="lbl-Email"
+                               style="color: rgba(173,199,255,0.5);">
+                            Email Address
+                        </label>
+                        <input asp-for="Email" type="email"
+                               placeholder="name@electrotech.vn"
+                               class="input-field" />
+                        <span asp-validation-for="Email" class="field-error"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="space-y-2">
+                        <label asp-for="Password"
+                               class="text-xs font-mono font-bold tracking-wider uppercase block"
+                               id="lbl-Password"
+                               style="color: rgba(173,199,255,0.5);">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <input asp-for="Password" type="password"
+                                   id="passwordInput"
+                                   placeholder="••••••••"
+                                   class="input-field pr-12" />
+                            <button type="button" onclick="togglePassword()"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                                    style="color: rgba(173,199,255,0.4);"
+                                    onmouseover="this.style.color='#4a8eff'"
+                                    onmouseout="this.style.color='rgba(173,199,255,0.4)'">
+                                <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="field-error"></span>
+                    </div>
+
+                    <!-- Remember -->
+                    <div class="flex items-center gap-3">
+                        <input asp-for="Remember" type="checkbox"
+                               class="w-4 h-4 rounded bg-[#1c1b1b]"
+                               style="accent-color: #4a8eff;" />
+                        <label asp-for="Remember"
+                               class="text-xs font-sans"
+                               style="color: rgba(173,199,255,0.5);">
+                            Ghi nho dang nhap
+                        </label>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" id="btn-login-submit"
+                            class="w-full font-mono font-bold text-sm py-3.5 px-4 rounded
+                                   flex items-center justify-center gap-2 select-none
+                                   cursor-pointer transition-all duration-200 active:scale-[0.98]"
+                            style="background: linear-gradient(135deg, #4a8eff 0%, #adc7ff 100%);
+                                   color: #001a41;"
+                            onmouseover="this.style.boxShadow='0 0 30px rgba(74,142,255,0.4)'"
+                            onmouseout="this.style.boxShadow='none'">
+                        <span id="btn-text">AUTHENTICATE</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-8 flex items-center">
+                    <div class="flex-grow border-t border-[#353534]"></div>
+                    <span class="mx-4 text-[10px] font-mono font-bold text-[#b7b5b4] tracking-widest uppercase">OR</span>
+                    <div class="flex-grow border-t border-[#353534]"></div>
+                </div>
+
+                <!-- Register link -->
+                <p class="text-xs font-sans text-center" style="color: rgba(173,199,255,0.5);">
+                    New to the ecosystem?
+                    <a asp-controller="Account" asp-action="Register"
+                       class="font-semibold hover:underline ml-1"
+                       style="color: #adc7ff;">
+                        Sign Up
+                    </a>
+                </p>
+            </div>
+
+            <!-- Back home -->
+            <div class="mt-6 text-center">
+                <a asp-controller="Home" asp-action="Index"
+                   class="text-xs font-mono transition-colors"
+                   style="color: rgba(173,199,255,0.4);"
+                   onmouseover="this.style.color='#adc7ff'"
+                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">
+                    ← Quay ve trang chu
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-20 w-full backdrop-blur-md border-t border-[#1a1a1a] py-6 px-6"
+            style="background: rgba(10,10,10,0.6);">
+        <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-4 text-center">
+            <span class="text-xs font-mono font-medium" style="color: rgba(173,199,255,0.4);">
+                &copy; @DateTime.Now.Year ElectroTech. All rights reserved.
+            </span>
+            <div class="flex gap-6">
+                <a href="#" class="text-xs font-sans transition-colors"
+                   style="color: rgba(173,199,255,0.4);"
+                   onmouseover="this.style.color='#adc7ff'"
+                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">Privacy Policy</a>
+                <a href="#" class="text-xs font-sans transition-colors"
+                   style="color: rgba(173,199,255,0.4);"
+                   onmouseover="this.style.color='#adc7ff'"
+                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Mouse glow - mau xanh
+        window.addEventListener('mousemove', (e) => {
+            const glow = document.getElementById('radial-glow-light');
+            if (glow) {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                glow.style.background = `radial-gradient(circle at ${x}% ${y}%,
+                            rgba(74,142,255,0.11) 0%, transparent 60%)`;
+            }
+        });
+
+        // Label glow on focus
+        document.querySelectorAll('input[type=email], input[type=password]').forEach(input => {
+            const labelId = 'lbl-' + input.id;
+            input.addEventListener('focus', () => {
+                const lbl = document.getElementById(labelId);
+                if (lbl) lbl.style.color = '#adc7ff';
+            });
+            input.addEventListener('blur', () => {
+                const lbl = document.getElementById(labelId);
+                if (lbl) lbl.style.color = '';
+            });
+        });
+
+        // Toggle password
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        // Submit loading
+        document.getElementById('form-login').addEventListener('submit', () => {
+            const btn = document.getElementById('btn-login-submit');
+            const text = document.getElementById('btn-text');
+            if (btn && text) {
+                text.textContent = 'AUTHENTICATING...';
+                btn.disabled = true;
+                btn.style.opacity = '0.8';
+            }
+        });
+    </script>
+</body>
+</html>

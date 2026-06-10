@@ -1,0 +1,291 @@
+﻿@{
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "User";
+}
+
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Quản lý người dùng</h1>
+            <p class="text-sm text-slate-500 mt-1">Danh sách tài khoản, phân quyền và trạng thái.</p>
+        </div>
+    </div>
+
+    <!-- Search & Filter bar -->
+    <div class="flex items-center gap-3">
+        <div class="relative flex-1 max-w-sm">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+            <input id="searchInput" type="text" placeholder="Tìm tên, email..."
+                   class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl
+                          focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+                          bg-white text-slate-700 placeholder:text-slate-400" />
+        </div>
+        <select id="roleFilter"
+                class="text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white
+                       text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">Tất cả vai trò</option>
+            <option value="SuperAdmin">SuperAdmin</option>
+            <option value="Admin">Admin</option>
+            <option value="Basic">Basic</option>
+        </select>
+        <select id="statusFilter"
+                class="text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white
+                       text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">Tất cả trạng thái</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+        </select>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-600 border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/60 text-[11px] text-slate-500 uppercase select-none">
+                    <th class="px-6 py-4 font-bold">Người dùng</th>
+                    <th class="px-6 py-4 font-bold">Email</th>
+                    <th class="px-6 py-4 font-bold">Số điện thoại</th>
+                    <th class="px-6 py-4 font-bold">Vai trò</th>
+                    <th class="px-6 py-4 font-bold">Ngày tạo</th>
+                    <th class="px-6 py-4 font-bold text-center">Trạng thái</th>
+                    <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Skeleton loading -->
+                @for (int i = 0; i < 5; i++)
+                {
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-slate-200 animate-pulse"></div>
+                                <div class="h-3 w-28 bg-slate-200 rounded animate-pulse"></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4"><div class="h-3 w-36 bg-slate-200 rounded animate-pulse"></div></td>
+                        <td class="px-6 py-4"><div class="h-3 w-24 bg-slate-200 rounded animate-pulse"></div></td>
+                        <td class="px-6 py-4"><div class="h-3 w-16 bg-slate-200 rounded animate-pulse"></div></td>
+                        <td class="px-6 py-4"><div class="h-3 w-20 bg-slate-200 rounded animate-pulse"></div></td>
+                        <td class="px-6 py-4 text-center"><div class="h-5 w-14 bg-slate-200 rounded-full animate-pulse mx-auto"></div></td>
+                        <td class="px-6 py-4"></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <span id="paginationInfo" class="text-xs text-slate-500"></span>
+            <div id="paginationControls" class="flex items-center gap-1"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <script>
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        // ── State ───────────────────────────────────────────────
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalRecords = 0;
+        let searchTimer = null;
+
+        // ── Load data ────────────────────────────────────────────
+        function loadData() {
+            const keyword = $('#searchInput').val();
+            const role = $('#roleFilter').val();
+            const status = $('#statusFilter').val();
+            const skip = (currentPage - 1) * pageSize;
+
+            $.ajax({
+                url: '@Url.Action("LoadAll", "Users", new { area = "Admin" })',
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token },
+                data: {
+                    draw: currentPage,
+                    start: skip,
+                    length: pageSize,
+                    'search[value]': keyword,
+                    role: role,
+                    status: status
+                },
+                success: function (res) {
+                    totalRecords = res.recordsFiltered;
+                    renderTable(res.data);
+                    renderPagination();
+                }
+            });
+        }
+
+        // ── Render table rows ─────────────────────────────────────
+        function renderTable(rows) {
+            if (!rows || rows.length === 0) {
+                $('#tableBody').html(`
+                            <tr>
+                                <td colspan="7" class="px-6 py-16 text-center text-slate-400 text-sm">
+                                    <svg class="mx-auto mb-2 text-slate-300" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                                    Không có dữ liệu
+                                </td>
+                            </tr>`);
+                return;
+            }
+
+            const html = rows.map(row => {
+                const initials = (row.fullName || 'U').substring(0, 2).toUpperCase();
+                const roleBadges = (row.roles || '').split(', ').filter(Boolean).map(r => {
+                    const colors = {
+                        'SuperAdmin': 'bg-purple-100 text-purple-700',
+                        'Admin': 'bg-blue-100 text-blue-700',
+                    };
+                    const cls = colors[r] || 'bg-green-100 text-green-700';
+                    return `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}">${r}</span>`;
+                }).join(' ');
+
+                const activeBadge = row.isActive
+                    ? `<span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700">Active</span>`
+                    : `<span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">Inactive</span>`;
+
+                const lockIcon = row.lockoutForever ? 'lock_open' : 'lock';
+                const lockTitle = row.lockoutForever ? 'Mở khóa' : 'Khóa vĩnh viễn';
+                const lockColor = row.lockoutForever ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50';
+                const toggleColor = row.isActive ? 'text-amber-500 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50';
+                const toggleTitle = row.isActive ? 'Vô hiệu hóa' : 'Kích hoạt';
+                const toggleIcon = row.isActive ? 'toggle_on' : 'toggle_off';
+
+                const date = row.createdOn
+                    ? new Date(row.createdOn).toLocaleDateString('vi-VN')
+                    : '—';
+
+                return `<tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center
+                                                text-[11px] font-black text-indigo-700 flex-shrink-0">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800 text-sm">${row.fullName ?? '—'}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-slate-600">${row.email ?? '—'}</td>
+                            <td class="px-6 py-4 text-slate-600">${row.phoneNumber ?? '—'}</td>
+                            <td class="px-6 py-4">${roleBadges || '<span class="text-slate-400">—</span>'}</td>
+                            <td class="px-6 py-4 text-slate-500">${date}</td>
+                            <td class="px-6 py-4 text-center">${activeBadge}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button onclick="toggleActive('${row.id}')" title="${toggleTitle}"
+                                            class="p-1.5 rounded-lg transition-colors ${toggleColor}">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-icon="${toggleIcon}">
+                                            ${toggleIcon === 'toggle_on'
+                        ? '<rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="17" cy="12" r="3" fill="currentColor"/>'
+                        : '<rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="7" cy="12" r="3" fill="currentColor"/>'}
+                                        </svg>
+                                    </button>
+                                    <button onclick="toggleLockout('${row.id}')" title="${lockTitle}"
+                                            class="p-1.5 rounded-lg transition-colors ${lockColor}">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            ${lockIcon === 'lock'
+                        ? '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+                        : '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>'}
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+            }).join('');
+
+            $('#tableBody').html(html);
+            lucide?.createIcons?.();
+        }
+
+        // ── Render pagination ─────────────────────────────────────
+        function renderPagination() {
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            const start = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalRecords);
+
+            $('#paginationInfo').text(`Hiển thị ${start}–${end} của ${totalRecords} người dùng`);
+
+            let btns = '';
+            const btnBase = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors';
+
+            // Prev
+            btns += `<button onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}
+                                     class="${btnBase} ${currentPage === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-200'}">
+                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                             </button>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                    btns += `<button onclick="goPage(${i})"
+                                             class="${btnBase} ${i === currentPage ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
+                                         ${i}
+                                     </button>`;
+                } else if (Math.abs(i - currentPage) === 2) {
+                    btns += `<span class="px-1 text-slate-400 text-xs">…</span>`;
+                }
+            }
+
+            // Next
+            btns += `<button onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}
+                                     class="${btnBase} ${currentPage === totalPages ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-200'}">
+                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                             </button>`;
+
+            $('#paginationControls').html(btns);
+        }
+
+        function goPage(page) {
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadData();
+        }
+
+        // ── Actions ───────────────────────────────────────────────
+        function toggleActive(id) {
+            $.post({
+                url: '/Admin/Users/ToggleActive',
+                data: { id },
+                headers: { 'RequestVerificationToken': token },
+                success: function (res) {
+                    if (res.success) loadData();
+                }
+            });
+        }
+
+        function toggleLockout(id) {
+            if (!confirm('Bạn có chắc muốn thay đổi trạng thái khóa?')) return;
+            $.post({
+                url: '/Admin/Users/ToggleLockout',
+                data: { id },
+                headers: { 'RequestVerificationToken': token },
+                success: function (res) {
+                    if (res.success) loadData();
+                }
+            });
+        }
+
+        // ── Event listeners ───────────────────────────────────────
+        $('#searchInput').on('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { currentPage = 1; loadData(); }, 400);
+        });
+
+        $('#roleFilter, #statusFilter').on('change', function () {
+            currentPage = 1;
+            loadData();
+        });
+
+        // ── Init ──────────────────────────────────────────────────
+        $(document).ready(loadData);
+    </script>
+
+    @Html.AntiForgeryToken()
+}

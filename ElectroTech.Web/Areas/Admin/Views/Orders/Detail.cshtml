@@ -1,0 +1,229 @@
+﻿@using Entities
+@using Enums
+@model Order
+@{
+    ViewData["Title"] = $"Đơn hàng #ET{Model.Id:D6}";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+
+    string StatusColor(string s) => s switch
+    {
+        "Pending" => "bg-amber-100 text-amber-600 border-amber-200",
+        "Confirmed" => "bg-blue-100 text-blue-600 border-blue-200",
+        "Shipping" => "bg-violet-100 text-violet-600 border-violet-200",
+        "Delivered" => "bg-green-100 text-green-600 border-green-200",
+        "Cancelled" => "bg-red-100 text-red-600 border-red-200",
+        _ => "bg-slate-100 text-slate-500 border-slate-200"
+    };
+    string StatusLabel(string s) => s switch
+    {
+        "Pending" => "⏳ Chờ xác nhận",
+        "Confirmed" => "✅ Đã xác nhận",
+        "Shipping" => "🚚 Đang giao",
+        "Delivered" => "📦 Đã giao",
+        "Cancelled" => "❌ Đã hủy",
+        _ => s
+    };
+
+    var statusStr = Model.Status.ToString();
+    var sc = StatusColor(statusStr);
+    var sl = StatusLabel(statusStr);
+}
+
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+        <div>
+            <a href="/Admin/Orders"
+               class="inline-flex items-center gap-1 text-sm text-slate-400
+                      hover:text-slate-600 transition-colors mb-2">
+                ← Đơn hàng
+            </a>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+                #@Model.OrderCode
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">
+                Đặt lúc @Model.CreatedOn.ToString("HH:mm") — @Model.CreatedOn.ToString("dd/MM/yyyy")
+            </p>
+        </div>
+        <span class="px-5 py-2 rounded-full text-[13px] font-bold border @sc">
+            @sl
+        </span>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+
+        <!-- ── LEFT ── -->
+        <div class="col-span-2 space-y-5">
+
+            <!-- Sản phẩm -->
+            <div class="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-base font-bold text-slate-900 mb-5">
+                    🛍️ Sản phẩm đã đặt
+                    <span class="text-slate-400 font-normal text-sm ml-2">
+                        (@(Model.OrderItems?.Count ?? 0) sản phẩm)
+                    </span>
+                </h2>
+                <div class="space-y-4">
+                    @foreach (var item in Model.OrderItems ?? new List<OrderItem>())
+                    {
+                        <div class="flex items-center gap-4 pb-4
+                                    border-b border-slate-100 last:border-0 last:pb-0">
+                            <div class="w-14 h-14 bg-slate-50 rounded-xl overflow-hidden
+                                        flex-shrink-0 border border-slate-200">
+                                @if (!string.IsNullOrEmpty(item.ProductImage))
+                                {
+                                    <img src="@item.ProductImage"
+                                         class="w-full h-full object-cover" />
+                                }
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-slate-900 text-sm truncate">
+                                    @item.ProductName
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    @item.UnitPrice.ToString("N0")₫ × @item.Quantity
+                                </p>
+                            </div>
+                            <p class="font-extrabold text-slate-900 whitespace-nowrap">
+                                @item.TotalPrice.ToString("N0")₫
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Giao hàng -->
+            <div class="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-base font-bold text-slate-900 mb-5">
+                    📦 Thông tin giao hàng
+                </h2>
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Người nhận</p>
+                        <p class="font-semibold text-slate-900">@Model.FullName</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Điện thoại</p>
+                        <p class="font-semibold text-slate-900">@Model.Phone</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Email</p>
+                        <p class="font-semibold text-slate-900">@Model.Email</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Địa chỉ</p>
+                        <p class="font-semibold text-slate-900">@Model.ShippingAddress</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="col-span-2">
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Ghi chú</p>
+                            <p class="text-slate-600">@Model.Note</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIGHT ── -->
+        <div class="space-y-4">
+
+            <!-- Tóm tắt -->
+            <div class="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-base font-bold text-slate-900 mb-4">💰 Tóm tắt</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Tạm tính</span>
+                        <span class="font-semibold text-slate-900">@Model.SubTotal.ToString("N0")₫</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Giảm giá</span>
+                        <span class="font-semibold text-green-600">-@Model.DiscountAmount.ToString("N0")₫</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Vận chuyển</span>
+                        <span class="font-semibold text-green-600">Miễn phí</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                        <span class="font-bold text-slate-900">Tổng cộng</span>
+                        <span class="font-extrabold text-lg text-blue-600">
+                            @Model.TotalAmount.ToString("N0")₫
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh toán -->
+            <div class="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-base font-bold text-slate-900 mb-4">💳 Thanh toán</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Phương thức</span>
+                        <span class="font-bold text-slate-900">
+                            @(Model.PaymentMethod == PaymentMethod.COD ? "🚚 COD" : "🏦 Chuyển khoản")
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500">Trạng thái</span>
+                        @{
+                            var ps = Model.PaymentStatus.ToString();
+                            var pClass = ps == "Paid" ? "text-green-600"
+                            : ps == "Cancelled" ? "text-red-500"
+                            : "text-amber-500";
+                            var plabel = ps == "Paid" ? "✅ Đã thanh toán"
+                            : ps == "Cancelled" ? "❌ Đã hủy"
+                            : "⏳ Chưa thanh toán";
+                        }
+                        <span class="font-bold @pClass">@plabel</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cập nhật nhanh -->
+            <div class="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-base font-bold text-slate-900 mb-4">⚡ Cập nhật nhanh</h2>
+                <div class="space-y-2">
+                    @foreach (var s in new (string Val, string Label, string Cls)[]
+                    {
+                    ("Confirmed", "✅ Xác nhận đơn",  "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100"),
+                    ("Shipping",  "🚚 Bắt đầu giao",  "border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100"),
+                    ("Delivered", "📦 Đã giao xong",  "border-green-200 bg-green-50 text-green-600 hover:bg-green-100"),
+                    ("Cancelled", "❌ Hủy đơn hàng",  "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"),
+                    })
+                    {
+                        if (Model.Status.ToString() != s.Val)
+                        {
+                            <button onclick="quickUpdate('@s.Val')"
+                                    class="w-full py-2.5 rounded-xl font-bold text-sm
+                                           border transition-all cursor-pointer @s.Cls">
+                                @s.Label
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        function quickUpdate(status) {
+            if (!confirm('Cập nhật trạng thái đơn hàng?')) return;
+            $.post({
+                url: '/Admin/Orders/UpdateStatus',
+                data: { id: @Model.Id, status: status },
+                headers: { 'RequestVerificationToken': token },
+                success: function (res) {
+                    if (res.success) location.reload();
+                    else alert('Lỗi: ' + res.message);
+                }
+            });
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

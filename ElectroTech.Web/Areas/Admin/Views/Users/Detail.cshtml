@@ -1,0 +1,205 @@
+﻿using Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ElectroTech.Web.Abstractions;
+
+namespace ElectroTech.Web.Areas.Admin.Controllers
+{
+    [Area("Admin")]
+    [Authorize]
+    public class UsersController : BaseController<UsersController>
+    {
+    private readonly UserManager<ApplicationUser>
+        _userManager;
+        private readonly RoleManager<ApplicationRole>
+            _roleManager;
+
+            public UsersController(
+            UserManager<ApplicationUser>
+                userManager,
+                RoleManager<ApplicationRole>
+                    roleManager)
+                    {
+                    _userManager = userManager;
+                    _roleManager = roleManager;
+                    }
+
+                    // GET /Admin/Users
+                    public IActionResult Index() => View();
+
+                    // POST /Admin/Users/LoadAll — AJAX server-side
+                    [HttpPost]
+                    [IgnoreAntiforgeryToken]
+                    public async Task<IActionResult>
+                        LoadAll(
+                        int draw, int start, int length,
+                        string? role, string? status)
+                        {
+                        var keyword = Request.Form["search[value]"].FirstOrDefault() ?? "";
+
+                        var query = _userManager.Users.AsQueryable();
+
+                        // Filter keyword
+                        if (!string.IsNullOrEmpty(keyword))
+                        query = query.Where(u =>
+                        (u.FullName != null && u.FullName.Contains(keyword)) ||
+                        (u.Email    != null && u.Email.Contains(keyword))    ||
+                        (u.UserName != null && u.UserName.Contains(keyword)));
+
+                        // Filter status
+                        if (!string.IsNullOrEmpty(status))
+                        {
+                        var isActive = status == "true";
+                        query = query.Where(u => u.IsActive == isActive);
+                        }
+
+                        var totalFiltered = await query.CountAsync();
+                        var users = await query
+                        .OrderByDescending(u => u.CreatedOn)
+                        .Skip(start)
+                        .Take(length)
+                        .ToListAsync();
+
+                        // Build result — filter by role in memory (Identity stores roles separately)
+                        var result = new List
+                        <object>
+                            ();
+                            foreach (var user in users)
+                            {
+                            var roles = await _userManager.GetRolesAsync(user);
+
+                            // Filter by role
+                            if (!string.IsNullOrEmpty(role) && !roles.Contains(role))
+                            continue;
+
+                            result.Add(new
+                            {
+                            id             = user.Id,
+                            fullName       = user.FullName ?? user.UserName,
+                            email          = user.Email,
+                            phoneNumber    = user.PhoneNumber,
+                            roles          = string.Join(", ", roles),
+                            isActive       = user.IsActive,
+                            lockoutForever = user.LockoutForever,
+                            createdOn      = user.CreatedOn,
+                            isSuperAdmin   = roles.Contains("SuperAdmin")
+                            });
+                            }
+
+                            return Json(new
+                            {
+                            draw,
+                            recordsTotal    = await _userManager.Users.CountAsync(),
+                            recordsFiltered = totalFiltered,
+                            data            = result
+                            });
+                            }
+
+                            // POST /Admin/Users/ToggleActive
+                            [HttpPost]
+                            [ValidateAntiForgeryToken]
+                            public async Task
+                            <IActionResult>
+                                ToggleActive(string id)
+                                {
+                                var user = await _userManager.FindByIdAsync(id);
+                                if (user is null)
+                                return Json(new { success = false, message = "Khong tim thay nguoi dung." });
+
+                                user.IsActive = !user.IsActive;
+                                await _userManager.UpdateAsync(user);
+                                return Json(new { success = true, isActive = user.IsActive });
+                                }
+
+                                // POST /Admin/Users/ToggleLockout  ← đúng tên view đang gọi
+                                [HttpPost]
+                                [ValidateAntiForgeryToken]
+                                public async Task<IActionResult>
+                                    ToggleLockout(string id)
+                                    {
+                                    var user = await _userManager.FindByIdAsync(id);
+                                    if (user is null)
+                                    return Json(new { success = false, message = "Khong tim thay nguoi dung." });
+
+                                    if (await _userManager.IsInRoleAsync(user, "SuperAdmin"))
+                                    return Json(new { success = false, message = "Khong the khoa tai khoan SuperAdmin." });
+
+                                    user.LockoutForever = !user.LockoutForever;
+
+                                    await _userManager.SetLockoutEnabledAsync(user, user.LockoutForever);
+                                    await _userManager.SetLockoutEndDateAsync(user,
+                                    user.LockoutForever ? DateTimeOffset.MaxValue : null);
+
+                                    await _userManager.UpdateAsync(user);
+                                    return Json(new { success = true, isLocked = user.LockoutForever });
+                                    }
+
+                                    // POST /Admin/Users/ToggleLock  ← alias phòng trường hợp view cũ gọi
+                                    [HttpPost]
+                                    [ValidateAntiForgeryToken]
+                                    public Task<IActionResult>
+                                        ToggleLock(string id) => ToggleLockout(id);
+
+                                        // GET /Admin/Users/Detail/{id}
+                                        public async Task<IActionResult>
+                                            Detail(string id)
+                                            {
+                                            var user = await _userManager.FindByIdAsync(id);
+                                            if (user is null)
+                                            {
+                                            _notify.Error("Khong tim thay nguoi dung.");
+                                            return RedirectToAction(nameof(Index));
+                                            }
+
+                                            ViewBag.AllRoles     = _roleManager.Roles.ToList();
+                                            ViewBag.CurrentRoles = (await _userManager.GetRolesAsync(user)).ToList();
+                                            return View(user);
+                                            }
+
+                                            // POST /Admin/Users/AssignRole
+                                            [HttpPost]
+                                            [ValidateAntiForgeryToken]
+                                            public async Task<IActionResult>
+                                                AssignRole(string userId, string role)
+                                                {
+                                                var user = await _userManager.FindByIdAsync(userId);
+                                                if (user is null)
+                                                {
+                                                _notify.Error("Khong tim thay nguoi dung.");
+                                                return RedirectToAction(nameof(Index));
+                                                }
+
+                                                if (!await _userManager.IsInRoleAsync(user, role))
+                                                {
+                                                await _userManager.AddToRoleAsync(user, role);
+                                                _notify.Success($"Da cap quyen {role} cho {user.UserName}.");
+                                                }
+                                                else
+                                                {
+                                                await _userManager.RemoveFromRoleAsync(user, role);
+                                                _notify.Success($"Da xoa quyen {role} khoi {user.UserName}.");
+                                                }
+
+                                                return RedirectToAction(nameof(Detail), new { id = userId });
+                                                }
+
+                                                // POST /Admin/Users/Delete
+                                                [HttpPost]
+                                                [ValidateAntiForgeryToken]
+                                                public async Task<IActionResult>
+                                                    Delete(string id)
+                                                    {
+                                                    var user = await _userManager.FindByIdAsync(id);
+                                                    if (user is null)
+                                                    return Json(new { success = false, message = "Khong tim thay nguoi dung." });
+
+                                                    if (await _userManager.IsInRoleAsync(user, "SuperAdmin"))
+                                                    return Json(new { success = false, message = "Khong the xoa tai khoan SuperAdmin." });
+
+                                                    await _userManager.DeleteAsync(user);
+                                                    return Json(new { success = true });
+                                                    }
+                                                    }
+                                                    }

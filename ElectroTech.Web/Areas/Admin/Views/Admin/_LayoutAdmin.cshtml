@@ -1,0 +1,353 @@
+﻿<!DOCTYPE html>
+<html lang="vi" x-data="{ darkMode: false }" :class="darkMode ? 'dark' : ''">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — ElectroTech Admin</title>
+
+    <!-- TailAdmin CSS -->
+    <link rel="stylesheet" href="~/css/tailadmin/style.css" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4a8eff',
+                        'primary-dark': '#3a7aee',
+                    },
+                    fontFamily: {
+                        display: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+            text-decoration: none;
+        }
+
+            .menu-item:hover {
+                background: #f3f4f6;
+                color: #111827;
+            }
+
+        .menu-item-active {
+            background: #eff6ff !important;
+            color: #3b82f6 !important;
+            font-weight: 600;
+        }
+
+        .menu-item-inactive {
+            color: #6b7280;
+        }
+
+        .menu-item-icon-active {
+            color: #3b82f6;
+            fill: #3b82f6;
+        }
+
+        .menu-item-icon-inactive {
+            color: #9ca3af;
+            fill: #9ca3af;
+        }
+
+        .menu-item-text {
+            flex: 1;
+        }
+
+        .menu-item-arrow {
+            transition: transform 0.2s;
+        }
+
+        .menu-item-arrow-active {
+            transform: rotate(180deg);
+            stroke: #3b82f6;
+        }
+
+        .menu-item-arrow-inactive {
+            stroke: #9ca3af;
+        }
+
+        .menu-dropdown {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-dropdown-item {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+            .menu-dropdown-item:hover {
+                background: #f3f4f6;
+                color: #111827;
+            }
+
+        .menu-dropdown-item-active {
+            background: #eff6ff !important;
+            color: #3b82f6 !important;
+            font-weight: 600;
+        }
+
+        .menu-dropdown-item-inactive {
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950"
+      x-data="{
+          sidebarToggle: false,
+          darkMode: false,
+          userDropdown: false
+      }">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        @await Html.PartialAsync("~/Areas/Admin/Views/Admin/_AdminSidebar.cshtml")
+
+        <!-- Main area -->
+        <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+
+            <!-- Header -->
+            <header class="sticky top-0 z-[999] flex w-full items-center justify-between
+                           bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800
+                           px-4 py-3 md:px-6 shadow-sm">
+
+                <div class="flex items-center gap-3">
+                    <!-- Mobile toggle -->
+                    <button @@click="sidebarToggle = !sidebarToggle"
+                            class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100
+                                   dark:hover:bg-gray-800 transition-colors">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+
+                    <!-- Breadcrumb -->
+                    <div class="hidden md:flex items-center gap-1 text-sm text-gray-500">
+                        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                           class="hover:text-blue-500 transition-colors font-medium">
+                            Admin
+                        </a>
+                        @{
+                            var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+                            var action = ViewContext.RouteData.Values["action"]?.ToString();
+                        }
+                        @if (ctrl != "Dashboard")
+                        {
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            <span class="text-gray-700 dark:text-gray-300 font-semibold">@ctrl</span>
+                        }
+                        @if (action != "Index")
+                        {
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            <span class="text-gray-700 dark:text-gray-300 font-semibold">@action</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+
+                    <!-- Dark mode toggle -->
+                    <button @@click="darkMode = !darkMode"
+                            class="p-2 rounded-lg text-gray-500 hover:bg-gray-100
+                                   dark:hover:bg-gray-800 transition-colors">
+                        <i data-lucide="sun" class="w-5 h-5" x-show="darkMode"></i>
+                        <i data-lucide="moon" class="w-5 h-5" x-show="!darkMode"></i>
+                    </button>
+
+                    <!-- View store -->
+                    <a asp-controller="Home" asp-action="Index" target="_blank"
+                       class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
+                              text-gray-600 dark:text-gray-300 hover:bg-gray-100
+                              dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        Xem Store
+                    </a>
+
+                    <!-- User dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @@click="open = !open"
+                                class="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                       hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <span class="text-white text-xs font-bold">
+                                    @(User.Identity?.Name?.FirstOrDefault().ToString().ToUpper() ?? "A")
+                                </span>
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100
+                                          max-w-[120px] truncate">
+                                    @User.Identity?.Name
+                                </p>
+                                <p class="text-xs text-gray-500">Administrator</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                        </button>
+
+                        <div x-show="open"
+                             @@click.outside="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-900
+                                    border border-gray-200 dark:border-gray-700 rounded-xl
+                                    shadow-lg overflow-hidden z-50">
+
+                            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                                <p class="text-xs text-gray-500">Đăng nhập với tư cách</p>
+                                <p class="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">
+                                    @User.Identity?.Name
+                                </p>
+                            </div>
+
+                            <a asp-controller="Home" asp-action="Index" target="_blank"
+                               class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600
+                                      dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800
+                                      transition-colors">
+                                <i data-lucide="store" class="w-4 h-4"></i>
+                                Xem Store
+                            </a>
+
+                            <div class="border-t border-gray-100 dark:border-gray-800">
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                                                   text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30
+                                                   transition-colors text-left">
+                                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                                        Đăng xuất
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto">
+                <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+                    @RenderBody()
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    
+    <script>
+        // Load bundle.js nhưng tránh crash làm hỏng các script sau
+        (function () {
+            try {
+                var s = document.createElement('script');
+                s.src = '/js/tailadmin/bundle.js';
+                s.onerror = function () { console.warn('bundle.js load failed'); };
+                document.head.appendChild(s);
+            } catch (e) { console.warn('bundle.js error:', e); }
+        })();
+    </script>
+    <!-- ✅ Fix lỗi TailAdmin bundle.js crash khi các element không tồn tại ở trang hiện tại -->
+    <script>
+        (function () {
+            'use strict';
+
+            // Fix: search-input / search-button không tồn tại ở mọi trang
+            var searchInput = document.getElementById('search-input');
+            var searchButton = document.getElementById('search-button');
+            if (searchInput && searchButton) {
+                function focusSearchInput() { searchInput.focus(); }
+                searchButton.addEventListener('click', focusSearchInput);
+                document.addEventListener('keydown', function (e) {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                        e.preventDefault();
+                        focusSearchInput();
+                    }
+                    if (e.key === '/' && document.activeElement !== searchInput) {
+                        e.preventDefault();
+                        focusSearchInput();
+                    }
+                });
+            }
+
+            // Fix: copy-input / copy-button không tồn tại ở mọi trang
+            var copyInput = document.getElementById('copy-input');
+            var copyButton = document.getElementById('copy-button');
+            var copyText = document.getElementById('copy-text');
+            var websiteInput = document.getElementById('website-input');
+            if (copyInput && copyButton && copyText && websiteInput) {
+                copyButton.addEventListener('click', function () {
+                    navigator.clipboard.writeText(websiteInput.value).then(function () {
+                        copyText.textContent = 'Copied';
+                        setTimeout(function () { copyText.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            }
+        })();
+    </script>
+
+    <!-- Init Lucide icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

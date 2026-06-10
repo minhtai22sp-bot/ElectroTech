@@ -1,0 +1,257 @@
+﻿@{
+    ViewData["Title"] = "Thêm danh mục";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<form action="/Admin/Category/Create" method="post" id="categoryForm">
+    @Html.AntiForgeryToken()
+    @if (ViewBag.DebugErrors != null)
+    {
+        <div class="bg-red-50 border border-red-300 rounded-xl p-4 mb-6">
+            <p class="text-sm font-bold text-red-700 mb-3">⚠️ Lỗi validation:</p>
+            @foreach (var kvp in (Dictionary<string, List<string>>)ViewBag.DebugErrors)
+            {
+                <div class="mb-1">
+                    <span class="text-xs font-bold text-red-600 font-mono">[@kvp.Key]</span>
+                    @foreach (var err in kvp.Value)
+                    {
+                        <span class="text-xs text-red-500 ml-2">→ @err</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-display font-black text-slate-900 tracking-tight">
+                    Thêm danh mục mới
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Điền thông tin danh mục sản phẩm</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/Admin/Category"
+                   class="px-4 py-2 border border-slate-200 rounded-xl text-slate-500
+                          font-semibold text-sm hover:bg-slate-50 transition-colors">
+                    ← Hủy
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl
+                               text-white font-bold text-sm transition-colors
+                               border-none cursor-pointer">
+                    💾 Lưu danh mục
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+
+            <!-- LEFT -->
+            <div class="col-span-2 space-y-6">
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-5">📋 Thông tin cơ bản</h2>
+                    <div class="space-y-4">
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">
+                                Tên danh mục *
+                            </label>
+                            <input type="text" name="Name" id="Name"
+                                   placeholder="VD: Điện thoại, Laptop..."
+                                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl
+                                          text-sm text-slate-900 focus:outline-none
+                                          focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all" />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">
+                                Mô tả
+                            </label>
+                            <textarea name="Description" rows="4"
+                                      placeholder="Mô tả ngắn về danh mục..."
+                                      class="w-full px-4 py-2.5 border border-slate-200 rounded-xl
+                                             text-sm text-slate-900 focus:outline-none
+                                             focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                                             transition-all resize-y"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600
+                                          uppercase tracking-wider mb-2">
+                                Thứ tự hiển thị
+                            </label>
+                            <input type="number" name="DisplayOrder" value="0" min="0"
+                                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl
+                                          text-sm text-slate-900 focus:outline-none
+                                          focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all" />
+                            <p class="text-xs text-slate-400 mt-1">Số nhỏ hơn hiển thị trước</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="space-y-6">
+
+                <!-- Ảnh -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">🖼️ Ảnh danh mục</h2>
+
+                    <div id="imgPreview"
+                         onclick="document.getElementById('fileInput').click()"
+                         class="w-full aspect-video bg-slate-50 border-2 border-dashed
+                                border-slate-200 rounded-xl mb-4 flex items-center
+                                justify-center overflow-hidden cursor-pointer
+                                hover:border-blue-400 transition-colors">
+                        <div class="text-center text-slate-400">
+                            <div class="text-4xl mb-2">🖼️</div>
+                            <div class="text-xs">Click để chọn ảnh</div>
+                        </div>
+                    </div>
+
+                    <input type="file" id="fileInput" accept="image/*" class="hidden"
+                           onchange="uploadImage(this)" />
+                    <input type="hidden" name="ImageUrl" id="ImageUrl" />
+
+                    <div class="relative mb-2">
+                        <input type="text" id="ImageUrlDisplay"
+                               placeholder="URL ảnh hoặc upload từ máy"
+                               oninput="syncUrl(this.value)"
+                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl
+                                      text-xs text-slate-900 focus:outline-none
+                                      focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                                      transition-all pr-20" />
+                        <button type="button"
+                                onclick="document.getElementById('fileInput').click()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2
+                                       px-2.5 py-1 bg-blue-50 hover:bg-blue-100
+                                       border border-blue-200 rounded-lg text-blue-600
+                                       text-[10px] font-bold cursor-pointer transition-colors">
+                            📁 Upload
+                        </button>
+                    </div>
+
+                    <div id="uploadStatus" class="hidden">
+                        <div class="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                            <div style="animation:spin 1s linear infinite;font-size:14px;">⏳</div>
+                            <span class="text-xs text-blue-600 font-medium">Đang tải lên...</span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-2 text-center">JPG, PNG, WebP — tối đa 5MB</p>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="bg-white border border-slate-200/50 rounded-2xl p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-5">📌 Trạng thái</h2>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700">Kích hoạt</p>
+                            <p class="text-xs text-slate-400">Hiển thị trên store</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="IsActive" value="true" checked
+                                   class="sr-only peer" />
+                            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600
+                                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                        after:bg-white after:rounded-full after:h-5 after:w-5
+                                        after:transition-all peer-checked:after:translate-x-full
+                                        cursor-pointer"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-xl
+                               text-white font-bold text-sm transition-colors
+                               border-none cursor-pointer">
+                    💾 Lưu danh mục
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <style>
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+        function syncUrl(val) {
+            document.getElementById('ImageUrl').value = val;
+            previewFromUrl(val);
+        }
+
+        function previewFromUrl(url) {
+            var preview = document.getElementById('imgPreview');
+            if (url) {
+                preview.innerHTML = '<img src="' + url + '" class="w-full h-full object-cover" />';
+            } else {
+                preview.innerHTML =
+                    '<div class="text-center text-slate-400">' +
+                    '<div class="text-4xl mb-2">🖼️</div>' +
+                    '<div class="text-xs">Click để chọn ảnh</div></div>';
+            }
+        }
+
+        async function uploadImage(input) {
+            var file = input.files[0];
+            if (!file) return;
+            var status = document.getElementById('uploadStatus');
+            status.classList.remove('hidden');
+
+            var fd = new FormData();
+            fd.append('file', file);
+
+            try {
+                var res = await fetch('/Admin/Category/UploadImage', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                    body: fd
+                });
+                var data = await res.json();
+                status.classList.add('hidden');
+                if (data.success) {
+                    document.getElementById('ImageUrl').value = data.url;
+                    document.getElementById('ImageUrlDisplay').value = data.url;
+                    previewFromUrl(data.url);
+                    showToast('✓ Upload thành công', 'green');
+                } else {
+                    showToast('Upload thất bại: ' + data.message, 'red');
+                }
+            } catch (e) {
+                status.classList.add('hidden');
+                showToast('Lỗi kết nối', 'red');
+            } finally { input.value = ''; }
+        }
+
+        function showToast(msg, color) {
+            var t = document.createElement('div');
+            t.style.cssText =
+                'position:fixed;bottom:24px;right:24px;z-index:9999;' +
+                'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;' +
+                'background:' + (color === 'green' ? '#dcfce7' : '#fee2e2') + ';' +
+                'color:' + (color === 'green' ? '#16a34a' : '#dc2626') + ';' +
+                'border:1px solid ' + (color === 'green' ? '#86efac' : '#fca5a5') + ';' +
+                'box-shadow:0 8px 24px rgba(0,0,0,0.1);transition:opacity .3s;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function () { t.style.opacity = '0'; }, 3000);
+            setTimeout(function () { t.remove(); }, 3400);
+        }
+    </script>
+}
