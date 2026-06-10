@@ -280,18 +280,43 @@
                                         <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                                     </a>
 
-                                    <!-- Nút đánh giá — chỉ hiện khi đã giao -->
+                                 
                                     @if (isDelivered)
                                     {
-                                        <a asp-controller="Reviews" asp-action="Create" asp-route-orderId="@order.Id"
-                                           class="inline-flex items-center gap-1.5 px-4 py-2
-                                                  bg-amber-400/10 border border-amber-400/25
-                                                  hover:bg-amber-400/20 hover:border-amber-400/50
-                                                  rounded-xl text-amber-400 text-xs font-bold transition-all">
-                                            <span class="material-symbols-outlined text-[14px]"
-                                                  style="font-variation-settings:'FILL' 1;">star</span>
-                                            Đánh giá
-                                        </a>
+                                        var reviewed = ViewBag.ReviewedProductIds as HashSet<int> ?? new HashSet<int>();
+
+                                        @foreach (var orderItem in order.OrderItems ?? new List<Entities.OrderItem>())
+                                        {
+                                            var pid = orderItem.ProductId ?? 0;
+                                            var alreadyReviewed = reviewed.Contains(pid);
+
+                                            @if (alreadyReviewed)
+                                            {
+                                                // Nút "Đã đánh giá" — disabled, không click được
+                                                <span class="inline-flex items-center gap-1.5 px-4 py-2
+                         bg-green-400/10 border border-green-400/20
+                         rounded-xl text-green-400 text-xs font-bold cursor-default">
+                                                    <span class="material-symbols-outlined text-[14px]"
+                                                          style="font-variation-settings:'FILL' 1;">check_circle</span>
+                                                    Đã đánh giá
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                // Nút "Đánh giá" — click được
+                                                <a asp-controller="Products" asp-action="Detail"
+                                                   asp-route-id="@orderItem.ProductId"
+                                                   asp-route-orderId="@order.Id"
+                                                   class="inline-flex items-center gap-1.5 px-4 py-2
+                      bg-amber-400/10 border border-amber-400/25
+                      hover:bg-amber-400/20 hover:border-amber-400/50
+                      rounded-xl text-amber-400 text-xs font-bold transition-all">
+                                                    <span class="material-symbols-outlined text-[14px]"
+                                                          style="font-variation-settings:'FILL' 1;">star</span>
+                                                    Đánh giá: @orderItem.ProductName
+                                                </a>
+                                            }
+                                        }
                                     }
                                 </div>
                             </div>
@@ -343,4 +368,35 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => filterOrders('all'));
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Tìm tất cả nút đánh giá
+            var reviewBtns = document.querySelectorAll('[id^="review-btn-"]');
+
+            for (var btn of reviewBtns) {
+                var parts = btn.id.split('-'); // review-btn-{orderId}-{productId}
+                var productId = parts[parts.length - 1];
+
+                try {
+                    var res = await fetch('/Review/CanReview?productId=' + productId);
+                    var data = await res.json();
+
+                    if (!data.canReview && data.reason.includes('đã đánh giá')) {
+                        // Đã đánh giá — đổi style nút
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = '0.6';
+                        btn.className = btn.className
+                            .replace('bg-amber-400/10', 'bg-green-400/10')
+                            .replace('border-amber-400/25', 'border-green-400/25')
+                            .replace('text-amber-400', 'text-green-400');
+                        btn.innerHTML = `
+                        <span class="material-symbols-outlined text-[14px]"
+                              style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        Đã đánh giá
+                    `;
+                    }
+                } catch (e) { }
+            }
+        });
+</script>
 </script>

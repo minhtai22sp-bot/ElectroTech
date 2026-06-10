@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = Model.Name;
     var approvedCount = Model.Reviews?.Count(r => r.IsApproved) ?? 0;
+    var showReviewForm = ViewBag.ShowReviewForm == true;
+    var reviewOrderId = ViewBag.OrderId as int?;
 }
 
 @Html.AntiForgeryToken()
@@ -10,10 +12,9 @@
     .pd-root {
         background: #f9f7f4;
         min-height: 100vh;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'DM Sans',sans-serif;
     }
 
-    /* breadcrumb */
     .pd-crumb a {
         color: #9ca3af;
         text-decoration: none;
@@ -25,19 +26,18 @@
             color: #1a1a1a;
         }
 
-    .pd-crumb span.sep {
+    .pd-crumb .sep {
         color: #d1d5db;
         margin: 0 6px;
         font-size: 13px;
     }
 
-    .pd-crumb span.cur {
+    .pd-crumb .cur {
         color: #374151;
         font-size: 13px;
         font-weight: 500;
     }
 
-    /* image */
     .pd-img-main {
         background: #fff;
         border-radius: 24px;
@@ -78,7 +78,6 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,.12);
         }
 
-    /* badge */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -109,15 +108,13 @@
         border: 1px solid #fecaca;
     }
 
-    /* price */
     .pd-price {
-        background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+        background: linear-gradient(135deg,#f5f3ff,#ede9fe);
         border: 1px solid #ddd6fe;
         border-radius: 18px;
         padding: 22px 24px;
     }
 
-    /* spec highlight card */
     .spec-card {
         background: #fff;
         border: 1px solid #e5e7eb;
@@ -134,7 +131,6 @@
             box-shadow: 0 4px 16px rgba(99,102,241,.08);
         }
 
-    /* qty */
     .qty-wrap {
         display: flex;
         align-items: center;
@@ -177,7 +173,6 @@
         user-select: none;
     }
 
-    /* buttons */
     .btn-cart {
         flex: 1;
         padding: 16px 24px;
@@ -190,7 +185,7 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: linear-gradient(135deg,#6366f1,#8b5cf6);
         color: #fff;
         transition: all .25s;
         box-shadow: 0 8px 24px rgba(99,102,241,.3);
@@ -228,7 +223,7 @@
             background: #fff5f5;
         }
 
-    /* tab */
+    /* Tabs */
     .tab-btn {
         padding: 12px 24px;
         border: none;
@@ -243,7 +238,7 @@
         align-items: center;
         gap: 8px;
         transition: all .2s;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'DM Sans',sans-serif;
     }
 
         .tab-btn.active {
@@ -255,7 +250,7 @@
             color: #374151;
         }
 
-    /* spec table */
+    /* Spec table */
     .spec-group {
         background: #fff;
         border-radius: 16px;
@@ -286,28 +281,48 @@
         background: #fafafa;
     }
 
-    /* review */
-    .star-bar-fill {
-        background: linear-gradient(90deg,#6366f1,#a78bfa);
+    /* Review form */
+    .review-form-wrap {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 28px;
     }
 
+    .review-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        color: #111827;
+        outline: none;
+        font-family: inherit;
+        transition: border-color .2s, box-shadow .2s;
+        box-sizing: border-box;
+        background: #fafafa;
+    }
+
+        .review-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+            background: #fff;
+        }
+
+        .review-input::placeholder {
+            color: #aaa;
+        }
+
+    /* Review cards */
     .review-card {
         background: #fff;
+        border: 1px solid #e5e7eb;
         border-radius: 16px;
         padding: 22px 24px;
-        border: 1px solid #e5e7eb;
     }
 
-    .verified-badge {
-        background: #dcfce7;
-        color: #16a34a;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 10px;
-    }
-
-    /* toast */
+    /* Toast */
     #cartToast {
         position: fixed;
         bottom: 32px;
@@ -357,16 +372,15 @@
                         <span class="material-symbols-outlined" style="font-size:80px;color:#d1d5db;">image_not_supported</span>
                     }
                 </div>
-
                 @if (Model.ProductImages != null && Model.ProductImages.Any())
                 {
                     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
-                        <div class="pd-img-thumb active" onclick="changeImage('@Model.ThumbnailUrl', this)">
+                        <div class="pd-img-thumb active" onclick="changeImage('@Model.ThumbnailUrl',this)">
                             <img src="@Model.ThumbnailUrl" alt="" style="width:100%;height:100%;object-fit:contain;" />
                         </div>
                         @foreach (var img in Model.ProductImages)
                         {
-                            <div class="pd-img-thumb" onclick="changeImage('@img.ImageUrl', this)">
+                            <div class="pd-img-thumb" onclick="changeImage('@img.ImageUrl',this)">
                                 <img src="@img.ImageUrl" alt="" style="width:100%;height:100%;object-fit:contain;" />
                             </div>
                         }
@@ -376,7 +390,6 @@
 
             <!-- RIGHT: Info -->
             <div style="display:flex;flex-direction:column;gap:20px;">
-
                 <!-- Badges -->
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     @if (Model.IsFeatured)
@@ -398,15 +411,10 @@
 
                 @if (!string.IsNullOrEmpty(Model.Brand))
                 {
-                    <p style="color:#6366f1;font-size:11px;font-weight:800;
-                               text-transform:uppercase;letter-spacing:.2em;margin:0;">
-                        @Model.Brand
-                    </p>
+                    <p style="color:#6366f1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.2em;margin:0;">@Model.Brand</p>
                 }
 
-                <h1 style="font-size:2rem;font-weight:800;color:#111827;
-                            line-height:1.2;margin:0;letter-spacing:-.02em;
-                            font-family:'Syne',sans-serif;">
+                <h1 style="font-size:2rem;font-weight:800;color:#111827;line-height:1.2;margin:0;letter-spacing:-.02em;font-family:'Syne',sans-serif;">
                     @Model.Name
                 </h1>
 
@@ -415,32 +423,23 @@
                     <div style="display:flex;gap:2px;">
                         @for (int i = 1; i <= 5; i++)
                         {
-                            var starColor = i <= (int)Model.Rating ? "#f59e0b" : "#e5e7eb";
-                            <span style="font-size:15px;color:@starColor;">★</span>
+                            <span style="font-size:15px;color:@(i<=(int)Model.Rating?"#f59e0b":"#e5e7eb");">★</span>
                         }
                     </div>
-                    <span style="color:#6b7280;font-size:13px;">
-                        @Model.Rating.ToString("0.0") · @Model.ReviewCount đánh giá
-                    </span>
+                    <span style="color:#6b7280;font-size:13px;">@Model.Rating.ToString("0.0") · @Model.ReviewCount đánh giá</span>
                 </div>
 
                 <!-- Price -->
                 <div class="pd-price">
                     <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-                        <span style="font-size:2.2rem;font-weight:900;color:#6366f1;
-                                     letter-spacing:-.03em;font-family:'Syne',sans-serif;">
+                        <span style="font-size:2.2rem;font-weight:900;color:#6366f1;letter-spacing:-.03em;font-family:'Syne',sans-serif;">
                             @Model.Price.ToString("N0")₫
                         </span>
                         @if (Model.OriginalPrice.HasValue && Model.OriginalPrice > Model.Price)
                         {
                             var discount = (int)((1 - Model.Price / Model.OriginalPrice.Value) * 100);
-                            <span style="font-size:1rem;color:#9ca3af;text-decoration:line-through;">
-                                @Model.OriginalPrice.Value.ToString("N0")₫
-                            </span>
-                            <span style="background:#dc2626;color:white;font-size:11px;
-                                         font-weight:800;padding:3px 10px;border-radius:20px;">
-                                −@discount%
-                            </span>
+                            <span style="font-size:1rem;color:#9ca3af;text-decoration:line-through;">@Model.OriginalPrice.Value.ToString("N0")₫</span>
+                            <span style="background:#dc2626;color:white;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;">−@discount%</span>
                         }
                     </div>
                 </div>
@@ -460,27 +459,18 @@
                     ["Rear Camera"] = "photo_camera",
                     ["Battery Capacity"] = "battery_full"
                 };
-                    var highlightSpecs = Model.ProductSpecs
-                    .Where(s => highlight.Contains(s.SpecKey))
-                    .OrderBy(s => s.DisplayOrder).Take(4).ToList();
-
-                    if (highlightSpecs.Any())
+                    var hs = Model.ProductSpecs.Where(s => highlight.Contains(s.SpecKey)).OrderBy(s => s.DisplayOrder).Take(4).ToList();
+                    if (hs.Any())
                     {
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                            @foreach (var spec in highlightSpecs)
+                            @foreach (var spec in hs)
                             {
-                                var icon = icons.ContainsKey(spec.SpecKey) ? icons[spec.SpecKey] : "info";
+                                var ico = icons.ContainsKey(spec.SpecKey) ? icons[spec.SpecKey] : "info";
                                 <div class="spec-card">
-                                    <span class="material-symbols-outlined"
-                                          style="color:#6366f1;font-size:20px;margin-top:2px;">@icon</span>
+                                    <span class="material-symbols-outlined" style="color:#6366f1;font-size:20px;margin-top:2px;">@ico</span>
                                     <div>
-                                        <p style="color:#9ca3af;font-size:9px;font-weight:700;
-                                                   text-transform:uppercase;letter-spacing:.15em;margin:0 0 4px;">
-                                            @spec.SpecKey
-                                        </p>
-                                        <p style="color:#111827;font-weight:700;font-size:13px;margin:0;">
-                                            @spec.SpecValue
-                                        </p>
+                                        <p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;margin:0 0 4px;">@spec.SpecKey</p>
+                                        <p style="color:#111827;font-weight:700;font-size:13px;margin:0;">@spec.SpecValue</p>
                                     </div>
                                 </div>
                             }
@@ -490,19 +480,14 @@
 
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <p style="color:#6b7280;font-size:14px;line-height:1.75;margin:0;">
-                        @Model.Description
-                    </p>
+                    <p style="color:#6b7280;font-size:14px;line-height:1.75;margin:0;">@Model.Description</p>
                 }
 
                 <!-- Quantity -->
                 @if (Model.Stock > 0)
                 {
                     <div style="display:flex;align-items:center;gap:14px;">
-                        <span style="color:#9ca3af;font-size:12px;font-weight:700;
-                                     text-transform:uppercase;letter-spacing:.12em;">
-                            Số lượng
-                        </span>
+                        <span style="color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;">Số lượng</span>
                         <div class="qty-wrap">
                             <button type="button" id="btnMinus" class="qty-btn" onclick="changeQty(-1)">
                                 <span class="material-symbols-outlined" style="font-size:18px;">remove</span>
@@ -512,18 +497,14 @@
                                 <span class="material-symbols-outlined" style="font-size:18px;">add</span>
                             </button>
                         </div>
-                        <span style="color:#9ca3af;font-size:13px;">
-                            / <span style="color:#374151;font-weight:600;">@Model.Stock</span> sản phẩm
-                        </span>
+                        <span style="color:#9ca3af;font-size:13px;">/ <span style="color:#374151;font-weight:600;">@Model.Stock</span> sản phẩm</span>
                     </div>
                 }
 
                 <!-- Buttons -->
                 <div style="display:flex;gap:12px;">
-                    <button id="addToCartBtn"
-                            class="btn-cart"
-                            data-product-id="@Model.Id"
-                            data-max-stock="@Model.Stock"
+                    <button id="addToCartBtn" class="btn-cart"
+                            data-product-id="@Model.Id" data-max-stock="@Model.Stock"
                     @(Model.Stock <= 0 ? "disabled" : "")>
                         <span class="material-symbols-outlined" style="font-size:20px;">add_shopping_cart</span>
                         <span id="addBtnText">@(Model.Stock > 0 ? "Thêm vào giỏ" : "Hết hàng")</span>
@@ -535,71 +516,51 @@
 
                 @if (!string.IsNullOrEmpty(Model.Code))
                 {
-                    <p style="color:#d1d5db;font-size:12px;margin:0;">
-                        SKU: <span style="color:#9ca3af;font-family:monospace;">@Model.Code</span>
-                    </p>
+                    <p style="color:#d1d5db;font-size:12px;margin:0;">SKU: <span style="color:#9ca3af;font-family:monospace;">@Model.Code</span></p>
                 }
             </div>
         </div>
 
         <!-- ── TABS ── -->
         <div style="margin-bottom:80px;">
-
-            <!-- Tab buttons -->
             <div style="display:flex;border-bottom:1px solid #e5e7eb;margin-bottom:32px;">
-                <button id="tab-specs" class="tab-btn active" onclick="switchTab('specs')">
+                <button id="tab-specs" class="tab-btn @(!showReviewForm ? "active" : "")" onclick="switchTab('specs')">
                     <span class="material-symbols-outlined" style="font-size:18px;">tune</span>
                     Thông số kỹ thuật
                     @if (Model.ProductSpecs != null && Model.ProductSpecs.Any())
                     {
-                        <span style="background:#ede9fe;color:#6366f1;font-size:10px;
-                                     font-weight:700;padding:2px 8px;border-radius:10px;">
-                            @Model.ProductSpecs.Count
-                        </span>
+                        <span style="background:#ede9fe;color:#6366f1;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">@Model.ProductSpecs.Count</span>
                     }
                 </button>
-                <button id="tab-reviews" class="tab-btn" onclick="switchTab('reviews')">
+                <button id="tab-reviews" class="tab-btn @(showReviewForm ? "active" : "")" onclick="switchTab('reviews')">
                     <span class="material-symbols-outlined" style="font-size:18px;">star</span>
                     Đánh giá
                     @if (approvedCount > 0)
                     {
-                        <span id="reviewBadge"
-                              style="background:#f3f4f6;color:#9ca3af;font-size:10px;
-                                     font-weight:700;padding:2px 8px;border-radius:10px;">
-                            @approvedCount
-                        </span>
+                        <span id="reviewBadge" style="background:#f3f4f6;color:#9ca3af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">@approvedCount</span>
                     }
                 </button>
             </div>
 
             <!-- Panel: Thông số -->
-            <div id="panel-specs">
+            <div id="panel-specs" style="display:@(!showReviewForm?"block":"none");">
                 @if (Model.ProductSpecs != null && Model.ProductSpecs.Any())
                 {
-                    var specGroups = Model.ProductSpecs
-                    .OrderBy(s => s.DisplayOrder)
+                    var groups = Model.ProductSpecs.OrderBy(s => s.DisplayOrder)
                     .GroupBy(s => string.IsNullOrEmpty(s.GroupName) ? "Thông số chung" : s.GroupName);
-
                     <div style="display:flex;flex-direction:column;gap:12px;">
-                        @foreach (var group in specGroups)
+                        @foreach (var grp in groups)
                         {
-                            var specList = group.ToList();
+                            var specList = grp.ToList();
                             <div class="spec-group">
-                                <div class="spec-group-head">
-                                    <h3>@group.Key</h3>
-                                </div>
+                                <div class="spec-group-head"><h3>@grp.Key</h3></div>
                                 <table style="width:100%;border-collapse:collapse;">
                                     @for (int idx = 0; idx < specList.Count; idx++)
                                     {
-                                        var spec = specList[idx];
-                                        var rowCls = idx % 2 == 0 ? "spec-row-even" : "spec-row-odd";
-                                        <tr class="@rowCls" style="border-bottom:1px solid #f3f4f6;">
-                                            <td style="padding:13px 24px;color:#6b7280;font-size:13px;font-weight:600;width:40%;">
-                                                @spec.SpecKey
-                                            </td>
-                                            <td style="padding:13px 24px;color:#111827;font-size:13px;">
-                                                @spec.SpecValue
-                                            </td>
+                                        var sp = specList[idx];
+                                        <tr class="@(idx%2==0?"spec-row-even":"spec-row-odd")" style="border-bottom:1px solid #f3f4f6;">
+                                            <td style="padding:13px 24px;color:#6b7280;font-size:13px;font-weight:600;width:40%;">@sp.SpecKey</td>
+                                            <td style="padding:13px 24px;color:#111827;font-size:13px;">@sp.SpecValue</td>
                                         </tr>
                                     }
                                 </table>
@@ -609,187 +570,117 @@
                 }
                 else
                 {
-                    <div style="text-align:center;padding:60px 0;color:#d1d5db;">
-                        <span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;">tune</span>
+                    <div style="text-align:center;padding:60px 0;">
+                        <span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;">tune</span>
                         <p style="font-size:14px;color:#9ca3af;">Chưa có thông số kỹ thuật.</p>
                     </div>
                 }
             </div>
 
             <!-- Panel: Đánh giá -->
-            <div id="panel-reviews" style="display:none;">
-                <!-- Form viết đánh giá -->
-                @if (User.Identity?.IsAuthenticated == true)
+            <div id="panel-reviews" style="display:@(showReviewForm?"block":"none");">
+
+                <!-- Form đánh giá — chỉ hiện khi có orderId hợp lệ từ server -->
+                @if (showReviewForm)
                 {
-                    <div class="mt-8 bg-[#16161a] border border-white/5 rounded-2xl p-6">
-                        <h3 class="text-white font-bold text-base mb-5">
-                            ✍️ Viết đánh giá của bạn
+                    <div class="review-form-wrap">
+                        <h3 style="font-size:1rem;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                            <span class="material-symbols-outlined" style="color:#6366f1;font-size:20px;">edit_note</span>
+                            Viết đánh giá của bạn
                         </h3>
-                        <form asp-controller="Review" asp-action="Create"
-                              method="post">
+                        <form action="/Review/Create" method="post" id="reviewForm">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@Model.Id" />
+                            <input type="hidden" name="orderId" value="@reviewOrderId" />
 
-                            <!-- Star rating -->
-                            <div class="mb-5">
-                                <label class="text-xs font-bold text-[#6b7280] uppercase
-                               tracking-wider mb-3 block">
+                            <!-- Stars -->
+                            <div style="margin-bottom:20px;">
+                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:10px;">
                                     Đánh giá *
                                 </label>
-                                <div class="flex gap-2" id="starRating">
+                                <div id="starPicker" style="display:flex;gap:6px;">
                                     @for (int s = 1; s <= 5; s++)
                                     {
-                                        <button type="button"
-                                                onclick="setRating(@s)"
-                                                id="star-@s"
-                                                class="text-3xl text-[#2a2a35] hover:text-yellow-400
-                                       transition-colors cursor-pointer
-                                       bg-none border-none">
+                                        <button type="button" onclick="setRating(@s)" data-star="@s"
+                                                style="font-size:34px;background:none;border:none;cursor:pointer;
+                                                   color:#e5e7eb;transition:all .15s;line-height:1;padding:2px;">
                                             ★
                                         </button>
                                     }
                                 </div>
                                 <input type="hidden" name="rating" id="ratingInput" value="0" />
-                                <p id="ratingError"
-                                   class="text-red-400 text-xs mt-1 hidden">
-                                    Vui lòng chọn số sao
-                                </p>
+                                <p id="ratingError" style="color:#ef4444;font-size:12px;margin:6px 0 0;display:none;">Vui lòng chọn số sao.</p>
                             </div>
 
                             <!-- Title -->
-                            <div class="mb-4">
-                                <label class="text-xs font-bold text-[#6b7280] uppercase
-                               tracking-wider mb-2 block">
-                                    Tiêu đề
-                                </label>
-                                <input type="text" name="title"
-                                       placeholder="Tóm tắt trải nghiệm của bạn..."
-                                       maxlength="200"
-                                       class="w-full bg-[#1c1c22] border border-white/8
-                              rounded-xl px-4 py-3 text-white text-sm
-                              outline-none focus:border-[#adc7ff]/50
-                              focus:ring-1 focus:ring-[#adc7ff]/30
-                              placeholder-[#374151] transition-all" />
+                            <div style="margin-bottom:14px;">
+                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px;">Tiêu đề (tùy chọn)</label>
+                                <input type="text" name="title" maxlength="200" class="review-input" placeholder="Tóm tắt nhận xét của bạn..." />
                             </div>
 
                             <!-- Comment -->
-                            <div class="mb-5">
-                                <label class="text-xs font-bold text-[#6b7280] uppercase
-                               tracking-wider mb-2 block">
-                                    Nội dung đánh giá *
-                                </label>
-                                <textarea name="comment" required rows="4"
-                                          maxlength="1000"
-                                          placeholder="Chia sẻ chi tiết trải nghiệm của bạn..."
-                                          class="w-full bg-[#1c1c22] border border-white/8
-                                 rounded-xl px-4 py-3 text-white text-sm
-                                 outline-none focus:border-[#adc7ff]/50
-                                 focus:ring-1 focus:ring-[#adc7ff]/30
-                                 placeholder-[#374151] resize-none
-                                 transition-all"></textarea>
+                            <div style="margin-bottom:20px;">
+                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px;">Nội dung *</label>
+                                <textarea name="comment" rows="4" maxlength="1000" required
+                                          class="review-input" style="resize:vertical;min-height:110px;"
+                                          placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
                             </div>
 
                             <button type="submit" onclick="return validateReview()"
-                                    class="px-7 py-3 bg-gradient-to-r from-[#adc7ff]
-                           to-[#7ca4f4] text-[#0d1b3e] font-bold
-                           rounded-xl text-sm hover:shadow-[0_8px_24px_rgba(173,199,255,0.3)]
-                           hover:-translate-y-0.5 transition-all
-                           cursor-pointer border-none">
+                                    style="padding:13px 28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                                       color:white;font-weight:700;font-size:14px;border:none;
+                                       border-radius:12px;cursor:pointer;transition:all .2s;
+                                       box-shadow:0 6px 20px rgba(99,102,241,.3);"
+                                    onmouseover="this.style.transform='translateY(-1px)'"
+                                    onmouseout="this.style.transform=''">
                                 Gửi đánh giá
                             </button>
                         </form>
                     </div>
                 }
-                else
-                {
-                    <div class="mt-8 bg-[#16161a] border border-white/5 rounded-2xl
-                p-8 text-center">
-                        <p class="text-[#6b7280] text-sm mb-4">
-                            Đăng nhập để viết đánh giá
-                        </p>
-                        <a asp-controller="Account" asp-action="Login"
-                           class="px-6 py-2.5 bg-[#adc7ff]/10 border border-[#adc7ff]/20
-                  text-[#adc7ff] font-bold rounded-xl text-sm
-                  hover:bg-[#adc7ff]/15 transition-colors no-underline
-                  inline-block">
-                            Đăng nhập
-                        </a>
-                    </div>
-                }
+
+                <!-- Danh sách đánh giá -->
+                <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 16px;">
+                    Đánh giá sản phẩm
+                    @if (approvedCount > 0)
+                    {
+                        <span style="color:#9ca3af;font-weight:400;font-size:14px;margin-left:6px;">(@approvedCount đánh giá)</span>
+                    }
+                </h3>
+
                 @if (Model.Reviews != null && Model.Reviews.Any(r => r.IsApproved))
                 {
-                    <!-- Rating summary -->
-                    <div style="display:flex;align-items:center;gap:32px;background:#fff;
-                                border:1px solid #e5e7eb;border-radius:20px;
-                                padding:28px 32px;margin-bottom:20px;
-                                box-shadow:0 2px 12px rgba(0,0,0,.04);">
-                        <div style="text-align:center;flex-shrink:0;">
-                            <p style="font-size:3.5rem;font-weight:900;color:#111827;
-                                      line-height:1;margin:0 0 6px;font-family:'Syne',sans-serif;">
-                                @Model.Rating.ToString("0.0")
-                            </p>
-                            <div style="display:flex;gap:2px;justify-content:center;margin-bottom:4px;">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    var sc = i <= (int)Math.Round(Model.Rating) ? "#f59e0b" : "#e5e7eb";
-                                    <span style="font-size:16px;color:@sc;">★</span>
-                                }
-                            </div>
-                            <p style="color:#9ca3af;font-size:12px;margin:0;">@approvedCount đánh giá</p>
-                        </div>
-                        <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
-                            @for (int star = 5; star >= 1; star--)
-                            {
-                                var cnt = Model.Reviews.Count(r => r.IsApproved && r.Rating == star);
-                                var pct = approvedCount > 0 ? (int)((double)cnt / approvedCount * 100) : 0;
-                                <div style="display:flex;align-items:center;gap:10px;">
-                                    <span style="color:#6b7280;font-size:11px;font-weight:600;width:12px;text-align:right;">@star</span>
-                                    <span style="color:#f59e0b;font-size:11px;">★</span>
-                                    <div style="flex:1;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
-                                        <div class="star-bar-fill" style="height:100%;border-radius:3px;width:@(pct)%;transition:width .6s ease;"></div>
-                                    </div>
-                                    <span style="color:#9ca3af;font-size:11px;width:28px;">@cnt</span>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Review list -->
                     <div style="display:flex;flex-direction:column;gap:12px;">
                         @foreach (var review in Model.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedOn))
                         {
                             <div class="review-card">
-                                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
-                                    <div style="display:flex;align-items:center;gap:12px;">
-                                        <div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;
-                                                    background:linear-gradient(135deg,#6366f1,#a78bfa);
-                                                    display:flex;align-items:center;justify-content:center;">
-                                            <span class="material-symbols-outlined" style="color:#fff;font-size:18px;">person</span>
+                                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <span class="material-symbols-outlined" style="color:white;font-size:18px;">person</span>
                                         </div>
                                         <div>
-                                            <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 3px;">
-                                                Người dùng #@(review.UserId.ToString()[..8])
-                                            </p>
-                                            <div style="display:flex;align-items:center;gap:8px;">
-                                                <span style="color:#9ca3af;font-size:12px;">@review.CreatedOn.ToString("dd/MM/yyyy")</span>
+                                            <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 3px;">Người dùng đã xác minh</p>
+                                            <div style="display:flex;align-items:center;gap:6px;">
+                                                <div style="display:flex;gap:1px;">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <span style="font-size:12px;color:@(i<=review.Rating?"#f59e0b":"#e5e7eb");">★</span>
+                                                    }
+                                                </div>
+                                                <span style="color:#9ca3af;font-size:11px;">@review.CreatedOn.ToString("dd/MM/yyyy")</span>
                                                 @if (review.IsVerifiedPurchase)
                                                 {
-                                                    <span class="verified-badge">✓ Đã mua hàng</span>
+                                                    <span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">✓ Đã mua hàng</span>
                                                 }
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="display:flex;gap:2px;">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            var sc2 = i <= review.Rating ? "#f59e0b" : "#e5e7eb";
-                                            <span style="font-size:14px;color:@sc2;">★</span>
-                                        }
-                                    </div>
                                 </div>
                                 @if (!string.IsNullOrEmpty(review.Title))
                                 {
-                                    <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 8px;">@review.Title</p>
+                                    <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 6px;">@review.Title</p>
                                 }
                                 <p style="color:#6b7280;font-size:14px;line-height:1.7;margin:0;">@review.Comment</p>
                             </div>
@@ -798,124 +689,89 @@
                 }
                 else
                 {
-                    <div style="text-align:center;padding:60px 0;">
-                        <span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;">rate_review</span>
-                        <p style="font-size:14px;color:#9ca3af;">Chưa có đánh giá nào.</p>
+                    <div style="text-align:center;padding:48px;background:#fafafa;border-radius:16px;border:1px solid #e5e7eb;">
+                        <p style="font-size:28px;margin:0 0 10px;">💬</p>
+                        <p style="color:#9ca3af;font-size:14px;margin:0;">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
                     </div>
                 }
             </div>
         </div>
+
     </div>
 </main>
 
 <!-- Toast -->
 <div id="cartToast">
-    <div id="toastIconWrap"
-         style="width:40px;height:40px;border-radius:50%;flex-shrink:0;
-                background:#ede9fe;display:flex;align-items:center;justify-content:center;">
-        <span class="material-symbols-outlined" id="toastIconSymbol"
-              style="font-size:20px;color:#6366f1;">check</span>
+    <div id="toastIconWrap" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;background:#ede9fe;display:flex;align-items:center;justify-content:center;">
+        <span class="material-symbols-outlined" id="toastIconSymbol" style="font-size:20px;color:#6366f1;">check</span>
     </div>
-    <span id="toastMsg" style="color:#111827;font-size:14px;font-weight:500;flex:1;">
-        Đã thêm vào giỏ!
-    </span>
-    <a href="/Cart"
-       style="color:#6366f1;font-size:12px;font-weight:700;text-decoration:none;
-              padding:5px 12px;border:1.5px solid #c7d2fe;border-radius:8px;
-              white-space:nowrap;background:#f5f3ff;transition:background .15s;"
-       onmouseover="this.style.background='#ede9fe'"
-       onmouseout="this.style.background='#f5f3ff'">
-        Xem giỏ →
-    </a>
+    <span id="toastMsg" style="color:#111827;font-size:14px;font-weight:500;flex:1;">Đã thêm vào giỏ!</span>
+    <a href="/Cart" style="color:#6366f1;font-size:12px;font-weight:700;text-decoration:none;
+                           padding:5px 12px;border:1.5px solid #c7d2fe;border-radius:8px;
+                           white-space:nowrap;background:#f5f3ff;">Xem giỏ →</a>
 </div>
 
 @section Scripts {
-
     <script>
-        // Star rating
-        var selectedRating = 0;
-
-        function setRating(val) {
-            selectedRating = val;
-            document.getElementById('ratingInput').value = val;
-            document.getElementById('ratingError').classList.add('hidden');
-
-            for (var i = 1; i <= 5; i++) {
-                var star = document.getElementById('star-' + i);
-                if (i <= val) {
-                    star.style.color = '#facc15';
-                } else {
-                    star.style.color = '#2a2a35';
-                }
+        // ── Tabs ──────────────────────────────────────────────────────────────
+        function switchTab(tab) {
+            var isReview = tab === 'reviews';
+            document.getElementById('tab-specs').classList.toggle('active', !isReview);
+            document.getElementById('tab-reviews').classList.toggle('active', isReview);
+            document.getElementById('panel-specs').style.display = isReview ? 'none' : 'block';
+            document.getElementById('panel-reviews').style.display = isReview ? 'block' : 'none';
+            var badge = document.getElementById('reviewBadge');
+            if (badge) {
+                badge.style.background = isReview ? '#ede9fe' : '#f3f4f6';
+                badge.style.color = isReview ? '#6366f1' : '#9ca3af';
             }
         }
 
-        // Hover effect
-        for (var i = 1; i <= 5; i++) {
-            (function (idx) {
-                var star = document.getElementById('star-' + idx);
-                if (!star) return;
-                star.addEventListener('mouseover', function () {
-                    for (var j = 1; j <= 5; j++) {
-                        document.getElementById('star-' + j).style.color =
-                            j <= idx ? '#facc15' : '#2a2a35';
-                    }
-                });
-                star.addEventListener('mouseout', function () {
-                    for (var j = 1; j <= 5; j++) {
-                        document.getElementById('star-' + j).style.color =
-                            j <= selectedRating ? '#facc15' : '#2a2a35';
-                    }
-                });
-            })(i);
+        // Nếu được redirect từ Orders → tự động mở tab reviews
+        @if (showReviewForm)
+        {
+            <text>document.addEventListener('DOMContentLoaded', function () { switchTab('reviews'); }); </text>
         }
 
+        // ── Star rating ───────────────────────────────────────────────────────
+        var currentRating = 0;
+
+        function setRating(val) {
+            currentRating = val;
+            document.getElementById('ratingInput').value = val;
+            document.getElementById('ratingError').style.display = 'none';
+            renderStars(val);
+        }
+        function hoverRating(val) { renderStars(val); }
+        function unhoverRating() { renderStars(currentRating); }
+        function renderStars(val) {
+            document.querySelectorAll('#starPicker button').forEach(function (btn) {
+                var s = parseInt(btn.dataset.star);
+                btn.style.color = s <= val ? '#f59e0b' : '#e5e7eb';
+                btn.style.transform = s <= val ? 'scale(1.15)' : 'scale(1)';
+            });
+        }
         function validateReview() {
-            if (selectedRating === 0) {
-                document.getElementById('ratingError').classList.remove('hidden');
+            if (currentRating === 0) {
+                document.getElementById('ratingError').style.display = 'block';
                 return false;
             }
             return true;
         }
-        var activeTab = 'specs';
 
-        function switchTab(tab) {
-            activeTab = tab;
-            var tSpecs = document.getElementById('tab-specs');
-            var tReviews = document.getElementById('tab-reviews');
-            var pSpecs = document.getElementById('panel-specs');
-            var pReviews = document.getElementById('panel-reviews');
-            var badge = document.getElementById('reviewBadge');
-
-            if (tab === 'specs') {
-                tSpecs.classList.add('active');
-                tReviews.classList.remove('active');
-                if (badge) { badge.style.background = '#f3f4f6'; badge.style.color = '#9ca3af'; }
-                pSpecs.style.display = 'block';
-                pReviews.style.display = 'none';
-            } else {
-                tReviews.classList.add('active');
-                tSpecs.classList.remove('active');
-                if (badge) { badge.style.background = '#ede9fe'; badge.style.color = '#6366f1'; }
-                pSpecs.style.display = 'none';
-                pReviews.style.display = 'block';
-            }
-        }
-
+        // ── Image gallery ─────────────────────────────────────────────────────
         function changeImage(url, el) {
             var img = document.getElementById('mainImage');
             if (!img) return;
             img.style.opacity = '0';
             setTimeout(function () { img.src = url; img.style.opacity = '1'; }, 150);
-            document.querySelectorAll('.pd-img-thumb').forEach(function (t) {
-                t.classList.remove('active');
-            });
+            document.querySelectorAll('.pd-img-thumb').forEach(function (t) { t.classList.remove('active'); });
             if (el) el.classList.add('active');
         }
 
+        // ── Quantity ──────────────────────────────────────────────────────────
         var qty = 1;
         var maxStock = parseInt(document.getElementById('addToCartBtn')?.dataset.maxStock ?? '0');
-
         function changeQty(delta) {
             qty = Math.max(1, Math.min(maxStock, qty + delta));
             document.getElementById('qtyDisplay').textContent = qty;
@@ -926,17 +782,17 @@
         }
         changeQty(0);
 
+        // ── Add to cart ───────────────────────────────────────────────────────
         var toastTimer;
         function showToast(msg, type) {
             var toast = document.getElementById('cartToast');
             var symbol = document.getElementById('toastIconSymbol');
             var wrap = document.getElementById('toastIconWrap');
-            var msgEl = document.getElementById('toastMsg');
             symbol.textContent = type === 'success' ? 'check' : 'error';
             symbol.style.color = type === 'success' ? '#6366f1' : '#ef4444';
             wrap.style.background = type === 'success' ? '#ede9fe' : '#fee2e2';
             toast.style.borderColor = type === 'success' ? '#c7d2fe' : '#fecaca';
-            msgEl.textContent = msg;
+            document.getElementById('toastMsg').textContent = msg;
             toast.style.opacity = '1';
             toast.style.transform = 'translateY(0)';
             toast.style.pointerEvents = 'auto';

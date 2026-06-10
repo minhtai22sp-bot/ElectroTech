@@ -1,13 +1,9 @@
 ﻿using AspNetCoreHero.Results;
 using Entities;
+using Enums;
 using Interfaces;
 using MediatR;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ElectroTech.Application.Features.Reviews.Commands
 {
@@ -28,9 +24,14 @@ namespace ElectroTech.Application.Features.Reviews.Commands
 
         public class Handler : IRequestHandler<CreateReviewCommand, IResult<bool>>
         {
-            private readonly IReviewRepository _repo;
+            private readonly IReviewRepository _reviewRepo;
+            private readonly IOrderRepository _orderRepo;
 
-            public Handler(IReviewRepository repo) => _repo = repo;
+            public Handler(IReviewRepository reviewRepo, IOrderRepository orderRepo)
+            {
+                _reviewRepo = reviewRepo;
+                _orderRepo = orderRepo;
+            }
 
             public async Task<IResult<bool>> Handle(
                 CreateReviewCommand cmd, CancellationToken ct)
@@ -40,10 +41,22 @@ namespace ElectroTech.Application.Features.Reviews.Commands
                     if (!Guid.TryParse(cmd.UserId, out var userId))
                         return await Result<bool>.FailAsync("User không hợp lệ.");
 
-                    // Kiểm tra đã review chưa
-                    if (await _repo.HasReviewedAsync(cmd.ProductId, userId))
+                    // ✅ 1. Kiểm tra đã mua và đã giao hàng chưa
+                    var hasDelivered = await _orderRepo
+                        .HasDeliveredProductAsync(userId, cmd.ProductId);
+
+                    if (!hasDelivered)
+                        return await Result<bool>.FailAsync(
+                            "Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao.");
+
+                    // ✅ 2. Kiểm tra đã review chưa
+                    if (await _reviewRepo.HasReviewedAsync(cmd.ProductId, userId))
                         return await Result<bool>.FailAsync(
                             "Bạn đã đánh giá sản phẩm này rồi.");
+
+                    // ✅ 3. Lấy OrderItemId để đánh dấu verified purchase
+                    var orderItemId = await _orderRepo
+                        .GetDeliveredOrderItemIdAsync(userId, cmd.ProductId);
 
                     var review = new Review
                     {
@@ -52,12 +65,14 @@ namespace ElectroTech.Application.Features.Reviews.Commands
                         Rating = cmd.Rating,
                         Title = cmd.Title,
                         Comment = cmd.Comment,
-                        IsApproved = true, // Auto approve
-                        IsVerifiedPurchase = false
+                        IsApproved = true,
+                        IsVerifiedPurchase = true,  // ✅ Đã xác nhận mua hàng
+                        OrderItemId = orderItemId
                     };
 
-                    await _repo.AddAsync(review);
-                    return await Result<bool>.SuccessAsync(true, "Cảm ơn bạn đã đánh giá!");
+                    await _reviewRepo.AddAsync(review);
+                    return await Result<bool>.SuccessAsync(
+                        true, "Cảm ơn bạn đã đánh giá sản phẩm!");
                 }
                 catch (Exception ex)
                 {

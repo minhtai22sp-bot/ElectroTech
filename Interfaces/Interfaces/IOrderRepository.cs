@@ -14,5 +14,7 @@ namespace Interfaces
         Task AddAsync(Order order);
         Task UpdateAsync(Order order);
         Task<List<Order>> GetAllAsync();
+        Task<bool> HasDeliveredProductAsync(Guid userId, int productId);
+        Task<int?> GetDeliveredOrderItemIdAsync(Guid userId, int productId);
     }
 }
