@@ -22,5 +22,7 @@ namespace Interfaces
         Task<List<ProductImage>> GetImagesAsync(int productId);
         Task SaveSpecsAsync(int productId, List<ProductSpec> specs);
         Task SaveImagesAsync(int productId, List<ProductImage> images);
+        Task<int> CountLowStockAsync(int threshold = 5);
+        Task<ProductSidebarStats> GetSidebarStatsAsync(string? keyword = null);
     }
 }

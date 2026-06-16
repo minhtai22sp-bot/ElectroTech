@@ -1,4 +1,5 @@
 ﻿using Entities;
+using Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,10 @@ namespace Interfaces
         Task<List<Order>> GetAllAsync();
         Task<bool> HasDeliveredProductAsync(Guid userId, int productId);
         Task<int?> GetDeliveredOrderItemIdAsync(Guid userId, int productId);
+        Task<List<Order>> GetByDateAsync(DateTime date);
+        Task<int> CountByStatusAsync(OrderStatus status);
+        Task<List<TopProductDto>> GetTopSellingProductsAsync(int limit);
+        Task<int> CountUniqueCustomersAsync();
+        Task<int> CountTotalOrdersAsync();
     }
 }

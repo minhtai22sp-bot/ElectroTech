@@ -27,16 +27,16 @@ public class ProductRepository : IProductRepository
 
     public IQueryable<Product> Entities => _productreporitory.Entities;
 
+    // ── CRUD ───────────────────────────────────────────────────────────────────
+
     public async Task<Product> GetById(int id)
-    {
-        return await _productreporitory.Entities
+        => await _productreporitory.Entities
             .Include(x => x.Categories)
             .Include(x => x.ProductImages)
             .Include(x => x.ProductSpecs)
             .Include(x => x.Reviews)
             .Where(x => x.Id == id)
             .SingleOrDefaultAsync();
-    }
 
     public async Task AddAsync(Product entity)
     {
@@ -51,16 +51,17 @@ public class ProductRepository : IProductRepository
     }
 
     public async Task DeleteAsync(int id)
-    {
-        await _productreporitory.Entities
+        => await _productreporitory.Entities
             .Where(x => x.Id == id)
             .ExecuteDeleteAsync();
-    }
+
+    // ── Paginated List ─────────────────────────────────────────────────────────
 
     public async Task<PaginatedList<ProductIndexModel>> GetAllPaginatedAsync(ProductSearch model)
     {
         var query = _productreporitory.Entities
             .Include(x => x.Categories)
+            .Include(x => x.Reviews)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(model.keyword))
@@ -95,28 +96,88 @@ public class ProductRepository : IProductRepository
             OriginalPrice = x.OriginalPrice,
             Stock = x.Stock,
             ThumbnailUrl = x.ThumbnailUrl,
-            Rating = x.Rating,
-            ReviewCount = x.ReviewCount,
             IsFeatured = x.IsFeatured,
             IsActive = x.IsActive,
             CategoryId = x.CategoryId,
-            CategoryName = x.Categories != null ? x.Categories.Name : ""
+            CategoryName = x.Categories != null ? x.Categories.Name : "",
+            ReviewCount = x.Reviews.Count(r => r.IsApproved),
+            Rating = x.Reviews.Any(r => r.IsApproved)
+                ? (decimal)Math.Round(
+                    x.Reviews.Where(r => r.IsApproved).Average(r => (double)r.Rating), 1)
+                : 0m,
         });
 
         return await PaginatedList<ProductIndexModel>.ToPagedListAsync(
             result, model.currentPage, model.pageSize);
     }
 
+    // ── Sidebar Stats ──────────────────────────────────────────────────────────
+
+    public async Task<ProductSidebarStats> GetSidebarStatsAsync(string? keyword = null)
+    {
+        var query = _productreporitory.Entities
+            .Include(x => x.Categories)
+            .AsQueryable();
+
+        // Chỉ giữ filter keyword, KHÔNG lọc category/brand/stock
+        // để sidebar luôn hiển thị số đếm toàn bộ
+        if (!string.IsNullOrEmpty(keyword))
+            query = query.Where(x =>
+                x.Name.Contains(keyword) ||
+                x.Code.Contains(keyword) ||
+                x.Brand.Contains(keyword));
+
+        var stats = new ProductSidebarStats
+        {
+            TotalCount = await query.CountAsync(),
+            InStockCount = await query.CountAsync(x => x.Stock > 0),
+            OnSaleCount = await query.CountAsync(x =>
+                                x.OriginalPrice.HasValue && x.OriginalPrice > x.Price),
+            FeaturedCount = await query.CountAsync(x => x.IsFeatured),
+
+            CategoryCounts = await query
+                .Where(x => x.Categories != null)
+                .GroupBy(x => new { x.CategoryId, x.Categories!.Name })
+                .Select(g => new CategoryCount
+                {
+                    Id = g.Key.CategoryId,
+                    Name = g.Key.Name,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .ToListAsync(),
+
+            BrandCounts = await query
+                .Where(x => !string.IsNullOrEmpty(x.Brand))
+                .GroupBy(x => x.Brand!)
+                .Select(g => new BrandCount
+                {
+                    Brand = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .ToListAsync(),
+        };
+
+        return stats;
+    }
+
+    // ── Low Stock ──────────────────────────────────────────────────────────────
+
+    public async Task<int> CountLowStockAsync(int threshold = 5)
+        => await _productreporitory.Entities
+            .CountAsync(p => p.IsActive && p.Stock <= threshold);
+
     // ── Specs ──────────────────────────────────────────────────────────────────
+
     public async Task<List<ProductSpec>> GetSpecsAsync(int productId)
         => await _specRepo.Entities
             .Where(s => s.ProductId == productId)
-            .OrderBy(s => s.DisplayOrder)   // ✅ đã sửa từ SortOrder → DisplayOrder
+            .OrderBy(s => s.DisplayOrder)
             .ToListAsync();
 
     public async Task SaveSpecsAsync(int productId, List<ProductSpec> specs)
     {
-        // Xóa specs cũ
         var old = await _specRepo.Entities
             .Where(s => s.ProductId == productId)
             .ToListAsync();
@@ -124,7 +185,6 @@ public class ProductRepository : IProductRepository
         foreach (var s in old)
             await _specRepo.DeleteAsync(s);
 
-        // Thêm specs mới
         foreach (var s in specs)
         {
             s.ProductId = productId;
@@ -135,15 +195,15 @@ public class ProductRepository : IProductRepository
     }
 
     // ── Images ─────────────────────────────────────────────────────────────────
+
     public async Task<List<ProductImage>> GetImagesAsync(int productId)
         => await _imageRepo.Entities
             .Where(i => i.ProductId == productId)
-            .OrderBy(i => i.DisplayOrder)   // ✅ đã sửa từ SortOrder → DisplayOrder
+            .OrderBy(i => i.DisplayOrder)
             .ToListAsync();
 
     public async Task SaveImagesAsync(int productId, List<ProductImage> images)
     {
-        // Xóa images cũ
         var old = await _imageRepo.Entities
             .Where(i => i.ProductId == productId)
             .ToListAsync();
@@ -151,7 +211,6 @@ public class ProductRepository : IProductRepository
         foreach (var i in old)
             await _imageRepo.DeleteAsync(i);
 
-        // Thêm images mới
         foreach (var img in images)
         {
             img.ProductId = productId;

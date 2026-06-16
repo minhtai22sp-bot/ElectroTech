@@ -39,6 +39,34 @@ namespace ElectroTech.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<Order>> GetByDateAsync(DateTime date)
+            => await _repo.Entities
+                .Include(o => o.OrderItems)
+                .Where(o => o.CreatedOn.Date == date.Date)
+                .OrderByDescending(o => o.CreatedOn)
+                .ToListAsync();
+
+        public async Task<int> CountByStatusAsync(OrderStatus status)
+            => await _repo.Entities
+                .CountAsync(o => o.Status == status);
+
+        public async Task<List<TopProductDto>> GetTopSellingProductsAsync(int limit)
+            => await _repo.Entities
+                .Where(o => o.Status == OrderStatus.Delivered)
+                .SelectMany(o => o.OrderItems)
+                .GroupBy(i => new { i.ProductId, i.ProductName, i.ProductImage })
+                .Select(g => new TopProductDto
+                {
+                    Id = g.Key.ProductId ?? 0,
+                    Name = g.Key.ProductName,
+                    ThumbnailUrl = g.Key.ProductImage,
+                    SoldCount = g.Sum(i => i.Quantity),
+                    Revenue = g.Sum(i => i.TotalPrice)
+                })
+                .OrderByDescending(x => x.SoldCount)
+                .Take(limit)
+                .ToListAsync();
+
         public async Task AddAsync(Order order)
         {
             await _repo.AddAsync(order);
@@ -50,27 +78,31 @@ namespace ElectroTech.Infrastructure.Repository
             await _repo.UpdateAsync(order);
             await _uow.SaveChangesAsync();
         }
+
         public async Task<bool> HasDeliveredProductAsync(Guid userId, int productId)
-        {
-            return await _repo.Entities
-                .Where(o => o.UserId == userId
-                         && o.Status == OrderStatus.Delivered)
-                .AnyAsync(o => o.OrderItems
-                    .Any(i => i.ProductId == productId));
-        }
+            => await _repo.Entities
+                .Where(o => o.UserId == userId && o.Status == OrderStatus.Delivered)
+                .AnyAsync(o => o.OrderItems.Any(i => i.ProductId == productId));
 
         public async Task<int?> GetDeliveredOrderItemIdAsync(Guid userId, int productId)
         {
             var order = await _repo.Entities
                 .Include(o => o.OrderItems)
-                .Where(o => o.UserId == userId
-                         && o.Status == OrderStatus.Delivered)
-                .FirstOrDefaultAsync(o => o.OrderItems
-                    .Any(i => i.ProductId == productId));
+                .Where(o => o.UserId == userId && o.Status == OrderStatus.Delivered)
+                .FirstOrDefaultAsync(o => o.OrderItems.Any(i => i.ProductId == productId));
 
             return order?.OrderItems
                 .FirstOrDefault(i => i.ProductId == productId)?.Id;
         }
-
+        public async Task<int> CountUniqueCustomersAsync()
+    => await _repo.Entities
+           .Select(o => o.UserId)
+           .Distinct()
+           .CountAsync();
+        public async Task<int> CountTotalOrdersAsync()
+        {
+            var orders = await GetAllAsync();
+            return orders.Count;
+        }
     }
 }

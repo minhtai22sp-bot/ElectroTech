@@ -2,234 +2,649 @@
 @model Library.PaginatedList<ProductIndexModel>
 
 @{
-    var categories = ViewBag.Categories as List<Entities.Categories> ?? new();
-    var currentCat = ViewBag.CategoryId as int? ?? 0;
-    var currentQ = ViewBag.SearchQuery as string ?? "";
-    var currentSort = ViewBag.SortBy as string ?? "";
-    var totalCount = Model?.TotalItemCount ?? 0;
+    // ── ViewBag ────────────────────────────────────────────────────────────────
+    var currentCat      = ViewBag.CategoryId as int? ?? 0;
+    var currentQ        = ViewBag.SearchQuery as string ?? "";
+    var currentSort     = ViewBag.SortBy as string ?? "";
+    var totalCount      = Model?.TotalItemCount ?? 0;
+    var currentInStock  = ViewBag.InStock  as bool? == true;
+    var currentOnSale   = ViewBag.OnSale   as bool? == true;
+    var currentFeatured = ViewBag.Featured as bool? == true;
+    var currentBrand    = ViewBag.Brand as string ?? "";
+    var stockAll        = !currentInStock && !currentOnSale && !currentFeatured;
+
+    // ── Price filter ───────────────────────────────────────────────────────────
+    var currentMinPrice = (ViewBag.MinPrice as decimal?)?.ToString() ?? "";
+    var currentMaxPrice = (ViewBag.MaxPrice as decimal?)?.ToString() ?? "";
+
+    // ── Sidebar stats (số liệu thật từ DB) ────────────────────────────────────
+    var stats = ViewBag.SidebarStats as ProductSidebarStats ?? new ProductSidebarStats();
+
+    // ── Helper: build URL giữ nguyên filter hiện tại, override key cụ thể ─────
+    string BuildUrl(
+        int?   cat      = null,
+        string q        = null,
+        string sortBy   = null,
+        string inStock  = null,
+        string onSale   = null,
+        string featured = null,
+        string brand    = null,
+        int?   page     = null,
+        string minPrice = null,
+        string maxPrice = null)
+    {
+        var p = new System.Collections.Specialized.NameValueCollection();
+
+        int    useCat      = cat     ?? currentCat;
+        string useQ        = q       ?? currentQ;
+        string useSort     = sortBy  ?? currentSort;
+        string useMinPrice = minPrice == null ? currentMinPrice : (minPrice == "" ? "" : minPrice);
+        string useMaxPrice = maxPrice == null ? currentMaxPrice : (maxPrice == "" ? "" : maxPrice);
+
+        if (useCat > 0)                       p["categoryId"] = useCat.ToString();
+        if (!string.IsNullOrEmpty(useQ))      p["q"]          = useQ;
+        if (!string.IsNullOrEmpty(useSort))   p["sortBy"]     = useSort;
+
+        bool useInStock  = inStock  == null ? currentInStock  : inStock  == "true";
+        bool useOnSale   = onSale   == null ? currentOnSale   : onSale   == "true";
+        bool useFeatured = featured == null ? currentFeatured : featured  == "true";
+        string useBrand  = brand    == null ? currentBrand    : (brand == "" ? "" : brand);
+
+        if (useInStock)                        p["inStock"]  = "true";
+        if (useOnSale)                         p["onSale"]   = "true";
+        if (useFeatured)                       p["featured"] = "true";
+        if (!string.IsNullOrEmpty(useBrand))   p["brand"]    = useBrand;
+        if (!string.IsNullOrEmpty(useMinPrice)) p["minPrice"] = useMinPrice;
+        if (!string.IsNullOrEmpty(useMaxPrice)) p["maxPrice"] = useMaxPrice;
+        if (page.HasValue && page > 1)         p["page"]     = page.ToString();
+
+        var qs = string.Join("&", Array.ConvertAll(p.AllKeys,
+            k => Uri.EscapeDataString(k) + "=" + Uri.EscapeDataString(p[k])));
+        return "/Products" + (qs.Length > 0 ? "?" + qs : "");
+    }
+
+    bool hasAnyFilter = currentCat > 0 || !string.IsNullOrEmpty(currentQ)
+                     || currentInStock || currentOnSale || currentFeatured
+                     || !string.IsNullOrEmpty(currentBrand)
+                     || !string.IsNullOrEmpty(currentMinPrice)
+                     || !string.IsNullOrEmpty(currentMaxPrice);
+
+    // Giá trị slider khởi tạo
+    long sliderMin = string.IsNullOrEmpty(currentMinPrice) ? 0         : (long)decimal.Parse(currentMinPrice);
+    long sliderMax = string.IsNullOrEmpty(currentMaxPrice) ? 50000000  : (long)decimal.Parse(currentMaxPrice);
 }
 
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-    /* Chỉ dùng cho dynamic Razor conditions — không thể dùng Tailwind cho các class được tạo runtime */
-    .cat-item-active {
-        background: #fff7ed;
-        color: #f97316;
-        font-weight: 600;
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* Category active bar */
+    .cat-row { position: relative; }
+    .cat-row.active::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 50%;
+        transform: translateY(-50%);
+        width: 3px; height: 65%;
+        background: #f97316;
+        border-radius: 3px;
     }
 
-        .cat-item-active .cat-badge {
-            background: #fed7aa;
-            color: #f97316;
-        }
-
-    .cat-item-default {
-        color: #374151;
+    /* Product card */
+    .pc { transition: transform .22s, box-shadow .22s; }
+    .pc:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 18px 44px rgba(0,0,0,.1);
     }
-
-        .cat-item-default:hover {
-            background: #f9fafb;
-        }
-
-    .star-on {
-        color: #fbbf24;
+    .pc:hover .pc-img { transform: scale(1.06); }
+    .pc-img { transition: transform .35s; }
+    .pc:hover .cart-ic {
+        background: #111 !important;
+        border-color: #111 !important;
+        color: #fff !important;
     }
+    .pc:hover .wish-btn { opacity: 1 !important; }
+    .wish-btn { transition: opacity .2s; }
 
-    .star-off {
-        color: #e5e7eb;
+    /* Sort select */
+    .ts {
+        -webkit-appearance: none;
+        background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2.5"%3E%3Cpath d="m6 9 6 6 6-6"/%3E%3C/svg%3E');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 10px;
+    }
+    .ts:focus { outline: none; box-shadow: 0 0 0 2px rgba(249,115,22,.25); }
+
+    /* Pagination */
+    .pb { transition: border-color .15s, color .15s, background .15s; }
+    .pb:hover { border-color: #f97316 !important; color: #f97316 !important; }
+    .pb.cur {
+        background: #f97316 !important;
+        border-color: #f97316 !important;
+        color: #fff !important;
+        pointer-events: none;
+    }
+    .pb.off { opacity: .35; pointer-events: none; }
+
+    /* Dual range slider */
+    .range-wrap { position: relative; height: 24px; }
+    .range-wrap input[type=range] {
+        position: absolute;
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        pointer-events: none;
+        height: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0;
+    }
+    .range-wrap input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: #f97316;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #f97316;
+        cursor: pointer;
+        pointer-events: all;
+    }
+    .range-wrap input[type=range]::-moz-range-thumb {
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: #f97316;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #f97316;
+        cursor: pointer;
+        pointer-events: all;
+    }
+    .range-track {
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 4px;
+        border-radius: 99px;
+        background: #e5e5e5;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    .range-fill {
+        position: absolute;
+        height: 100%;
+        background: #f97316;
+        border-radius: 99px;
     }
 </style>
 
-<div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-6 py-8 flex gap-6 items-start">
+<div class="bg-[#f0efed] min-h-screen" style="font-family:'Inter',system-ui,sans-serif;">
 
-        <!-- ── SIDEBAR ── -->
-        <aside class="w-52 shrink-0 sticky top-6 flex flex-col gap-3">
+    <!-- ══ PAGE HEADER ══ -->
+    <div class="bg-[#111]" style="padding:56px 0 44px;">
+        <div style="max-width:1280px;margin:0 auto;padding:0 40px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+                <a href="/" style="font-size:11px;color:#444;font-weight:600;text-decoration:none;">Trang chủ</a>
+                <span style="color:#2a2a2a;font-size:11px;">›</span>
+                <span style="font-size:11px;color:#f97316;font-weight:700;">Sản phẩm</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+                <div>
+                    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <span style="display:block;width:26px;height:2px;background:#f97316;border-radius:2px;"></span>
+                        <span style="font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#f97316;">Khám phá bộ sưu tập</span>
+                    </div>
+                    <h1 style="font-size:clamp(2.2rem,4vw,3.4rem);font-weight:900;letter-spacing:-.04em;line-height:1;color:#fff;margin:0 0 12px;">
+                        Tất cả <span style="color:#f97316;">Sản phẩm</span>
+                    </h1>
+                    <p style="font-size:13px;color:#555;margin:0;">
+                        @if (currentCat > 0)
+                        {
+                            var ac = stats.CategoryCounts.FirstOrDefault(c => c.Id == currentCat);
+                            if (ac != null) { <text>Danh mục: <strong style="color:#888;">@ac.Name</strong></text> }
+                        }
+                        else if (!string.IsNullOrEmpty(currentQ))
+                        {
+                            <text>Kết quả cho: <strong style="color:#888;">"@currentQ"</strong></text>
+                        }
+                        else if (!string.IsNullOrEmpty(currentMinPrice) || !string.IsNullOrEmpty(currentMaxPrice))
+                        {
+                            <text>Giá: <strong style="color:#888;">@(string.IsNullOrEmpty(currentMinPrice)?"0":decimal.Parse(currentMinPrice).ToString("N0"))₫ – @(string.IsNullOrEmpty(currentMaxPrice)?"50.000.000":decimal.Parse(currentMaxPrice).ToString("N0"))₫</strong></text>
+                        }
+                        else
+                        {
+                            <text>Thiết bị công nghệ hiệu suất cao — được lựa chọn kỹ lưỡng.</text>
+                        }
+                    </p>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+                    <span style="font-size:3rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-.04em;">@totalCount</span>
+                    <span style="font-size:10px;color:#444;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Sản phẩm</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Danh mục -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Danh mục</p>
-                <ul class="flex flex-col gap-0.5">
-                    <li>
-                        <a asp-action="Index" asp-controller="Products"
-                           asp-route-q="@currentQ" asp-route-sortBy="@currentSort"
-                           class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors @(currentCat==0 ? "cat-item-active" : "cat-item-default")">
-                            <span>Tất cả</span>
-                            <span class="cat-badge text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">@totalCount</span>
-                        </a>
-                    </li>
-                    @foreach (var cat in categories)
+    <!-- ══ TOPBAR ══ -->
+    <div style="background:#fff;border-bottom:1px solid #e8e8e6;position:sticky;top:64px;z-index:40;">
+        <div style="max-width:1280px;margin:0 auto;padding:0 40px;height:58px;
+                    display:flex;align-items:center;justify-content:space-between;gap:16px;">
+
+            <!-- Search form -->
+            <form method="get" asp-action="Index" asp-controller="Products" style="position:relative;flex-shrink:0;">
+                @if (currentCat > 0)                              { <input type="hidden" name="categoryId" value="@currentCat" /> }
+                @if (currentInStock)                              { <input type="hidden" name="inStock"    value="true" /> }
+                @if (currentOnSale)                               { <input type="hidden" name="onSale"     value="true" /> }
+                @if (currentFeatured)                             { <input type="hidden" name="featured"   value="true" /> }
+                @if (!string.IsNullOrEmpty(currentBrand))         { <input type="hidden" name="brand"      value="@currentBrand" /> }
+                @if (!string.IsNullOrEmpty(currentSort))          { <input type="hidden" name="sortBy"     value="@currentSort" /> }
+                @if (!string.IsNullOrEmpty(currentMinPrice))      { <input type="hidden" name="minPrice"   value="@currentMinPrice" /> }
+                @if (!string.IsNullOrEmpty(currentMaxPrice))      { <input type="hidden" name="maxPrice"   value="@currentMaxPrice" /> }
+
+                <span class="material-symbols-outlined"
+                      style="position:absolute;left:11px;top:50%;transform:translateY(-50%);
+                             font-size:15px;color:#bbb;pointer-events:none;">search</span>
+                <input type="text" name="q" value="@currentQ" placeholder="Tìm sản phẩm..."
+                       style="height:38px;width:260px;padding:0 14px 0 36px;border-radius:12px;
+                              background:#f5f4f1;border:1.5px solid transparent;color:#111;font-size:13px;
+                              outline:none;transition:all .18s;"
+                       onfocus="this.style.borderColor='#f97316';this.style.background='#fff';this.style.boxShadow='0 0 0 3px rgba(249,115,22,.12)'"
+                       onblur="this.style.borderColor='transparent';this.style.background='#f5f4f1';this.style.boxShadow='none'" />
+            </form>
+
+            <div style="display:flex;align-items:center;gap:10px;">
+                @if (hasAnyFilter)
+                {
+                    <a href="/Products"
+                       style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;
+                              border-radius:999px;background:#fff3e8;border:1.5px solid #fed7aa;
+                              color:#f97316;font-size:11px;font-weight:800;text-decoration:none;transition:all .15s;"
+                       onmouseover="this.style.background='#f97316';this.style.color='#fff'"
+                       onmouseout="this.style.background='#fff3e8';this.style.color='#f97316'">
+                        <span class="material-symbols-outlined" style="font-size:13px;">close</span>
+                        Xóa bộ lọc
+                    </a>
+                }
+
+                <!-- Sort form -->
+                <form method="get" asp-action="Index" asp-controller="Products" id="sf"
+                      style="display:flex;align-items:center;gap:8px;">
+                    @if (currentCat > 0)                          { <input type="hidden" name="categoryId" value="@currentCat" /> }
+                    @if (!string.IsNullOrEmpty(currentQ))         { <input type="hidden" name="q"          value="@currentQ" /> }
+                    @if (currentInStock)                          { <input type="hidden" name="inStock"    value="true" /> }
+                    @if (currentOnSale)                           { <input type="hidden" name="onSale"     value="true" /> }
+                    @if (currentFeatured)                         { <input type="hidden" name="featured"   value="true" /> }
+                    @if (!string.IsNullOrEmpty(currentBrand))     { <input type="hidden" name="brand"      value="@currentBrand" /> }
+                    @if (!string.IsNullOrEmpty(currentMinPrice))  { <input type="hidden" name="minPrice"   value="@currentMinPrice" /> }
+                    @if (!string.IsNullOrEmpty(currentMaxPrice))  { <input type="hidden" name="maxPrice"   value="@currentMaxPrice" /> }
+
+                    <span style="font-size:11px;font-weight:700;color:#bbb;white-space:nowrap;letter-spacing:.05em;">SẮP XẾP</span>
+                    <select name="sortBy" onchange="document.getElementById('sf').submit()" class="ts"
+                            style="height:38px;padding:0 28px 0 12px;border-radius:12px;
+                                   background:#f5f4f1;border:1.5px solid transparent;
+                                   color:#444;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;">
+                        @foreach (var (val, label) in new[] {
+                            ("",           "Mặc định"),
+                            ("price_asc",  "Giá thấp → cao"),
+                            ("price_desc", "Giá cao → thấp"),
+                            ("newest",     "Mới nhất"),
+                            ("rating",     "Đánh giá cao"),
+                        })
+                        {
+                            <option value="@val" selected="@(currentSort == val)">@label</option>
+                        }
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ CONTENT ══ -->
+    <div style="max-width:1280px;margin:0 auto;padding:28px 40px 100px;
+                display:flex;gap:26px;align-items:flex-start;">
+
+        <!-- ══════════ SIDEBAR ══════════ -->
+        <aside style="width:290px;flex-shrink:0;position:sticky;top:136px;
+                      display:flex;flex-direction:column;gap:12px;">
+
+            <!-- ── CATEGORIES ── -->
+            <div class="bg-white border border-[#ebebeb] rounded-[20px] overflow-hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between;
+                            padding:16px 20px;border-bottom:1px solid #f4f4f2;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:28px;height:28px;border-radius:9px;background:#fff3e8;
+                                    display:flex;align-items:center;justify-content:center;">
+                            <span class="material-symbols-outlined" style="font-size:15px;color:#f97316;">category</span>
+                        </div>
+                        <span style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#111;">Danh mục</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:700;color:#ccc;background:#f5f5f3;
+                                 padding:2px 9px;border-radius:999px;">@stats.CategoryCounts.Count</span>
+                </div>
+                <div style="padding:10px;">
+                    <a href="@BuildUrl(cat: 0)"
+                       class="cat-row @(currentCat == 0 ? "active" : "")"
+                       style="display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;
+                              border-radius:12px;font-size:13px;font-weight:@(currentCat==0?"700":"500");
+                              text-decoration:none;transition:background .12s;
+                              background:@(currentCat==0?"#fff3e8":"transparent");
+                              color:@(currentCat==0?"#f97316":"#666");"
+                       onmouseover="if(this.className.indexOf('active')<0){this.style.background='#f8f7f5';this.style.color='#111';}"
+                       onmouseout="if(this.className.indexOf('active')<0){this.style.background='transparent';this.style.color='#666';}">
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Tất cả sản phẩm</span>
+                        <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;
+                                     background:@(currentCat==0?"#fed7aa":"#f0efed");
+                                     color:@(currentCat==0?"#ea6c0a":"#aaa");">@stats.TotalCount</span>
+                    </a>
+
+                    @if (stats.CategoryCounts.Any())
                     {
-                        <li>
-                            <a asp-action="Index" asp-controller="Products"
-                               asp-route-categoryId="@cat.Id"
-                               asp-route-q="@currentQ" asp-route-sortBy="@currentSort"
-                               class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors @(currentCat==cat.Id ? "cat-item-active" : "cat-item-default")">
-                                <span>@cat.Name</span>
+                        <div style="height:1px;background:#f4f4f2;margin:6px 0;"></div>
+                        @foreach (var cat in stats.CategoryCounts)
+                        {
+                            bool isActive = currentCat == cat.Id;
+                            <a href="@BuildUrl(cat: cat.Id)"
+                               class="cat-row @(isActive ? "active" : "")"
+                               style="display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;
+                                      border-radius:12px;font-size:13px;font-weight:@(isActive?"700":"500");
+                                      text-decoration:none;transition:background .12s;
+                                      background:@(isActive?"#fff3e8":"transparent");
+                                      color:@(isActive?"#f97316":"#666");"
+                               onmouseover="if(this.className.indexOf('active')<0){this.style.background='#f8f7f5';this.style.color='#111';}"
+                               onmouseout="if(this.className.indexOf('active')<0){this.style.background='transparent';this.style.color='#666';}">
+                                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@cat.Name</span>
+                                <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;
+                                             background:@(isActive?"#fed7aa":"#f0efed");
+                                             color:@(isActive?"#ea6c0a":"#aaa");">@cat.Count</span>
                             </a>
-                        </li>
+                        }
                     }
-                </ul>
-            </div>
-
-            <!-- Khoảng giá -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Khoảng giá</p>
-                <input type="range" min="0" max="100" value="50"
-                       class="w-full h-1 rounded-full cursor-pointer accent-orange-500 mb-2" />
-                <div class="flex justify-between text-[11px] font-semibold text-gray-400">
-                    <span>0₫</span><span>50,000,000₫</span>
                 </div>
             </div>
 
-            <!-- Tình trạng -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Tình trạng</p>
-                <div class="flex flex-wrap gap-1.5">
-                    <a asp-action="Index" asp-controller="Products"
-                       asp-route-categoryId="@currentCat" asp-route-q="@currentQ"
-                       class="px-3 py-1 rounded-full text-xs font-semibold border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500 transition-colors">
-                        Tất cả
-                    </a>
-                    <a asp-action="Index" asp-controller="Products"
-                       asp-route-categoryId="@currentCat" asp-route-q="@currentQ" asp-route-inStock="true"
-                       class="px-3 py-1 rounded-full text-xs font-semibold border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500 transition-colors">
-                        Còn hàng
-                    </a>
-                    <a asp-action="Index" asp-controller="Products"
-                       asp-route-categoryId="@currentCat" asp-route-q="@currentQ" asp-route-onSale="true"
-                       class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-500 border border-orange-500 text-white">
-                        Giảm giá
-                    </a>
+            <!-- ── PRICE RANGE ── -->
+            <div class="bg-white border border-[#ebebeb] rounded-[20px] overflow-hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #f4f4f2;">
+                    <div style="width:28px;height:28px;border-radius:9px;background:#fff3e8;
+                                display:flex;align-items:center;justify-content:center;">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:#f97316;">payments</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#111;">Khoảng giá</span>
+                    @if (!string.IsNullOrEmpty(currentMinPrice) || !string.IsNullOrEmpty(currentMaxPrice))
+                    {
+                        <a href="@BuildUrl(minPrice:"", maxPrice:"")"
+                           style="margin-left:auto;font-size:10px;color:#f97316;font-weight:700;text-decoration:none;
+                                  display:inline-flex;align-items:center;gap:3px;"
+                           onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                            <span class="material-symbols-outlined" style="font-size:12px;">close</span>Xóa
+                        </a>
+                    }
+                </div>
+                <div style="padding:16px 20px 18px;">
+                    <form method="get" asp-action="Index" asp-controller="Products" id="priceForm">
+                        @if (currentCat > 0)                          { <input type="hidden" name="categoryId" value="@currentCat" /> }
+                        @if (!string.IsNullOrEmpty(currentQ))         { <input type="hidden" name="q"          value="@currentQ" /> }
+                        @if (!string.IsNullOrEmpty(currentSort))      { <input type="hidden" name="sortBy"     value="@currentSort" /> }
+                        @if (currentInStock)                          { <input type="hidden" name="inStock"    value="true" /> }
+                        @if (currentOnSale)                           { <input type="hidden" name="onSale"     value="true" /> }
+                        @if (currentFeatured)                         { <input type="hidden" name="featured"   value="true" /> }
+                        @if (!string.IsNullOrEmpty(currentBrand))     { <input type="hidden" name="brand"      value="@currentBrand" /> }
+
+                        <!-- Dual slider -->
+                        <div class="range-wrap">
+                            <div class="range-track">
+                                <div id="rangeFill" class="range-fill"></div>
+                            </div>
+                            <input id="sliderMin" type="range" min="0" max="50000000" step="500000"
+                                   value="@sliderMin" oninput="syncPrice()" />
+                            <input id="sliderMax" type="range" min="0" max="50000000" step="500000"
+                                   value="@sliderMax" oninput="syncPrice()" />
+                        </div>
+
+                        <!-- Labels -->
+                        <div style="display:flex;justify-content:space-between;margin-top:10px;">
+                            <span id="labelMin" style="font-size:11px;font-weight:800;color:#555;"></span>
+                            <span id="labelMax" style="font-size:11px;font-weight:800;color:#f97316;"></span>
+                        </div>
+
+                        <!-- Hidden inputs -->
+                        <input type="hidden" id="minPriceInput" name="minPrice" />
+                        <input type="hidden" id="maxPriceInput" name="maxPrice" />
+
+                        <!-- Apply button -->
+                        <button type="button" onclick="applyPrice()"
+                                style="margin-top:14px;width:100%;height:36px;border-radius:10px;
+                                       background:#f97316;border:none;color:#fff;font-size:12px;
+                                       font-weight:800;cursor:pointer;transition:background .15s;"
+                                onmouseover="this.style.background='#ea6600'"
+                                onmouseout="this.style.background='#f97316'">
+                            Áp dụng
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            @if (currentCat > 0 || !string.IsNullOrEmpty(currentQ))
+            <!-- ── STOCK STATUS ── -->
+            <div class="bg-white border border-[#ebebeb] rounded-[20px] overflow-hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #f4f4f2;">
+                    <div style="width:28px;height:28px;border-radius:9px;background:#fff3e8;
+                                display:flex;align-items:center;justify-content:center;">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:#f97316;">inventory_2</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#111;">Tình trạng</span>
+                </div>
+                <div style="padding:10px;">
+                    @{
+                        var stockOpts = new[]
+                        {
+                            (Label:"Tất cả",        On:stockAll,        Count:stats.TotalCount,
+                             Url:BuildUrl(inStock:"", onSale:"", featured:""),
+                             Badge:""),
+                            (Label:"Còn hàng",      On:currentInStock,  Count:stats.InStockCount,
+                             Url:BuildUrl(inStock:"true", onSale:"", featured:""),
+                             Badge:"<span style='width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;'></span>"),
+                            (Label:"Đang giảm giá", On:currentOnSale,   Count:stats.OnSaleCount,
+                             Url:BuildUrl(inStock:"", onSale:"true", featured:""),
+                             Badge:"<span style='font-size:9px;font-weight:900;padding:2px 7px;border-radius:999px;background:#111;color:#fff;'>SALE</span>"),
+                            (Label:"Nổi bật",       On:currentFeatured, Count:stats.FeaturedCount,
+                             Url:BuildUrl(inStock:"", onSale:"", featured:"true"),
+                             Badge:"<span style='font-size:9px;font-weight:900;padding:2px 7px;border-radius:999px;background:#fff3e8;color:#f97316;'>⚡HOT</span>"),
+                        };
+                    }
+                    @foreach (var opt in stockOpts)
+                    {
+                        <a href="@opt.Url"
+                           style="display:flex;align-items:center;gap:10px;padding:11px 14px;
+                                  border-radius:12px;font-size:13px;font-weight:@(opt.On?"700":"500");
+                                  text-decoration:none;transition:background .12s;
+                                  background:@(opt.On?"#fff3e8":"transparent");
+                                  color:@(opt.On?"#f97316":"#555");"
+                           onmouseover="if('@opt.On'!='True'){this.style.background='#f8f7f5';this.style.color='#111';}"
+                           onmouseout="if('@opt.On'!='True'){this.style.background='transparent';this.style.color='#555';}">
+                            <span style="width:17px;height:17px;border-radius:5px;flex-shrink:0;
+                                         display:flex;align-items:center;justify-content:center;
+                                         font-size:9px;font-weight:900;
+                                         background:@(opt.On?"#f97316":"transparent");
+                                         border:1.5px solid @(opt.On?"#f97316":"#ddd");
+                                         color:@(opt.On?"#fff":"transparent");">✓</span>
+                            @opt.Label
+                            <span style="font-size:10px;font-weight:700;color:@(opt.On?"#f97316":"#bbb");margin-left:2px;">
+                                (@opt.Count)
+                            </span>
+                            <span style="margin-left:auto;">@Html.Raw(opt.Badge)</span>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- ── BRANDS ── -->
+            <div class="bg-white border border-[#ebebeb] rounded-[20px] overflow-hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #f4f4f2;">
+                    <div style="width:28px;height:28px;border-radius:9px;background:#fff3e8;
+                                display:flex;align-items:center;justify-content:center;">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:#f97316;">verified</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#111;">Thương hiệu</span>
+                </div>
+                <div style="padding:14px;display:flex;flex-wrap:wrap;gap:7px;">
+                    @if (stats.BrandCounts.Any())
+                    {
+                        @foreach (var b in stats.BrandCounts)
+                        {
+                            bool isOn = currentBrand == b.Brand;
+                            string brandUrl = isOn ? BuildUrl(brand: "") : BuildUrl(brand: b.Brand);
+                            <a href="@brandUrl"
+                               style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;
+                                      border-radius:999px;font-size:12px;font-weight:700;
+                                      text-decoration:none;transition:all .15s;
+                                      background:@(isOn?"#f97316":"#fff");
+                                      border:1.5px solid @(isOn?"#f97316":"#e5e5e5");
+                                      color:@(isOn?"#fff":"#555");
+                                      @(isOn?"box-shadow:0 2px 10px rgba(249,115,22,.25);":"")"
+                               onmouseover="if('@isOn'!='True'){this.style.borderColor='#f97316';this.style.color='#f97316';}"
+                               onmouseout="if('@isOn'!='True'){this.style.borderColor='#e5e5e5';this.style.color='#555';}">
+                                @b.Brand
+                                <span style="font-size:10px;opacity:.6;">(@b.Count)</span>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <p style="font-size:12px;color:#ccc;margin:0;">Chưa có thương hiệu.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- ── CLEAR ALL ── -->
+            @if (hasAnyFilter)
             {
-                <a asp-action="Index" asp-controller="Products"
-                   class="block text-center py-2 rounded-xl text-sm font-semibold text-orange-500 bg-orange-50 border border-orange-100 hover:bg-orange-500 hover:text-white transition-colors">
-                    ✕ Xóa bộ lọc
+                <a href="/Products"
+                   style="display:flex;align-items:center;justify-content:center;gap:8px;
+                          padding:13px 18px;border-radius:14px;font-size:12px;font-weight:800;
+                          text-decoration:none;color:#f97316;background:#fff3e8;
+                          border:1.5px solid #fed7aa;transition:all .15s;"
+                   onmouseover="this.style.background='#f97316';this.style.color='#fff';this.style.borderColor='#f97316';"
+                   onmouseout="this.style.background='#fff3e8';this.style.color='#f97316';this.style.borderColor='#fed7aa';">
+                    <span class="material-symbols-outlined" style="font-size:16px;">filter_list_off</span>
+                    Xóa tất cả bộ lọc
                 </a>
             }
 
         </aside>
+        <!-- ══════════ /SIDEBAR ══════════ -->
 
-        <!-- ── MAIN ── -->
-        <div class="flex-1 min-w-0">
+        <!-- ══════════ PRODUCT GRID ══════════ -->
+        <div style="flex:1;min-width:0;">
 
-            <!-- Topbar -->
-            <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
-                <div class="flex items-center gap-3">
-                    <p class="text-sm text-gray-500">
-                        <strong class="text-gray-800 font-bold">@totalCount</strong> sản phẩm được tìm thấy
-                    </p>
-                    <form method="get" asp-action="Index" asp-controller="Products" class="relative">
-                        @if (currentCat > 0)
-                        {
-                            <input type="hidden" name="categoryId" value="@currentCat" />
-                        }
-                        <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"
-                              style="font-size:16px;">search</span>
-                        <input type="text" name="q" value="@currentQ" placeholder="Tìm sản phẩm..."
-                               class="h-9 w-52 pl-8 pr-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none placeholder-gray-300
-                          focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition" />
-                    </form>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-400">Sắp xếp:</span>
-                    <form method="get" asp-action="Index" asp-controller="Products" id="sf">
-                        @if (currentCat > 0)
-                        {
-                            <input type="hidden" name="categoryId" value="@currentCat" />
-                        }
-                        @if (!string.IsNullOrEmpty(currentQ))
-                        {
-                            <input type="hidden" name="q" value="@currentQ" />
-                        }
-                        <select name="sortBy" onchange="document.getElementById('sf').submit()"
-                                class="h-9 pl-3 pr-8 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700
-                           outline-none focus:border-orange-400 cursor-pointer transition"
-                                style="appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239ca3af%22 stroke-width=%222.5%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:10px;">
-                            <option value="" selected="@(currentSort==""          )">Mặc định</option>
-                            <option value="price_asc" selected="@(currentSort=="price_asc" )">Giá thấp → cao</option>
-                            <option value="price_desc" selected="@(currentSort=="price_desc")">Giá cao → thấp</option>
-                            <option value="newest" selected="@(currentSort=="newest"    )">Mới nhất</option>
-                            <option value="rating" selected="@(currentSort=="rating"    )">Đánh giá cao</option>
-                        </select>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Grid -->
             @if (Model != null && Model.Items.Any())
             {
-                <div class="grid grid-cols-4 gap-4">
+                <!-- Meta row -->
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+                    <p style="font-size:12px;color:#bbb;font-weight:600;margin:0;white-space:nowrap;">
+                        <strong style="color:#555;">@Model.Items.Count</strong> / @totalCount sản phẩm
+                        @if (Model.PageCount > 1)
+                        {
+                            <text> · Trang <strong style="color:#555;">@Model.CurrentPage</strong>/@Model.PageCount</text>
+                        }
+                    </p>
+                    <div style="flex:1;height:1px;background:#e5e4e1;"></div>
+                </div>
+
+                <!-- Grid -->
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
                     @foreach (var item in Model.Items)
                     {
-                        <a asp-controller="Products" asp-action="Detail" asp-route-id="@item.Id"
-                           class="group bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col
-                      shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 no-underline">
+                        var ri = (int)Math.Round(item.Rating);
+                        bool isOnSale = item.OriginalPrice.HasValue && item.OriginalPrice > item.Price;
+                        int disc = isOnSale
+                            ? (int)Math.Round((1 - (double)item.Price / (double)item.OriginalPrice!.Value) * 100)
+                            : 0;
 
-                            <!-- Ảnh -->
-                            <div class="relative bg-gray-50 overflow-hidden" style="aspect-ratio:1">
+                        <a asp-controller="Products" asp-action="Detail" asp-route-id="@item.Id"
+                           class="pc bg-white rounded-[20px] border border-[#ebebeb] overflow-hidden flex flex-col no-underline"
+                           style="color:inherit;">
+
+                            <!-- Image -->
+                            <div style="background:#eeede9;aspect-ratio:1;position:relative;overflow:hidden;">
                                 @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
                                 {
-                                    <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy" class="pc-img"
+                                         style="width:100%;height:100%;object-fit:cover;" />
                                 }
                                 else
                                 {
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <span class="material-symbols-outlined text-gray-200" style="font-size:48px;">image_not_supported</span>
+                                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                                        <span class="material-symbols-outlined" style="font-size:44px;color:#ddd;">image_not_supported</span>
                                     </div>
                                 }
-
                                 @if (item.Stock <= 0)
                                 {
-                                    <span class="absolute top-2.5 left-2.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/10 text-gray-500">Hết hàng</span>
+                                    <span style="position:absolute;top:10px;left:10px;font-size:9px;font-weight:900;
+                                                 padding:4px 10px;border-radius:999px;background:#e5e7eb;color:#9ca3af;">Hết hàng</span>
                                 }
-                                else if (item.OriginalPrice.HasValue && item.OriginalPrice > item.Price)
+                                else if (isOnSale)
                                 {
-                                    var d = (int)Math.Round((1 - (double)item.Price / (double)item.OriginalPrice.Value) * 100);
-                                    <span class="absolute top-2.5 left-2.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-orange-500 text-white">-@d%</span>
+                                    <span style="position:absolute;top:10px;left:10px;font-size:9px;font-weight:900;
+                                                 padding:4px 10px;border-radius:999px;background:#111;color:#fff;">-@disc%</span>
                                 }
                                 else if (item.IsFeatured)
                                 {
-                                    <span class="absolute top-2.5 left-2.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-900 text-white">Mới</span>
+                                    <span style="position:absolute;top:10px;left:10px;font-size:9px;font-weight:900;
+                                                 padding:4px 10px;border-radius:999px;background:#f97316;color:#fff;">New</span>
                                 }
+                                <button onclick="return false;" class="wish-btn"
+                                        style="position:absolute;top:10px;right:10px;width:30px;height:30px;
+                                               border-radius:50%;background:rgba(255,255,255,.88);border:none;
+                                               display:flex;align-items:center;justify-content:center;
+                                               cursor:pointer;opacity:0;color:#bbb;">
+                                    <span class="material-symbols-outlined" style="font-size:15px;">favorite_border</span>
+                                </button>
                             </div>
 
-                            <!-- Thông tin -->
-                            <div class="p-3.5 flex flex-col gap-1 flex-1">
+                            <!-- Body -->
+                            <div style="padding:14px 15px 15px;display:flex;flex-direction:column;gap:5px;flex:1;">
                                 @if (!string.IsNullOrEmpty(item.Brand))
                                 {
-                                    <p class="text-[10px] font-bold uppercase tracking-widest text-orange-500">@item.Brand</p>
+                                    <p style="font-size:9px;font-weight:800;text-transform:uppercase;
+                                               letter-spacing:.13em;color:#bbb;margin:0;">@item.Brand</p>
                                 }
-                                <h4 class="text-sm font-semibold text-gray-800 leading-snug line-clamp-2">@item.Name</h4>
+                                <h4 style="font-size:13px;font-weight:800;color:#111;line-height:1.38;margin:0;
+                                           display:-webkit-box;-webkit-line-clamp:2;
+                                           -webkit-box-orient:vertical;overflow:hidden;">@item.Name</h4>
 
-                                <div class="flex items-center gap-0.5 my-0.5">
+                                <div style="display:flex;align-items:center;gap:2px;margin-top:1px;">
                                     @for (int s = 1; s <= 5; s++)
                                     {
-                                        <span class="@(s<=(int)Math.Round(item.Rating) ? "star-on" : "star-off")" style="font-size:11px;">★</span>
+                                        <span style="font-size:11px;color:@(s<=ri?"#f59e0b":"#e5e7eb");">★</span>
                                     }
-                                    <span class="text-[10px] text-gray-300 ml-1">(@item.Rating.ToString("0.0"))</span>
+                                    <span style="font-size:10px;font-weight:600;color:#aaa;margin-left:4px;">@item.Rating.ToString("0.0")</span>
+                                    @if (item.ReviewCount > 0)
+                                    {
+                                        <span style="font-size:10px;color:#ccc;">(@item.ReviewCount)</span>
+                                    }
                                 </div>
 
-                                <div class="flex items-end justify-between mt-auto pt-2.5 border-t border-gray-50">
+                                <div style="display:flex;align-items:flex-end;justify-content:space-between;
+                                            margin-top:auto;padding-top:11px;border-top:1px solid #f2f2f0;">
                                     <div>
-                                        <p class="text-[15px] font-bold text-orange-500">@item.Price.ToString("N0")₫</p>
-                                        @if (item.OriginalPrice.HasValue && item.OriginalPrice > item.Price)
+                                        <p style="font-size:15px;font-weight:900;margin:0;letter-spacing:-.02em;
+                                                  color:@(item.Stock<=0?"#bbb":"#f97316");">
+                                            @item.Price.ToString("N0")₫
+                                        </p>
+                                        @if (isOnSale)
                                         {
-                                            <p class="text-[11px] text-gray-300 line-through">@item.OriginalPrice.Value.ToString("N0")₫</p>
+                                            <p style="font-size:10px;color:#ccc;text-decoration:line-through;margin:2px 0 0;">
+                                                @item.OriginalPrice!.Value.ToString("N0")₫
+                                            </p>
                                         }
                                     </div>
-                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center
-                              text-gray-400 group-hover:bg-orange-500 group-hover:border-orange-500
-                              group-hover:text-white transition-all shrink-0">
+                                    <div class="cart-ic"
+                                         style="width:33px;height:33px;border-radius:10px;flex-shrink:0;
+                                                display:flex;align-items:center;justify-content:center;
+                                                background:#f5f4f1;border:1px solid #e8e8e6;color:#555;transition:all .15s;">
                                         <span class="material-symbols-outlined" style="font-size:14px;">shopping_cart</span>
                                     </div>
                                 </div>
                             </div>
-
                         </a>
                     }
                 </div>
@@ -237,58 +652,55 @@
                 <!-- Pagination -->
                 @if (Model.PageCount > 1)
                 {
-                    <div class="flex items-center justify-center gap-1.5 mt-10 flex-wrap">
+                    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:48px;flex-wrap:wrap;">
                         @if (Model.HasPreviousPage)
                         {
-                            <a asp-action="Index" asp-controller="Products"
-                               asp-route-page="@(Model.CurrentPage-1)" asp-route-categoryId="@currentCat"
-                               asp-route-q="@currentQ" asp-route-sortBy="@currentSort"
-                               class="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center
-                        text-gray-500 hover:border-orange-400 hover:text-orange-500 transition-colors">
-                                <span class="material-symbols-outlined" style="font-size:15px;">chevron_left</span>
+                            <a href="@BuildUrl(page: Model.CurrentPage - 1)" class="pb"
+                               style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                      background:#fff;border:1.5px solid #e5e5e5;color:#555;text-decoration:none;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                             </a>
                         }
                         else
                         {
-                            <span class="w-9 h-9 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-200 pointer-events-none">
-                                <span class="material-symbols-outlined" style="font-size:15px;">chevron_left</span>
+                            <span class="pb off" style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                         background:#fafafa;border:1.5px solid #efefed;color:#ddd;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                             </span>
                         }
 
-                        @for (int p = 1; p <= Model.PageCount; p++)
+                        @for (int pg = 1; pg <= Model.PageCount; pg++)
                         {
-                            if (p == Model.CurrentPage)
+                            if (pg == Model.CurrentPage)
                             {
-                                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white bg-orange-500">@p</span>
+                                <span class="pb cur" style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                             font-size:13px;font-weight:800;">@pg</span>
                             }
-                            else if (p == 1 || p == Model.PageCount || Math.Abs(p - Model.CurrentPage) <= 2)
+                            else if (pg == 1 || pg == Model.PageCount || Math.Abs(pg - Model.CurrentPage) <= 2)
                             {
-                                <a asp-action="Index" asp-controller="Products"
-                                   asp-route-page="@p" asp-route-categoryId="@currentCat"
-                                   asp-route-q="@currentQ" asp-route-sortBy="@currentSort"
-                                   class="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center
-                          text-sm font-medium text-gray-600 hover:border-orange-400 hover:text-orange-500 transition-colors">@p</a>
+                                <a href="@BuildUrl(page: pg)" class="pb"
+                                   style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                          font-size:13px;font-weight:700;background:#fff;border:1.5px solid #e5e5e5;color:#555;text-decoration:none;">@pg</a>
                             }
-                            else if (Math.Abs(p - Model.CurrentPage) == 3)
+                            else if (Math.Abs(pg - Model.CurrentPage) == 3)
                             {
-                                <span class="w-9 h-9 flex items-center justify-center text-sm text-gray-300">…</span>
+                                <span style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#ccc;">…</span>
                             }
                         }
 
                         @if (Model.HasNextPage)
                         {
-                            <a asp-action="Index" asp-controller="Products"
-                               asp-route-page="@(Model.CurrentPage+1)" asp-route-categoryId="@currentCat"
-                               asp-route-q="@currentQ" asp-route-sortBy="@currentSort"
-                               class="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center
-                        text-gray-500 hover:border-orange-400 hover:text-orange-500 transition-colors">
-                                <span class="material-symbols-outlined" style="font-size:15px;">chevron_right</span>
+                            <a href="@BuildUrl(page: Model.CurrentPage + 1)" class="pb"
+                               style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                      background:#fff;border:1.5px solid #e5e5e5;color:#555;text-decoration:none;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
                             </a>
                         }
                         else
                         {
-                            <span class="w-9 h-9 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-200 pointer-events-none">
-                                <span class="material-symbols-outlined" style="font-size:15px;">chevron_right</span>
+                            <span class="pb off" style="width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+                                         background:#fafafa;border:1.5px solid #efefed;color:#ddd;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
                             </span>
                         }
                     </div>
@@ -296,16 +708,64 @@
             }
             else
             {
-                <div class="text-center py-24 text-gray-400">
-                    <span class="material-symbols-outlined block text-gray-200 mb-3" style="font-size:48px;">inventory_2</span>
-                    <p class="text-sm mb-4">Không tìm thấy sản phẩm nào.</p>
-                    <a asp-action="Index" asp-controller="Products"
-                       class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors">
-                        Xem tất cả →
+                <div style="text-align:center;padding:120px 0;">
+                    <div style="width:88px;height:88px;border-radius:26px;background:#fff;border:1px solid #ebebeb;
+                                display:flex;align-items:center;justify-content:margin:0 auto 22px;">
+                        <span class="material-symbols-outlined" style="font-size:44px;color:#e0e0e0;">inventory_2</span>
+                    </div>
+                    <p style="font-size:16px;font-weight:800;color:#555;margin:0 0 8px;letter-spacing:-.01em;">Không tìm thấy sản phẩm nào.</p>
+                    <p style="font-size:13px;color:#bbb;margin:0 0 28px;">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                    <a href="/Products"
+                       style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;
+                              border-radius:14px;background:#f97316;color:#fff;font-size:13px;
+                              font-weight:800;text-decoration:none;
+                              box-shadow:0 6px 20px rgba(249,115,22,.32);transition:all .18s;"
+                       onmouseover="this.style.background='#ea6600'"
+                       onmouseout="this.style.background='#f97316'">
+                        Xem tất cả sản phẩm →
                     </a>
                 </div>
             }
 
         </div>
+        <!-- ══════════ /PRODUCT GRID ══════════ -->
     </div>
 </div>
+
+<!-- ══ PRICE SLIDER SCRIPT ══ -->
+<script>
+    const PRICE_MAX = 50000000;
+    const fmt = v => new Intl.NumberFormat('vi-VN').format(v) + '₫';
+
+    function syncPrice() {
+        const sMin = document.getElementById('sliderMin');
+        const sMax = document.getElementById('sliderMax');
+        const fill = document.getElementById('rangeFill');
+
+        let mn = parseInt(sMin.value);
+        let mx = parseInt(sMax.value);
+        const gap = 500000;
+
+        if (mn > mx - gap) { mn = mx - gap; sMin.value = mn; }
+        if (mx < mn + gap) { mx = mn + gap; sMax.value = mx; }
+
+        const left  = (mn / PRICE_MAX) * 100;
+        const right = (mx / PRICE_MAX) * 100;
+        fill.style.left  = left  + '%';
+        fill.style.right = (100 - right) + '%';
+
+        document.getElementById('labelMin').textContent = fmt(mn);
+        document.getElementById('labelMax').textContent = fmt(mx);
+    }
+
+    function applyPrice() {
+        const mn = parseInt(document.getElementById('sliderMin').value);
+        const mx = parseInt(document.getElementById('sliderMax').value);
+        document.getElementById('minPriceInput').value = mn > 0        ? mn : '';
+        document.getElementById('maxPriceInput').value = mx < PRICE_MAX ? mx : '';
+        document.getElementById('priceForm').submit();
+    }
+
+    // Khởi tạo khi load trang
+    syncPrice();
+</script>

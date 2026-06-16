@@ -20,6 +20,6 @@ namespace Interfaces
         //void Commit();
         void Rollback();
 
-        //DbSet<Customer> Customer { get; set; }
+      
     }
 }

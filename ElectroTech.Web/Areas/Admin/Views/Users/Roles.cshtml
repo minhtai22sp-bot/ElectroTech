@@ -7,156 +7,157 @@
 
     <!-- Header -->
     <div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Phân quyền người dùng</h1>
-        <p class="text-sm text-slate-500 mt-1">Gán và thu hồi vai trò cho từng tài khoản.</p>
+        <p class="text-[10px] font-extrabold uppercase tracking-[.2em] text-orange-500 mb-1">
+            Admin Panel
+        </p>
+        <h1 class="text-2xl font-black text-[#111] tracking-tight">Phân quyền người dùng</h1>
+        <p class="text-xs text-slate-400 mt-1">Gán và thu hồi vai trò cho từng tài khoản.</p>
     </div>
 
     <!-- Table card -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <table id="rolesTable" class="w-full text-sm text-left">
+    <div class="bg-white rounded-[18px] border border-[#e8e8e6] overflow-hidden shadow-sm">
+
+        <!-- Card header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#f0f0ee]">
+            <p class="text-[13px] font-extrabold text-[#111]">Danh sách tài khoản</p>
+            <div id="dtSearch"></div>
+        </div>
+
+        <!-- Table -->
+        <table id="rolesTable" class="w-full text-sm">
             <thead>
-                <tr class="bg-slate-50 border-b border-slate-100">
-                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Người dùng
-                    </th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Email
-                    </th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Vai trò hiện tại
-                    </th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right"
-                        data-orderable="false">
-                        Thao tác
-                    </th>
+                <tr class="bg-[#fafaf8]">
+                    <th class="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-400 border-b border-[#f0f0ee]">Người dùng</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-400 border-b border-[#f0f0ee]">Email</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-400 border-b border-[#f0f0ee]">Vai trò hiện tại</th>
+                    <th class="px-5 py-3 text-right text-[10px] font-extrabold uppercase tracking-widest text-slate-400 border-b border-[#f0f0ee]"
+                        data-orderable="false">Thao tác</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50"></tbody>
+            <tbody></tbody>
         </table>
+
+        <!-- Card footer: length + info + pagination -->
+        <div id="dtFooter"
+             class="flex items-center justify-between px-6 py-3 border-t border-[#f8f8f6]">
+        </div>
     </div>
 </div>
 
-<!-- Modal Overlay -->
+<!-- Modal -->
 <div id="roleModal"
      class="fixed inset-0 z-[9999] hidden items-center justify-center px-4"
-     style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);">
+     style="background:rgba(0,0,0,.55);backdrop-filter:blur(6px);">
 
-    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+    <div class="bg-white rounded-[22px] w-full max-w-[420px] shadow-2xl overflow-hidden">
 
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-            <h3 class="text-lg font-black text-slate-900">Phân quyền tài khoản</h3>
+        <!-- Modal header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-[#f0f0ee]">
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-[.2em] text-orange-500 mb-1">
+                    Phân quyền
+                </p>
+                <h3 class="text-base font-black text-[#111]">Tài khoản người dùng</h3>
+            </div>
             <button onclick="closeModal()"
-                    class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200
-                           text-slate-500 flex items-center justify-center
-                           border-none cursor-pointer transition-colors text-base">
+                    class="w-8 h-8 rounded-[10px] bg-[#f5f5f7] hover:bg-slate-200
+                           border-0 cursor-pointer text-slate-400 text-sm
+                           flex items-center justify-center transition-colors">
                 ✕
             </button>
         </div>
 
-        <div class="px-6 py-5">
+        <div class="px-6 pt-5 pb-6 space-y-5">
 
             <!-- User info -->
-            <div class="flex items-center gap-3 bg-slate-50 border border-slate-200
-                        rounded-xl px-4 py-3 mb-5">
+            <div class="flex items-center gap-3 bg-[#fafaf8] border border-[#e8e8e6] rounded-2xl px-4 py-3.5">
                 <div id="modalAvatar"
-                     class="w-11 h-11 bg-indigo-100 rounded-full flex items-center
-                            justify-content font-black text-indigo-700 text-sm
-                            flex-shrink-0 flex items-center justify-center">
-                </div>
+                     class="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center
+                            font-black text-orange-500 text-sm flex-shrink-0"></div>
                 <div class="min-w-0">
-                    <p id="modalName" class="font-bold text-slate-900 text-sm truncate"></p>
-                    <p id="modalEmail" class="text-slate-400 text-xs truncate"></p>
+                    <p id="modalName" class="font-extrabold text-[#111] text-sm truncate m-0"></p>
+                    <p id="modalEmail" class="text-slate-400 text-xs truncate mt-0.5 m-0"></p>
                 </div>
             </div>
 
-            <!-- Role label -->
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-                Chọn vai trò
-            </p>
+            <!-- Roles -->
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400 mb-3">
+                    Chọn vai trò
+                </p>
+                <div class="space-y-2.5">
 
-            <!-- Role options -->
-            <div class="space-y-2.5 mb-6">
-
-                <!-- SuperAdmin -->
-                <label id="label-SuperAdmin"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
-                              border-2 border-slate-200 cursor-pointer transition-all
-                              hover:border-violet-300 hover:bg-violet-50"
-                       onclick="toggleLabel(this,'#7c3aed')">
-                    <input type="checkbox" name="roles" value="SuperAdmin"
-                           class="w-4 h-4 cursor-pointer accent-violet-600 flex-shrink-0" />
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <span class="px-2 py-0.5 bg-violet-100 text-violet-700
-                                         text-xs font-bold rounded-full">
+                    <label id="label-SuperAdmin"
+                           class="flex items-center gap-3 px-4 py-3.5 rounded-2xl
+                                  border-2 border-[#e8e8e6] cursor-pointer
+                                  hover:border-violet-400 hover:bg-violet-50 transition-all"
+                           onclick="toggleLabel(this,'#7c3aed','#f5f3ff')">
+                        <input type="checkbox" name="roles" value="SuperAdmin"
+                               class="w-4 h-4 cursor-pointer accent-violet-600 flex-shrink-0" />
+                        <div class="flex-1 min-w-0">
+                            <span class="inline-flex px-2.5 py-0.5 bg-violet-50 text-violet-700
+                                         text-[11px] font-extrabold rounded-full mb-1 block w-fit">
                                 SuperAdmin
                             </span>
+                            <p class="text-[11px] text-slate-400 m-0">
+                                Toàn quyền — quản lý mọi tính năng hệ thống
+                            </p>
                         </div>
-                        <p class="text-xs text-slate-400 m-0">
-                            Toàn quyền — quản lý mọi tính năng hệ thống
-                        </p>
-                    </div>
-                    <span class="text-xl flex-shrink-0">👑</span>
-                </label>
+                        <span class="text-xl flex-shrink-0">👑</span>
+                    </label>
 
-                <!-- Admin -->
-                <label id="label-Admin"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
-                              border-2 border-slate-200 cursor-pointer transition-all
-                              hover:border-blue-300 hover:bg-blue-50"
-                       onclick="toggleLabel(this,'#2563eb')">
-                    <input type="checkbox" name="roles" value="Admin"
-                           class="w-4 h-4 cursor-pointer accent-blue-600 flex-shrink-0" />
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700
-                                         text-xs font-bold rounded-full">
+                    <label id="label-Admin"
+                           class="flex items-center gap-3 px-4 py-3.5 rounded-2xl
+                                  border-2 border-[#e8e8e6] cursor-pointer
+                                  hover:border-blue-400 hover:bg-blue-50 transition-all"
+                           onclick="toggleLabel(this,'#2563eb','#eff6ff')">
+                        <input type="checkbox" name="roles" value="Admin"
+                               class="w-4 h-4 cursor-pointer accent-blue-600 flex-shrink-0" />
+                        <div class="flex-1 min-w-0">
+                            <span class="inline-flex px-2.5 py-0.5 bg-blue-50 text-blue-700
+                                         text-[11px] font-extrabold rounded-full mb-1 block w-fit">
                                 Admin
                             </span>
+                            <p class="text-[11px] text-slate-400 m-0">
+                                Quản trị viên — quản lý sản phẩm, đơn hàng, người dùng
+                            </p>
                         </div>
-                        <p class="text-xs text-slate-400 m-0">
-                            Quản trị viên — quản lý sản phẩm, đơn hàng, người dùng
-                        </p>
-                    </div>
-                    <span class="text-xl flex-shrink-0">🛡️</span>
-                </label>
+                        <span class="text-xl flex-shrink-0">🛡️</span>
+                    </label>
 
-                <!-- Customer -->
-                <label id="label-Customer"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-xl
-                              border-2 border-slate-200 cursor-pointer transition-all
-                              hover:border-green-300 hover:bg-green-50"
-                       onclick="toggleLabel(this,'#16a34a')">
-                    <input type="checkbox" name="roles" value="Customer"
-                           class="w-4 h-4 cursor-pointer accent-green-600 flex-shrink-0" />
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <span class="px-2 py-0.5 bg-green-100 text-green-700
-                                         text-xs font-bold rounded-full">
+                    <label id="label-Customer"
+                           class="flex items-center gap-3 px-4 py-3.5 rounded-2xl
+                                  border-2 border-[#e8e8e6] cursor-pointer
+                                  hover:border-green-400 hover:bg-green-50 transition-all"
+                           onclick="toggleLabel(this,'#16a34a','#f0fdf4')">
+                        <input type="checkbox" name="roles" value="Customer"
+                               class="w-4 h-4 cursor-pointer accent-green-600 flex-shrink-0" />
+                        <div class="flex-1 min-w-0">
+                            <span class="inline-flex px-2.5 py-0.5 bg-green-50 text-green-700
+                                         text-[11px] font-extrabold rounded-full mb-1 block w-fit">
                                 Customer
                             </span>
+                            <p class="text-[11px] text-slate-400 m-0">
+                                Khách hàng — mua hàng, xem đơn hàng cá nhân
+                            </p>
                         </div>
-                        <p class="text-xs text-slate-400 m-0">
-                            Khách hàng — mua hàng, xem đơn hàng
-                        </p>
-                    </div>
-                    <span class="text-xl flex-shrink-0">🛒</span>
-                </label>
+                        <span class="text-xl flex-shrink-0">🛒</span>
+                    </label>
+
+                </div>
             </div>
 
             <!-- Buttons -->
-            <div class="flex gap-3 justify-end">
+            <div class="flex gap-2.5 justify-end pt-1">
                 <button onclick="closeModal()"
-                        class="px-5 py-2.5 border border-slate-200 rounded-xl
-                               text-slate-500 font-semibold text-sm hover:bg-slate-50
-                               transition-colors cursor-pointer bg-white">
+                        class="px-5 py-2.5 bg-[#f5f5f7] hover:bg-slate-200 border border-[#e8e8e6]
+                               rounded-xl text-slate-500 text-xs font-bold cursor-pointer transition-colors">
                     Hủy
                 </button>
-                <button onclick="saveRoles()"
-                        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl
-                               text-white font-bold text-sm transition-colors
-                               cursor-pointer border-none">
+                <button id="btnSave" onclick="saveRoles()"
+                        class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600
+                               rounded-xl text-white text-xs font-extrabold cursor-pointer
+                               border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     💾 Lưu phân quyền
                 </button>
             </div>
@@ -165,63 +166,83 @@
 </div>
 
 @section Scripts {
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
-        /* Override DataTables default styles */
+        /* ── DataTables resets ── */
         #rolesTable_wrapper .dataTables_filter input {
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 6px 12px;
-            font-size: 13px;
-            outline: none;
+            border: 1px solid #e8e8e6 !important;
+            border-radius: 10px !important;
+            padding: 7px 14px !important;
+            font-size: 12px !important;
+            background: #f5f5f7 !important;
+            outline: none !important;
+            width: 220px;
+            transition: border-color .15s, box-shadow .15s;
         }
 
             #rolesTable_wrapper .dataTables_filter input:focus {
-                border-color: #93c5fd;
-                box-shadow: 0 0 0 2px rgba(147,197,253,0.3);
+                border-color: #f97316 !important;
+                background: #fff !important;
+                box-shadow: 0 0 0 3px rgba(249,115,22,.12) !important;
             }
 
-        #rolesTable_wrapper .dataTables_length select {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 13px;
+        #rolesTable_wrapper .dataTables_filter label {
+            font-size: 0;
         }
-
+        /* ẩn chữ "Search:" */
         #rolesTable_wrapper .dataTables_info {
-            font-size: 12px;
-            color: #94a3b8;
+            font-size: 11px;
+            color: #bbb;
+            padding-top: 0;
         }
 
         #rolesTable_paginate .paginate_button {
             border-radius: 8px !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            border: none !important;
+            padding: 5px 11px !important;
         }
 
-            #rolesTable_paginate .paginate_button.current {
-                background: #2563eb !important;
-                border-color: #2563eb !important;
-                color: white !important;
+            #rolesTable_paginate .paginate_button.current,
+            #rolesTable_paginate .paginate_button.current:hover {
+                background: #f97316 !important;
+                border-color: #f97316 !important;
+                color: #fff !important;
             }
 
-        #rolesTable tbody tr:hover {
-            background: #f8fafc;
+            #rolesTable_paginate .paginate_button:hover:not(.current):not(.disabled) {
+                background: #fff7ed !important;
+                color: #f97316 !important;
+            }
+        /* row hover */
+        #rolesTable tbody tr:hover td {
+            background: #fafaf8;
+        }
+        /* xóa border mặc định DT */
+        table.dataTable thead th {
+            border-bottom: none !important;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: none !important;
         }
     </style>
 
     <script>
-        var token = $('input[name="__RequestVerificationToken"]').val();
+        var token = null;
         var currentUser = null;
 
         $(document).ready(function () {
-            $('#rolesTable').DataTable({
+            token = $('input[name="__RequestVerificationToken"]').val();
+
+            var table = $('#rolesTable').DataTable({
                 processing: true,
                 serverSide: true,
+                dom: 'rt',
                 ajax: {
                     url: '@Url.Action("LoadAllRoles", "Users", new { area = "Admin" })',
                     type: 'POST',
@@ -230,13 +251,15 @@
                 columns: [
                     {
                         data: 'fullName',
-                        render: function (data, type, row) {
+                        render: function (data) {
                             var initials = (data || 'U').substring(0, 2).toUpperCase();
-                            return '<div class="flex items-center gap-3">' +
-                                '<div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center ' +
-                                'justify-center font-black text-indigo-700 text-xs flex-shrink-0">' +
+                            // dùng inline style vì DT render HTML string, Tailwind JIT không scan được
+                            return '<div style="display:flex;align-items:center;gap:12px;padding:14px 20px;">' +
+                                '<div style="width:36px;height:36px;background:#fff7ed;border-radius:10px;' +
+                                'display:flex;align-items:center;justify-content:center;' +
+                                'font-weight:900;color:#f97316;font-size:12px;flex-shrink:0;">' +
                                 initials + '</div>' +
-                                '<span class="font-semibold text-slate-800">' + (data || '—') + '</span>' +
+                                '<span style="font-weight:700;color:#111;font-size:13px;">' + (data || '—') + '</span>' +
                                 '</div>';
                         }
                     },
@@ -244,48 +267,75 @@
                         data: 'email',
                         defaultContent: '—',
                         render: function (data) {
-                            return '<span class="text-slate-500 text-xs">' + (data || '—') + '</span>';
+                            return '<div style="padding:14px 20px;">' +
+                                '<span style="color:#94a3b8;font-size:12px;">' + (data || '—') + '</span>' +
+                                '</div>';
                         }
                     },
                     {
                         data: 'roles',
                         render: function (data) {
                             if (!data)
-                                return '<span class="text-slate-300 text-xs italic">Chưa có vai trò</span>';
-                            return data.split(', ').map(function (r) {
-                                var bg = r === 'SuperAdmin' ? 'bg-violet-100 text-violet-700' :
-                                    r === 'Admin' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-green-100 text-green-700';
-                                return '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold ' + bg + ' mr-1">' + r + '</span>';
+                                return '<div style="padding:14px 20px;"><span style="color:#cbd5e1;font-size:11px;font-style:italic;">Chưa có vai trò</span></div>';
+                            var badges = data.split(', ').map(function (r) {
+                                var style = r === 'SuperAdmin'
+                                    ? 'background:#f5f3ff;color:#7c3aed;'
+                                    : r === 'Admin'
+                                        ? 'background:#eff6ff;color:#2563eb;'
+                                        : 'background:#f0fdf4;color:#16a34a;';
+                                return '<span style="display:inline-flex;padding:3px 10px;border-radius:20px;' +
+                                    'font-size:11px;font-weight:800;margin-right:4px;' + style + '">' + r + '</span>';
                             }).join('');
+                            return '<div style="padding:14px 20px;">' + badges + '</div>';
                         }
                     },
                     {
                         data: null,
-                        className: 'text-right',
                         render: function (data, type, row) {
-                            return '<button onclick=\'openModal(' + JSON.stringify(row).replace(/'/g, "&#39;") + ')\' ' +
-                                'class="inline-flex items-center gap-1.5 px-3 py-1.5 ' +
-                                'bg-blue-50 hover:bg-blue-100 text-blue-600 ' +
-                                'text-xs font-bold rounded-lg transition-colors ' +
-                                'border border-blue-100 cursor-pointer">' +
-                                '🔑 Phân quyền</button>';
+                            return '<div style="padding:14px 20px;text-align:right;">' +
+                                '<button onclick=\'openModal(' + JSON.stringify(row).replace(/'/g, "&#39;") + ')\' ' +
+                                'style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;' +
+                                'background:#fff7ed;color:#f97316;font-size:11px;font-weight:800;' +
+                                'border-radius:10px;border:1px solid #fed7aa;cursor:pointer;' +
+                                'transition:background .15s;"' +
+                                'onmouseover="this.style.background=\'#ffedd5\'"' +
+                                'onmouseout="this.style.background=\'#fff7ed\'">' +
+                                '🔑 Phân quyền</button></div>';
                         }
                     }
                 ],
                 language: {
-                    processing: '<div class="text-slate-400 text-sm py-4">Đang tải...</div>',
-                    search: '',
-                    searchPlaceholder: 'Tìm kiếm...',
-                    lengthMenu: 'Hiển thị _MENU_ dòng',
-                    info: 'Hiển thị _START_–_END_ / _TOTAL_',
-                    infoEmpty: 'Không có dữ liệu',
-                    zeroRecords: 'Không tìm thấy kết quả',
-                    paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+                    processing: '<div style="text-align:center;color:#bbb;font-size:12px;padding:28px 0;">Đang tải...</div>',
+                    zeroRecords: '<div style="text-align:center;color:#bbb;font-size:12px;padding:28px 0;">Không tìm thấy kết quả</div>',
                 }
             });
+
+            // Đưa search vào card header
+            var $filter = $('#rolesTable_filter');
+            $filter.find('input').attr('placeholder', '🔍  Tìm kiếm...');
+            $('#dtSearch').append($filter);
+
+            // Footer: length dropdown + info + pagination
+            var $footer = $('#dtFooter');
+
+            var $lengthWrap = $('<div style="display:flex;align-items:center;gap:8px;">' +
+                '<span style="font-size:11px;color:#bbb;font-weight:600;">Hiển thị</span>' +
+                '<select id="dtPageSize" style="border:1px solid #e8e8e6;border-radius:8px;' +
+                'padding:5px 10px;font-size:11px;background:#f5f5f7;color:#111;outline:none;cursor:pointer;">' +
+                '<option value="10">10</option><option value="25">25</option>' +
+                '<option value="50">50</option><option value="100">100</option>' +
+                '</select>' +
+                '<span style="font-size:11px;color:#bbb;font-weight:600;">dòng</span>' +
+                '</div>');
+
+            $footer.append($lengthWrap);
+            $footer.append($('#rolesTable_info'));
+            $footer.append($('#rolesTable_paginate'));
+
+            $('#dtPageSize').on('change', function () { table.page.len(+this.value).draw(); });
         });
 
+        /* ── Modal ── */
         function openModal(user) {
             currentUser = user;
             var name = user.fullName || user.email || 'User';
@@ -295,22 +345,20 @@
 
             ['SuperAdmin', 'Admin', 'Customer'].forEach(function (role) {
                 var label = document.getElementById('label-' + role);
-                var cb = label.querySelector('input');
-                cb.checked = false;
-                label.style.borderColor = '#e2e8f0';
-                label.style.background = 'white';
+                label.querySelector('input').checked = false;
+                label.style.borderColor = '';
+                label.style.background = '';
             });
 
-            var currentRoles = (user.roles || '').split(', ').map(function (r) { return r.trim(); });
-            currentRoles.forEach(function (role) {
+            var colorMap = { SuperAdmin: '#7c3aed', Admin: '#2563eb', Customer: '#16a34a' };
+            var bgMap = { SuperAdmin: '#f5f3ff', Admin: '#eff6ff', Customer: '#f0fdf4' };
+
+            (user.roles || '').split(', ').map(r => r.trim()).filter(Boolean).forEach(function (role) {
                 var label = document.getElementById('label-' + role);
                 if (!label) return;
-                var cb = label.querySelector('input');
-                cb.checked = true;
-                var color = role === 'SuperAdmin' ? '#7c3aed' :
-                    role === 'Admin' ? '#2563eb' : '#16a34a';
-                label.style.borderColor = color;
-                label.style.background = color + '15';
+                label.querySelector('input').checked = true;
+                label.style.borderColor = colorMap[role];
+                label.style.background = bgMap[role];
             });
 
             var modal = document.getElementById('roleModal');
@@ -325,78 +373,71 @@
             currentUser = null;
         }
 
-        function toggleLabel(label, color) {
-            setTimeout(function () {
-                var cb = label.querySelector('input');
-                label.style.borderColor = cb.checked ? color : '#e2e8f0';
-                label.style.background = cb.checked ? color + '15' : 'white';
-            }, 0);
+        function toggleLabel(label, color, bg) {
+            requestAnimationFrame(function () {
+                var checked = label.querySelector('input').checked;
+                label.style.borderColor = checked ? color : '';
+                label.style.background = checked ? bg : '';
+            });
+        }
+
+        async function changeRole(url, userId, role) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: 'id=' + encodeURIComponent(userId) + '&role=' + encodeURIComponent(role)
+            });
+            return res.json();
         }
 
         async function saveRoles() {
             if (!currentUser) return;
 
-            var selected = Array.from(
-                document.querySelectorAll('input[name="roles"]:checked')
-            ).map(function (cb) { return cb.value; });
+            const selected = Array.from(document.querySelectorAll('input[name="roles"]:checked')).map(cb => cb.value);
+            const currentRoles = (currentUser.roles || '').split(', ').map(r => r.trim()).filter(Boolean);
+            const toAdd = selected.filter(r => !currentRoles.includes(r));
+            const toRemove = currentRoles.filter(r => !selected.includes(r));
 
-            var currentRoles = (currentUser.roles || '')
-                .split(', ').map(function (r) { return r.trim(); }).filter(Boolean);
+            if (toRemove.includes('SuperAdmin') &&
+                !confirm('Bạn có chắc muốn thu hồi quyền SuperAdmin của tài khoản này?')) return;
 
-            var toAdd = selected.filter(function (r) { return !currentRoles.includes(r); });
-            var toRemove = currentRoles.filter(function (r) { return !selected.includes(r); });
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang lưu...';
 
             try {
-                for (var i = 0; i < toAdd.length; i++) {
-                    var res = await fetch('/Admin/Users/AssignRole', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'RequestVerificationToken': token
-                        },
-                        body: 'id=' + encodeURIComponent(currentUser.id) +
-                            '&role=' + encodeURIComponent(toAdd[i])
-                    });
-                    var data = await res.json();
-                    if (!data.success) { showToast('Lỗi: ' + data.message, 'red'); return; }
-                }
-
-                for (var j = 0; j < toRemove.length; j++) {
-                    var res2 = await fetch('/Admin/Users/RemoveRole', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'RequestVerificationToken': token
-                        },
-                        body: 'id=' + encodeURIComponent(currentUser.id) +
-                            '&role=' + encodeURIComponent(toRemove[j])
-                    });
-                    var data2 = await res2.json();
-                    if (!data2.success) { showToast('Lỗi: ' + data2.message, 'red'); return; }
-                }
-
+                const results = await Promise.all([
+                    ...toAdd.map(r => changeRole('/Admin/Users/AssignRole', currentUser.id, r)),
+                    ...toRemove.map(r => changeRole('/Admin/Users/RemoveRole', currentUser.id, r))
+                ]);
+                const failed = results.find(d => !d.success);
+                if (failed) { showToast('Lỗi: ' + failed.message, false); return; }
                 closeModal();
                 $('#rolesTable').DataTable().ajax.reload(null, false);
-                showToast('✅ Phân quyền thành công!', 'green');
-
+                showToast('✅ Phân quyền thành công!', true);
             } catch (err) {
-                showToast('Lỗi: ' + err.message, 'red');
+                showToast('Lỗi: ' + err.message, false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 Lưu phân quyền';
             }
         }
 
-        function showToast(msg, color) {
+        function showToast(msg, success) {
             var t = document.createElement('div');
-            t.style.cssText =
-                'position:fixed;bottom:24px;right:24px;z-index:99999;' +
-                'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;' +
-                'background:' + (color === 'green' ? '#dcfce7' : '#fee2e2') + ';' +
-                'color:' + (color === 'green' ? '#16a34a' : '#dc2626') + ';' +
-                'border:1px solid ' + (color === 'green' ? '#86efac' : '#fca5a5') + ';' +
-                'box-shadow:0 8px 24px rgba(0,0,0,0.1);transition:opacity .3s;';
+            t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;' +
+                'padding:12px 20px;border-radius:14px;font-size:12px;font-weight:700;' +
+                'box-shadow:0 8px 28px rgba(0,0,0,.1);transition:opacity .3s;' +
+                (success
+                    ? 'background:#dcfce7;color:#16a34a;border:1px solid #86efac;'
+                    : 'background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;');
             t.textContent = msg;
             document.body.appendChild(t);
-            setTimeout(function () { t.style.opacity = '0'; }, 3000);
-            setTimeout(function () { t.remove(); }, 3400);
+            setTimeout(() => t.style.opacity = '0', 3000);
+            setTimeout(() => t.remove(), 3400);
         }
 
         document.getElementById('roleModal').addEventListener('click', function (e) {

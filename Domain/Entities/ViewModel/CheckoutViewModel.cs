@@ -31,7 +31,7 @@ namespace Entities.ViewModel
         [MaxLength(200)]
         public string Email { get; set; } = "";
 
-        // Readonly — hiển thị
+       
         public List<CheckoutItemViewModel> Items { get; set; } = new();
         public decimal SubTotal { get; set; }
         public decimal Total { get; set; }

@@ -9,560 +9,330 @@
 @Html.AntiForgeryToken()
 
 <style>
-    .cart-layout {
-        display: flex;
-        gap: 2.5rem;
-        align-items: flex-start;
+    *, *::before, *::after { box-sizing: border-box; }
+
+    .cart-root {
+        background: #f7f6f3;
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: #111;
     }
 
-    .cart-items-col {
-        flex: 1 1 0%;
-        min-width: 0;
+    /* Eyebrow line decoration (matches hero-eyebrow in Index) */
+    .eyebrow {
         display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .cart-summary-col {
-        width: 380px;
-        flex-shrink: 0;
-        position: sticky;
-        top: 7rem;
-    }
-
-    .cart-item-card {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 16px;
-        padding: 1.5rem;
-        display: flex;
-        gap: 1.5rem;
         align-items: center;
-        transition: background 0.2s;
-    }
-
-        .cart-item-card:hover {
-            background: rgba(255,255,255,0.08);
-        }
-
-    .cart-item-img {
-        width: 120px;
-        height: 120px;
-        border-radius: 12px;
-        overflow: hidden;
-        flex-shrink: 0;
-        background: rgba(255,255,255,0.04);
-    }
-
-        .cart-item-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    .cart-item-body {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .cart-item-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .cart-item-name {
-        font-size: 1.1rem;
+        gap: 10px;
+        font-size: 11px;
         font-weight: 700;
-        color: #e5e2e1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 360px;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: #f97316;
+        margin-bottom: 8px;
+    }
+    .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 2px;
+        background: #f97316;
+        flex-shrink: 0;
     }
 
-    .cart-item-price {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #adc7ff;
-        white-space: nowrap;
-    }
-
-    .cart-item-bottom {
-        display: flex;
+    /* Qty pill */
+    .qty-pill {
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        margin-top: 1.25rem;
-        gap: 1rem;
-    }
-
-    .qty-control {
-        display: flex;
-        align-items: center;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 999px;
-        padding: 4px;
-        gap: 4px;
+        background: #fff;
+        border: 1.5px solid #e2e2e2;
+        border-radius: 100px;
+        padding: 3px;
+        gap: 2px;
     }
 
     .qty-btn {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         border: none;
         background: transparent;
-        color: #e5e2e1;
+        color: #555;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.15s;
-        font-size: 18px;
+        transition: background .15s;
+        font-size: 16px;
     }
+    .qty-btn:hover { background: #f0efed; }
+    .qty-btn:disabled { opacity: .3; cursor: not-allowed; }
 
-        .qty-btn:hover {
-            background: rgba(255,255,255,0.12);
-        }
-
-        .qty-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-    .qty-value {
-        width: 36px;
+    .qty-val {
+        width: 32px;
         text-align: center;
-        font-weight: 700;
-        color: #e5e2e1;
-        font-size: 1rem;
+        font-weight: 800;
+        font-size: 13px;
+        color: #111;
     }
 
-    .subtotal-text {
-        font-weight: 700;
-        color: #e5e2e1;
-        white-space: nowrap;
-    }
-
+    /* Remove / clear buttons */
     .remove-btn {
         background: none;
         border: none;
-        color: #6b7280;
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #bbb;
         padding: 6px 10px;
         border-radius: 8px;
-        transition: all 0.15s;
+        transition: color .15s, background .15s;
     }
+    .remove-btn:hover { color: #ef4444; background: #fef2f2; }
 
-        .remove-btn:hover {
-            color: #f87171;
-            background: rgba(248,113,113,0.08);
-        }
-
-    /* Summary card */
-    .summary-card {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .summary-body {
-        padding: 2rem;
-    }
-
-    .summary-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #e5e2e1;
-        margin-bottom: 1.5rem;
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.875rem;
-        color: #9ca3af;
-        padding: 6px 0;
-    }
-
-        .summary-row span:last-child {
-            color: #e5e2e1;
-        }
-
-    .summary-divider {
-        border: none;
-        border-top: 1px solid rgba(255,255,255,0.08);
-        margin: 1rem 0;
-    }
-
-    .summary-total {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .summary-total-label {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #e5e2e1;
-    }
-
-    .summary-total-value {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #adc7ff;
-    }
-
-    .promo-row {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 1rem;
-    }
-
+    /* Promo input */
     .promo-input {
         flex: 1;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1.5px solid #e2e2e2;
         border-radius: 10px;
         padding: 10px 14px;
-        color: #e5e2e1;
-        font-size: 0.875rem;
+        font-size: 13px;
+        background: #fff;
+        color: #111;
         outline: none;
+        transition: border-color .18s;
     }
-
-        .promo-input::placeholder {
-            color: #6b7280;
-        }
-
-    .promo-btn {
-        background: rgba(255,255,255,0.1);
-        border: none;
-        border-radius: 10px;
-        padding: 10px 16px;
-        color: #adc7ff;
-        font-weight: 700;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-        .promo-btn:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-    .checkout-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 16px;
-        background: linear-gradient(135deg, #adc7ff, #7ca4f4);
-        color: #0d1b3e;
-        font-weight: 800;
-        font-size: 1rem;
-        border-radius: 12px;
-        text-decoration: none;
-        transition: all 0.2s;
-        margin-bottom: 10px;
-        box-shadow: 0 0 24px rgba(173,199,255,0.2);
-    }
-
-        .checkout-btn:hover {
-            box-shadow: 0 0 36px rgba(173,199,255,0.4);
-        }
-
-    .continue-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 12px;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 12px;
-        color: #9ca3af;
-        font-size: 0.875rem;
-        text-decoration: none;
-        transition: all 0.15s;
-    }
-
-        .continue-btn:hover {
-            color: #e5e2e1;
-            border-color: rgba(255,255,255,0.2);
-        }
-
-    .summary-footer {
-        padding: 14px 2rem;
-        background: rgba(255,255,255,0.03);
-        border-top: 1px solid rgba(255,255,255,0.06);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-size: 0.7rem;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-    }
-
-    .bento-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .bento-card {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-
-        .bento-card p {
-            margin: 4px 0 0;
-        }
-
-    .clear-btn {
-        background: none;
-        border: none;
-        color: #6b7280;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
-        padding: 6px 10px;
-        border-radius: 8px;
-        transition: all 0.15s;
-        margin-left: auto;
-    }
-
-        .clear-btn:hover {
-            color: #f87171;
-        }
+    .promo-input:focus { border-color: #111; }
+    .promo-input::placeholder { color: #bbb; }
 
     @@media (max-width: 900px) {
-        .cart-layout {
-            flex-direction: column;
-        }
-
-        .cart-summary-col {
-            width: 100%;
-            position: static;
-        }
-
-        .cart-item-name {
-            max-width: 200px;
-        }
+        .cart-layout { flex-direction: column !important; }
+        .cart-summary-col { width: 100% !important; position: static !important; }
     }
 </style>
 
-<div style="max-width:1400px; margin:0 auto; padding: 7rem 1.5rem 4rem;">
+<div class="cart-root">
+<div class="max-w-[1200px] mx-auto px-10 pt-16 pb-20">
 
-    <!-- Header -->
-    <div style="margin-bottom:2.5rem;">
-        <h1 style="font-size:2.5rem; font-weight:800; color:#e5e2e1; letter-spacing:-0.03em; margin:0 0 6px;">
-            Your Shopping Cart
-            <span style="color:#adc7ff;">(@count Items)</span>
+    <!-- ══ HEADER ══ -->
+    <div class="mb-10">
+        <p class="eyebrow">Your Selection</p>
+        <h1 class="text-[2.6rem] font-black tracking-[-0.04em] leading-none mb-2">
+            Shopping Cart
+            <span class="text-orange-500">(@count)</span>
         </h1>
-        <p style="color:#6b7280; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.2em; margin:0;">
+        <p class="text-[12px] text-gray-400 font-semibold uppercase tracking-widest">
             Review your curated technology selection
         </p>
     </div>
 
     @if (Model == null || !Model.Any())
     {
-        <div style="text-align:center; padding:6rem 0;">
-            <span class="material-symbols-outlined" style="font-size:80px; color:#374151; display:block; margin-bottom:1rem;">
-                shopping_cart
-            </span>
-            <p style="color:#6b7280; font-size:1.2rem; margin-bottom:2rem;">Your cart is empty</p>
+        <!-- ══ EMPTY STATE ══ -->
+        <div class="flex flex-col items-center justify-center py-28 gap-5">
+            <div class="w-24 h-24 rounded-3xl bg-white border border-[#ebebeb] flex items-center justify-center">
+                <span class="material-symbols-outlined text-gray-200" style="font-size:48px;">shopping_cart</span>
+            </div>
+            <p class="text-[1.1rem] font-bold text-gray-400">Your cart is empty</p>
             <a asp-controller="Products" asp-action="Index"
-               style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px;
-                      background:linear-gradient(135deg,#adc7ff,#7ca4f4); color:#0d1b3e;
-                      font-weight:700; border-radius:12px; text-decoration:none;">
-                <span class="material-symbols-outlined">arrow_back</span>
+               class="inline-flex items-center gap-2 px-7 py-3.5 rounded-[14px] bg-orange-500 text-white
+                      text-[13px] font-black shadow-[0_6px_20px_rgba(249,115,22,.32)]
+                      hover:bg-orange-600 hover:-translate-y-0.5 transition-all">
+                <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
                 Continue Shopping
             </a>
         </div>
     }
     else
     {
-        <div class="cart-layout">
+        <div class="cart-layout flex gap-8 items-start">
 
-            <!-- ── LEFT: Items ── -->
-            <div class="cart-items-col" id="cartItemsList">
+            <!-- ══ LEFT: Items ══ -->
+            <div class="flex-1 min-w-0 flex flex-col gap-3" id="cartItemsList">
 
                 @foreach (var item in Model)
                 {
-                    <div class="cart-item-card" data-product-id="@item.ProductId">
+                    <div class="bg-white rounded-[20px] border border-[#ebebeb] p-5 flex gap-5 items-center
+                                transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,.07)]"
+                         data-product-id="@item.ProductId">
 
                         <!-- Image -->
-                        <div class="cart-item-img">
+                        <div class="w-[110px] h-[110px] rounded-[14px] overflow-hidden bg-[#f0efed] flex-shrink-0">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
-                                <img src="@item.ImageUrl" alt="@item.ProductName" />
+                                <img src="@item.ImageUrl" alt="@item.ProductName"
+                                     class="w-full h-full object-cover" />
                             }
                             else
                             {
-                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                                    <span class="material-symbols-outlined" style="font-size:40px;color:#374151;">image_not_supported</span>
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-gray-200" style="font-size:36px;">image_not_supported</span>
                                 </div>
                             }
                         </div>
 
                         <!-- Info -->
-                        <div class="cart-item-body">
-                            <div class="cart-item-top">
-                                <div style="min-width:0;">
-                                    <div class="cart-item-name">@item.ProductName</div>
-                                    <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
-                                        <span class="material-symbols-outlined"
-                                              style="font-size:14px;color:#4ade80;font-variation-settings:'FILL' 1;">
-                                            check_circle
-                                        </span>
-                                        <span style="font-size:11px;font-weight:700;color:#4ade80;
-                                                     text-transform:uppercase;letter-spacing:0.1em;">
-                                            In Stock
-                                        </span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-4 mb-3">
+                                <div class="min-w-0">
+                                    <h4 class="text-[14px] font-black text-[#111] truncate max-w-[340px]">
+                                        @item.ProductName
+                                    </h4>
+                                    <div class="flex items-center gap-1 mt-1">
+                                        <span class="material-symbols-outlined text-green-500"
+                                              style="font-size:13px;font-variation-settings:'FILL' 1;">check_circle</span>
+                                        <span class="text-[11px] font-bold text-green-500 uppercase tracking-wider">In Stock</span>
                                     </div>
                                 </div>
-                                <div class="cart-item-price">@item.Price.ToString("N0")₫</div>
+                                <span class="text-[14px] font-black text-orange-500 whitespace-nowrap flex-shrink-0">
+                                    @item.Price.ToString("N0")₫
+                                </span>
                             </div>
 
-                            <div class="cart-item-bottom">
-                                <!-- Qty -->
-                                <div class="qty-control">
+                            <div class="flex items-center gap-4 flex-wrap">
+                                <!-- Qty control -->
+                                <div class="qty-pill">
                                     <button class="qty-btn" type="button"
                                             onclick="updateQty(@item.ProductId, @(item.Quantity - 1))"
-                                    @(item.Quantity <= 1 ? "disabled" : "")>
-                                        <span class="material-symbols-outlined" style="font-size:18px;">remove</span>
+                                            @(item.Quantity <= 1 ? "disabled" : "")>
+                                        <span class="material-symbols-outlined" style="font-size:16px;">remove</span>
                                     </button>
-                                    <span class="qty-value" id="qty-@item.ProductId">@item.Quantity</span>
+                                    <span class="qty-val" id="qty-@item.ProductId">@item.Quantity</span>
                                     <button class="qty-btn" type="button"
                                             onclick="updateQty(@item.ProductId, @(item.Quantity + 1))">
-                                        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                                        <span class="material-symbols-outlined" style="font-size:16px;">add</span>
                                     </button>
                                 </div>
 
                                 <!-- Subtotal -->
-                                <div class="subtotal-text" id="subtotal-@item.ProductId">
+                                <span class="text-[13px] font-black text-[#111] ml-auto"
+                                      id="subtotal-@item.ProductId">
                                     @item.Subtotal.ToString("N0")₫
-                                </div>
+                                </span>
 
                                 <!-- Remove -->
                                 <button class="remove-btn" type="button"
                                         onclick="removeItem(@item.ProductId)">
-                                    <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
-                                    Remove
+                                    <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                                    Xoá
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 }
 
                 <!-- Clear all -->
-                <button class="clear-btn" type="button" onclick="clearCart()">
-                    <span class="material-symbols-outlined" style="font-size:18px;">delete_sweep</span>
-                    Clear All
-                </button>
+                <div class="flex justify-end mt-1">
+                    <button class="remove-btn" type="button" onclick="clearCart()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_sweep</span>
+                        Xoá tất cả
+                    </button>
+                </div>
             </div>
 
-            <!-- ── RIGHT: Summary ── -->
-            <div class="cart-summary-col">
-                <div class="summary-card">
-                    <div class="summary-body">
-                        <div class="summary-title">Order Summary</div>
+            <!-- ══ RIGHT: Summary ══ -->
+            <div class="cart-summary-col" style="width:360px; flex-shrink:0; position:sticky; top:7rem;">
 
-                        <!-- Item list -->
-                        <div style="margin-bottom:1rem;" id="summaryList">
+                <!-- Summary card -->
+                <div class="bg-white rounded-[20px] border border-[#ebebeb] overflow-hidden mb-3">
+                    <div class="p-6">
+                        <p class="text-[10px] font-black uppercase tracking-[.2em] text-orange-500 mb-1">Order</p>
+                        <h2 class="text-[1.35rem] font-black tracking-tight mb-5">Tóm tắt đơn hàng</h2>
+
+                        <!-- Per-item list -->
+                        <div class="flex flex-col gap-2 mb-4" id="summaryList">
                             @foreach (var item in Model)
                             {
-                                <div class="summary-row" id="summary-@item.ProductId">
-                                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">
+                                <div class="flex justify-between items-center text-[13px]"
+                                     id="summary-@item.ProductId">
+                                    <span class="text-gray-400 truncate max-w-[180px]">
                                         @item.ProductName
-                                        <span style="color:#6b7280;" id="summaryQty-@item.ProductId">
-                                            x@(item.Quantity)
-                                        </span>
+                                        <span class="font-bold" id="summaryQty-@item.ProductId">×@item.Quantity</span>
                                     </span>
-                                    <span id="summarySubtotal-@item.ProductId">
+                                    <span class="font-bold text-[#111]" id="summarySubtotal-@item.ProductId">
                                         @item.Subtotal.ToString("N0")₫
                                     </span>
                                 </div>
                             }
                         </div>
 
-                        <hr class="summary-divider" />
-
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span id="totalDisplay">@total.ToString("N0")₫</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Shipping</span>
-                            <span style="color:#4ade80;font-weight:700;">Free</span>
-                        </div>
-
-                        <hr class="summary-divider" />
-
-                        <div class="summary-total">
-                            <span class="summary-total-label">Total</span>
-                            <span class="summary-total-value" id="grandTotal">@total.ToString("N0")₫</span>
+                        <div class="border-t border-[#f0f0f0] pt-4 flex flex-col gap-2 mb-4">
+                            <div class="flex justify-between text-[13px]">
+                                <span class="text-gray-400">Tạm tính</span>
+                                <span class="font-bold" id="totalDisplay">@total.ToString("N0")₫</span>
+                            </div>
+                            <div class="flex justify-between text-[13px]">
+                                <span class="text-gray-400">Vận chuyển</span>
+                                <span class="font-bold text-green-500">Miễn phí</span>
+                            </div>
                         </div>
 
-                        <!-- Promo -->
-                        <div class="promo-row">
-                            <input class="promo-input" placeholder="Promo code" type="text" />
-                            <button class="promo-btn">Apply</button>
+                        <div class="border-t border-[#f0f0f0] pt-4 flex justify-between items-baseline mb-5">
+                            <span class="text-[15px] font-black">Tổng cộng</span>
+                            <span class="text-[1.7rem] font-black text-orange-500"
+                                  id="grandTotal">@total.ToString("N0")₫</span>
+                        </div>
+
+                        <!-- Promo code -->
+                        <div class="flex gap-2 mb-4">
+                            <input class="promo-input" placeholder="Mã giảm giá" type="text" />
+                            <button class="px-4 py-2 rounded-[10px] bg-[#f0efed] border border-[#e2e2e2]
+                                           text-[12px] font-bold text-[#111] hover:bg-[#e5e4e1] transition-all">
+                                Áp dụng
+                            </button>
                         </div>
 
                         <!-- Checkout -->
-                        <a asp-controller="Checkout" asp-action="Index" class="checkout-btn">
-                            <span class="material-symbols-outlined">payment</span>
-                            Proceed to Checkout
+                        <a asp-controller="Checkout" asp-action="Index"
+                           class="flex items-center justify-center gap-2 w-full py-4 rounded-[14px]
+                                  bg-orange-500 text-white text-[14px] font-black
+                                  shadow-[0_6px_20px_rgba(249,115,22,.32)]
+                                  hover:bg-orange-600 hover:-translate-y-0.5 transition-all mb-2">
+                            <span class="material-symbols-outlined" style="font-size:18px;">payment</span>
+                            Tiến hành thanh toán
                         </a>
 
-                        <!-- Continue -->
-                        <a asp-controller="Products" asp-action="Index" class="continue-btn">
+                        <!-- Continue shopping -->
+                        <a asp-controller="Products" asp-action="Index"
+                           class="flex items-center justify-center gap-2 w-full py-3 rounded-[14px]
+                                  border-2 border-[#ebebeb] text-[13px] font-bold text-gray-400
+                                  hover:border-[#111] hover:text-[#111] transition-all">
                             <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
-                            Continue Shopping
+                            Tiếp tục mua sắm
                         </a>
                     </div>
 
-                    <div class="summary-footer">
+                    <!-- Secure footer -->
+                    <div class="px-6 py-3 bg-[#f7f6f3] border-t border-[#f0f0f0] flex items-center
+                                justify-center gap-2 text-[10px] font-bold text-gray-300
+                                uppercase tracking-[.15em]">
                         <span class="material-symbols-outlined"
-                              style="font-size:16px;font-variation-settings:'FILL' 1;">verified_user</span>
-                        Secure 256-bit Encrypted Checkout
+                              style="font-size:14px;font-variation-settings:'FILL' 1;">verified_user</span>
+                        Thanh toán mã hoá 256-bit
                     </div>
                 </div>
 
-                <!-- Bento -->
-                <div class="bento-grid">
-                    <div class="bento-card">
-                        <span class="material-symbols-outlined" style="color:#adc7ff;">local_shipping</span>
-                        <p style="font-size:0.8rem;font-weight:700;color:#e5e2e1;">Express Delivery</p>
-                        <p style="font-size:0.7rem;color:#6b7280;">2-3 Business Days</p>
+                <!-- Bento chips -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white rounded-[16px] border border-[#ebebeb] p-4">
+                        <span class="material-symbols-outlined text-orange-400" style="font-size:22px;">local_shipping</span>
+                        <p class="text-[12px] font-black text-[#111] mt-2">Giao hàng nhanh</p>
+                        <p class="text-[11px] text-gray-400 mt-0.5">2–3 ngày làm việc</p>
                     </div>
-                    <div class="bento-card">
-                        <span class="material-symbols-outlined" style="color:#adc7ff;">keyboard_return</span>
-                        <p style="font-size:0.8rem;font-weight:700;color:#e5e2e1;">30-Day Returns</p>
-                        <p style="font-size:0.7rem;color:#6b7280;">Hassle-free guarantee</p>
+                    <div class="bg-white rounded-[16px] border border-[#ebebeb] p-4">
+                        <span class="material-symbols-outlined text-orange-400" style="font-size:22px;">keyboard_return</span>
+                        <p class="text-[12px] font-black text-[#111] mt-2">Đổi trả 30 ngày</p>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Không rắc rối</p>
                     </div>
                 </div>
-            </div>
 
+            </div><!-- /summary col -->
         </div>
     }
+
+</div>
 </div>
 
 @section Scripts {
@@ -590,7 +360,7 @@
 
             document.getElementById('qty-' + productId).textContent = newQty;
             document.getElementById('subtotal-' + productId).textContent = formatVnd(data.subtotal);
-            document.getElementById('summaryQty-' + productId).textContent = 'x' + newQty;
+            document.getElementById('summaryQty-' + productId).textContent = '×' + newQty;
             document.getElementById('summarySubtotal-' + productId).textContent = formatVnd(data.subtotal);
             document.getElementById('totalDisplay').textContent = formatVnd(data.total);
             document.getElementById('grandTotal').textContent = formatVnd(data.total);

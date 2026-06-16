@@ -1,4 +1,5 @@
 ﻿using Entities;
+using Entities.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
@@ -150,19 +151,9 @@ namespace ElectroTech.Infrastructure.DbContexts
                 Entry = entry;
             }
 
-            public AuditLog ToAudit()
+            internal AuditLog ToAudit()
             {
-                AuditLog audit = new AuditLog();
-                audit.UserId = UserId;
-                audit.ComId = ComId;
-                audit.Type = AuditType.ToString();
-                audit.TableName = TableName;
-                audit.DateTime = DateTime.UtcNow;
-                audit.PrimaryKey = JsonConvert.SerializeObject(KeyValues);
-                audit.OldValues = ((OldValues.Count == 0) ? null : JsonConvert.SerializeObject(OldValues));
-                audit.NewValues = ((NewValues.Count == 0) ? null : JsonConvert.SerializeObject(NewValues));
-                audit.AffectedColumns = ((ChangedColumns.Count == 0) ? null : JsonConvert.SerializeObject(ChangedColumns));
-                return audit;
+                throw new NotImplementedException();
             }
         }
     }

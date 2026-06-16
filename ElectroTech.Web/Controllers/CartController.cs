@@ -2,6 +2,7 @@
 using ElectroTech.Application.Features.Cart.Queries;
 using ElectroTech.Application.Features.Products.Queries;
 using ElectroTech.Web.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Entities;
 
@@ -9,24 +10,38 @@ namespace ElectroTech.Web.Controllers;
 
 public class CartController : BaseController<CartController>
 {
-    // GET /Cart
+   
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     public async Task<IActionResult> Index()
     {
         var response = await _mediator.Send(new GetCartQuery());
         return View(response.Data);
     }
 
-    // POST /Cart/Add — AJAX thêm sản phẩm
+    
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(int productId, int quantity = 1)
     {
+        
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            var returnUrl = Uri.EscapeDataString(Url.Action("Index", "Products") ?? "/");
+            return Json(new
+            {
+                success = false,
+                requireLogin = true,
+                message = "Vui lòng đăng nhập để thêm vào giỏ hàng.",
+                redirectUrl = $"/account/login?returnUrl={returnUrl}"
+            });
+        }
+
         var product = await _mediator.Send(new GetIdProductQuery { Id = productId });
         if (!product.Succeeded || product.Data is null)
-            return Json(new { success = false, message = "San pham khong ton tai." });
+            return Json(new { success = false, message = "Sản phẩm không tồn tại." });
 
         if (product.Data.Stock < quantity)
-            return Json(new { success = false, message = $"Chi con {product.Data.Stock} san pham." });
+            return Json(new { success = false, message = $"Chỉ còn {product.Data.Stock} sản phẩm." });
 
         var response = await _mediator.Send(new AddToCartCommand
         {
@@ -40,23 +55,16 @@ public class CartController : BaseController<CartController>
         return Json(new { success = true, count = response.Data });
     }
 
-    // POST /Cart/UpdateAjax — AJAX cap nhat so luong
+
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateAjax(int productId, int quantity)
     {
         if (quantity < 1)
-        {
             await _mediator.Send(new RemoveFromCartCommand { ProductId = productId });
-        }
         else
-        {
-            await _mediator.Send(new UpdateCartCommand
-            {
-                ProductId = productId,
-                Quantity = quantity
-            });
-        }
+            await _mediator.Send(new UpdateCartCommand { ProductId = productId, Quantity = quantity });
 
         var cart = await _mediator.Send(new GetCartQuery());
         var items = cart.Data ?? new List<CartItem>();
@@ -64,17 +72,12 @@ public class CartController : BaseController<CartController>
         var total = items.Sum(i => i.Subtotal);
         var count = items.Sum(i => i.Quantity);
 
-        return Json(new
-        {
-            success = true,
-            subtotal = item?.Subtotal ?? 0,
-            total,
-            count
-        });
+        return Json(new { success = true, subtotal = item?.Subtotal ?? 0, total, count });
     }
 
-    // POST /Cart/RemoveAjax — AJAX xoa 1 san pham
+   
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveAjax(int productId)
     {
@@ -82,14 +85,18 @@ public class CartController : BaseController<CartController>
 
         var cart = await _mediator.Send(new GetCartQuery());
         var items = cart.Data ?? new List<CartItem>();
-        var total = items.Sum(i => i.Subtotal);
-        var count = items.Sum(i => i.Quantity);
 
-        return Json(new { success = true, total, count });
+        return Json(new
+        {
+            success = true,
+            total = items.Sum(i => i.Subtotal),
+            count = items.Sum(i => i.Quantity)
+        });
     }
 
-    // POST /Cart/ClearAjax — AJAX xoa gio hang
+   
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ClearAjax()
     {
@@ -97,8 +104,9 @@ public class CartController : BaseController<CartController>
         return Json(new { success = true, total = 0, count = 0 });
     }
 
-    // POST /Cart/Update — form submit (giu lai de tuong thich)
+    
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int productId, int quantity)
     {
@@ -106,8 +114,9 @@ public class CartController : BaseController<CartController>
         return RedirectToAction(nameof(Index));
     }
 
-    // POST /Cart/Remove — form submit (giu lai de tuong thich)
+   
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Remove(int productId)
     {
@@ -115,8 +124,9 @@ public class CartController : BaseController<CartController>
         return RedirectToAction(nameof(Index));
     }
 
-    // POST /Cart/Clear — form submit (giu lai de tuong thich)
+    
     [HttpPost]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationCustomer.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Clear()
     {
@@ -124,10 +134,13 @@ public class CartController : BaseController<CartController>
         return RedirectToAction(nameof(Index));
     }
 
-    // GET /Cart/Count — AJAX badge
+   
     [HttpGet]
     public async Task<IActionResult> Count()
     {
+        if (User.Identity?.IsAuthenticated != true)
+            return Json(new { count = 0 });
+
         var response = await _mediator.Send(new GetCartQuery());
         var count = response.Data?.Sum(i => i.Quantity) ?? 0;
         return Json(new { count });

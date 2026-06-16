@@ -9,150 +9,160 @@
 @Html.AntiForgeryToken()
 
 <style>
-    .pd-root {
-        background: #f9f7f4;
-        min-height: 100vh;
-        font-family: 'DM Sans',sans-serif;
+    *, *::before, *::after {
+        box-sizing: border-box;
     }
 
+    .pd-root {
+        background: #f7f6f3;
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: #111;
+    }
+
+    /* Breadcrumb */
     .pd-crumb a {
-        color: #9ca3af;
+        color: #bbb;
         text-decoration: none;
-        font-size: 13px;
+        font-size: 12px;
+        font-weight: 600;
         transition: color .15s;
     }
 
         .pd-crumb a:hover {
-            color: #1a1a1a;
+            color: #111;
         }
 
     .pd-crumb .sep {
-        color: #d1d5db;
+        color: #ddd;
         margin: 0 6px;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .pd-crumb .cur {
-        color: #374151;
-        font-size: 13px;
-        font-weight: 500;
+        color: #555;
+        font-size: 12px;
+        font-weight: 700;
     }
 
+    /* Image gallery */
     .pd-img-main {
         background: #fff;
         border-radius: 24px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #ebebeb;
         aspect-ratio: 1;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 32px;
         overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0,0,0,.05);
         cursor: zoom-in;
         transition: box-shadow .2s;
     }
 
         .pd-img-main:hover {
-            box-shadow: 0 8px 40px rgba(0,0,0,.1);
+            box-shadow: 0 12px 40px rgba(0,0,0,.08);
         }
 
     .pd-img-thumb {
         background: #fff;
-        border-radius: 14px;
-        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        border: 2px solid #ebebeb;
         aspect-ratio: 1;
         cursor: pointer;
-        padding: 6px;
+        padding: 5px;
         overflow: hidden;
-        transition: border-color .2s, transform .15s;
+        transition: border-color .18s, transform .15s;
     }
 
         .pd-img-thumb:hover {
             transform: translateY(-2px);
-            border-color: #6366f1;
+            border-color: #f97316;
         }
 
         .pd-img-thumb.active {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249,115,22,.15);
         }
 
+    /* Badges */
     .badge {
         display: inline-flex;
         align-items: center;
         gap: 5px;
         padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: .06em;
+        border-radius: 100px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
         text-transform: uppercase;
     }
 
     .badge-featured {
-        background: #ede9fe;
-        color: #7c3aed;
-        border: 1px solid #ddd6fe;
+        background: #fff3e8;
+        color: #f97316;
+        border: 1px solid #fed7aa;
     }
 
     .badge-instock {
-        background: #dcfce7;
+        background: #f0fdf4;
         color: #16a34a;
         border: 1px solid #bbf7d0;
     }
 
     .badge-outstock {
-        background: #fee2e2;
+        background: #fef2f2;
         color: #dc2626;
         border: 1px solid #fecaca;
     }
 
+    /* Price box */
     .pd-price {
-        background: linear-gradient(135deg,#f5f3ff,#ede9fe);
-        border: 1px solid #ddd6fe;
+        background: #fff;
+        border: 1px solid #ebebeb;
         border-radius: 18px;
-        padding: 22px 24px;
+        padding: 20px 22px;
     }
 
-    .spec-card {
+    /* Spec chips */
+    .spec-chip {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #ebebeb;
         border-radius: 14px;
-        padding: 14px 16px;
+        padding: 12px 14px;
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        transition: border-color .2s, box-shadow .2s;
+        gap: 10px;
+        transition: border-color .18s, box-shadow .18s;
     }
 
-        .spec-card:hover {
-            border-color: #a5b4fc;
-            box-shadow: 0 4px 16px rgba(99,102,241,.08);
+        .spec-chip:hover {
+            border-color: #f97316;
+            box-shadow: 0 4px 16px rgba(249,115,22,.08);
         }
 
+    /* Qty control */
     .qty-wrap {
         display: flex;
         align-items: center;
         background: #fff;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 14px;
+        border: 1.5px solid #e2e2e2;
+        border-radius: 12px;
         overflow: hidden;
-        transition: border-color .2s;
+        transition: border-color .18s;
     }
 
         .qty-wrap:focus-within {
-            border-color: #6366f1;
+            border-color: #f97316;
         }
 
     .qty-btn {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border: none;
         background: none;
         cursor: pointer;
-        color: #9ca3af;
-        font-size: 18px;
+        color: #bbb;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -160,61 +170,68 @@
     }
 
         .qty-btn:hover {
-            color: #6366f1;
-            background: #f5f3ff;
+            color: #f97316;
+            background: #fff3e8;
+        }
+
+        .qty-btn:disabled {
+            opacity: .3;
+            cursor: not-allowed;
         }
 
     .qty-num {
-        width: 48px;
+        width: 44px;
         text-align: center;
-        font-weight: 800;
-        font-size: 16px;
-        color: #111827;
+        font-weight: 900;
+        font-size: 15px;
+        color: #111;
         user-select: none;
     }
 
+    /* CTA buttons */
     .btn-cart {
         flex: 1;
-        padding: 16px 24px;
+        padding: 15px 22px;
         border: none;
-        border-radius: 16px;
-        font-size: 15px;
-        font-weight: 700;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 800;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        background: linear-gradient(135deg,#6366f1,#8b5cf6);
+        gap: 9px;
+        background: #f97316;
         color: #fff;
-        transition: all .25s;
-        box-shadow: 0 8px 24px rgba(99,102,241,.3);
+        transition: all .22s;
+        box-shadow: 0 6px 20px rgba(249,115,22,.32);
     }
 
         .btn-cart:hover:not(:disabled) {
+            background: #ea6600;
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(99,102,241,.45);
+            box-shadow: 0 10px 28px rgba(249,115,22,.42);
         }
 
         .btn-cart:disabled {
-            background: #f3f4f6;
-            color: #9ca3af;
+            background: #f0f0f0;
+            color: #ccc;
             box-shadow: none;
             cursor: not-allowed;
         }
 
     .btn-wish {
-        width: 56px;
-        height: 56px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 16px;
+        width: 52px;
+        height: 52px;
+        border: 1.5px solid #e2e2e2;
+        border-radius: 14px;
         background: #fff;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #9ca3af;
-        transition: all .2s;
+        color: #ccc;
+        transition: all .18s;
     }
 
         .btn-wish:hover {
@@ -225,29 +242,29 @@
 
     /* Tabs */
     .tab-btn {
-        padding: 12px 24px;
+        padding: 11px 22px;
         border: none;
         background: none;
         cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        color: #9ca3af;
+        font-size: 13px;
+        font-weight: 700;
+        color: #bbb;
         border-bottom: 2px solid transparent;
         margin-bottom: -1px;
         display: flex;
         align-items: center;
-        gap: 8px;
-        transition: all .2s;
-        font-family: 'DM Sans',sans-serif;
+        gap: 7px;
+        transition: all .18s;
+        font-family: inherit;
     }
 
         .tab-btn.active {
-            color: #6366f1;
-            border-bottom-color: #6366f1;
+            color: #f97316;
+            border-bottom-color: #f97316;
         }
 
         .tab-btn:hover:not(.active) {
-            color: #374151;
+            color: #555;
         }
 
     /* Spec table */
@@ -255,19 +272,19 @@
         background: #fff;
         border-radius: 16px;
         overflow: hidden;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #ebebeb;
     }
 
     .spec-group-head {
-        background: #f5f3ff;
-        padding: 11px 24px;
-        border-bottom: 1px solid #ede9fe;
+        background: #fff3e8;
+        padding: 10px 22px;
+        border-bottom: 1px solid #fed7aa;
     }
 
         .spec-group-head h3 {
-            color: #6366f1;
-            font-size: 11px;
-            font-weight: 700;
+            color: #f97316;
+            font-size: 10px;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: .18em;
             margin: 0;
@@ -284,71 +301,89 @@
     /* Review form */
     .review-form-wrap {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #ebebeb;
         border-radius: 20px;
-        padding: 28px;
-        margin-bottom: 28px;
+        padding: 26px;
+        margin-bottom: 24px;
     }
 
     .review-input {
         width: 100%;
-        padding: 11px 14px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 14px;
-        color: #111827;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e2e2;
+        border-radius: 11px;
+        font-size: 13px;
+        color: #111;
         outline: none;
         font-family: inherit;
-        transition: border-color .2s, box-shadow .2s;
-        box-sizing: border-box;
+        transition: border-color .18s;
         background: #fafafa;
     }
 
         .review-input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+            border-color: #f97316;
             background: #fff;
         }
 
         .review-input::placeholder {
-            color: #aaa;
+            color: #ccc;
         }
 
     /* Review cards */
     .review-card {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #ebebeb;
         border-radius: 16px;
-        padding: 22px 24px;
+        padding: 20px 22px;
     }
 
     /* Toast */
     #cartToast {
         position: fixed;
-        bottom: 32px;
-        right: 32px;
+        bottom: 28px;
+        right: 28px;
         z-index: 9999;
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 16px 20px;
+        padding: 15px 18px;
         border-radius: 18px;
         background: #fff;
-        min-width: 300px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 20px 60px rgba(0,0,0,.12);
+        min-width: 290px;
+        border: 1px solid #ebebeb;
+        box-shadow: 0 16px 48px rgba(0,0,0,.1);
         opacity: 0;
-        transform: translateY(16px);
+        transform: translateY(14px);
         transition: all .3s cubic-bezier(.34,1.56,.64,1);
         pointer-events: none;
     }
+
+    /* Eyebrow line */
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: #f97316;
+    }
+
+        .eyebrow::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: #f97316;
+            flex-shrink: 0;
+        }
 </style>
 
 <main class="pd-root pt-20 pb-24">
-    <div style="max-width:1280px;margin:0 auto;padding:0 40px;">
+    <div style="max-width:1200px; margin:0 auto; padding:0 40px;">
 
         <!-- Breadcrumb -->
-        <nav class="pd-crumb" style="display:flex;align-items:center;margin-bottom:36px;padding-top:28px;">
+        <nav class="pd-crumb" style="display:flex; align-items:center; margin-bottom:32px; padding-top:24px;">
             <a asp-controller="Home" asp-action="Index">Trang chủ</a>
             <span class="sep">›</span>
             <a asp-controller="Products" asp-action="Index">Sản phẩm</a>
@@ -356,32 +391,33 @@
             <span class="cur">@Model.Name</span>
         </nav>
 
-        <!-- Main grid -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-bottom:72px;align-items:start;">
+        <!-- ══ MAIN GRID ══ -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:52px; margin-bottom:72px; align-items:start;">
 
             <!-- LEFT: Images -->
             <div>
-                <div class="pd-img-main" style="margin-bottom:14px;">
+                <div class="pd-img-main" style="margin-bottom:12px;">
                     @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
                     {
                         <img id="mainImage" src="@Model.ThumbnailUrl" alt="@Model.Name"
-                             style="width:100%;height:100%;object-fit:contain;transition:opacity .2s;" />
+                             style="width:100%; height:100%; object-fit:contain; transition:opacity .2s;" />
                     }
                     else
                     {
-                        <span class="material-symbols-outlined" style="font-size:80px;color:#d1d5db;">image_not_supported</span>
+                        <span class="material-symbols-outlined" style="font-size:72px; color:#ddd;">image_not_supported</span>
                     }
                 </div>
+
                 @if (Model.ProductImages != null && Model.ProductImages.Any())
                 {
-                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
-                        <div class="pd-img-thumb active" onclick="changeImage('@Model.ThumbnailUrl',this)">
-                            <img src="@Model.ThumbnailUrl" alt="" style="width:100%;height:100%;object-fit:contain;" />
+                    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px;">
+                        <div class="pd-img-thumb active" onclick="changeImage('@Model.ThumbnailUrl', this)">
+                            <img src="@Model.ThumbnailUrl" alt="" style="width:100%; height:100%; object-fit:contain;" />
                         </div>
                         @foreach (var img in Model.ProductImages)
                         {
-                            <div class="pd-img-thumb" onclick="changeImage('@img.ImageUrl',this)">
-                                <img src="@img.ImageUrl" alt="" style="width:100%;height:100%;object-fit:contain;" />
+                            <div class="pd-img-thumb" onclick="changeImage('@img.ImageUrl', this)">
+                                <img src="@img.ImageUrl" alt="" style="width:100%; height:100%; object-fit:contain;" />
                             </div>
                         }
                     </div>
@@ -389,9 +425,10 @@
             </div>
 
             <!-- RIGHT: Info -->
-            <div style="display:flex;flex-direction:column;gap:20px;">
+            <div style="display:flex; flex-direction:column; gap:18px;">
+
                 <!-- Badges -->
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     @if (Model.IsFeatured)
                     {
                         <span class="badge badge-featured">⚡ Nổi bật</span>
@@ -403,7 +440,7 @@
                     else
                     {
                         <span class="badge badge-instock">
-                            <span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block;"></span>
+                            <span style="width:5px; height:5px; background:#16a34a; border-radius:50%; display:inline-block;"></span>
                             Còn hàng (@Model.Stock)
                         </span>
                     }
@@ -411,35 +448,46 @@
 
                 @if (!string.IsNullOrEmpty(Model.Brand))
                 {
-                    <p style="color:#6366f1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.2em;margin:0;">@Model.Brand</p>
+                    <p class="eyebrow">@Model.Brand</p>
                 }
 
-                <h1 style="font-size:2rem;font-weight:800;color:#111827;line-height:1.2;margin:0;letter-spacing:-.02em;font-family:'Syne',sans-serif;">
+                <h1 style="font-size:1.9rem; font-weight:900; color:#111; line-height:1.15; margin:0; letter-spacing:-.03em;">
                     @Model.Name
                 </h1>
 
-                <!-- Rating -->
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div style="display:flex;gap:2px;">
+                @{
+                    var approvedReviews = Model.Reviews?.Where(r => r.IsApproved).ToList() ?? new();
+                    var displayRating = approvedReviews.Any()
+                    ? Math.Round(approvedReviews.Average(r => (double)r.Rating), 1)
+                    : 0.0;
+                    var displayCount = approvedReviews.Count;
+                }
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; gap:2px;">
                         @for (int i = 1; i <= 5; i++)
                         {
-                            <span style="font-size:15px;color:@(i<=(int)Model.Rating?"#f59e0b":"#e5e7eb");">★</span>
+                            <span style="font-size:14px; color:@(i<=(int)displayRating?"#f59e0b":"#e5e7eb");">★</span>
                         }
                     </div>
-                    <span style="color:#6b7280;font-size:13px;">@Model.Rating.ToString("0.0") · @Model.ReviewCount đánh giá</span>
+                    <span style="color:#aaa; font-size:12px; font-weight:600;">
+                        @displayRating.ToString("0.0") · @displayCount đánh giá
+                    </span>
                 </div>
 
                 <!-- Price -->
                 <div class="pd-price">
-                    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-                        <span style="font-size:2.2rem;font-weight:900;color:#6366f1;letter-spacing:-.03em;font-family:'Syne',sans-serif;">
+                    <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+                        <span style="font-size:2rem; font-weight:900; color:#f97316; letter-spacing:-.03em;">
                             @Model.Price.ToString("N0")₫
                         </span>
                         @if (Model.OriginalPrice.HasValue && Model.OriginalPrice > Model.Price)
                         {
                             var discount = (int)((1 - Model.Price / Model.OriginalPrice.Value) * 100);
-                            <span style="font-size:1rem;color:#9ca3af;text-decoration:line-through;">@Model.OriginalPrice.Value.ToString("N0")₫</span>
-                            <span style="background:#dc2626;color:white;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;">−@discount%</span>
+                            <span style="font-size:14px; color:#ccc; text-decoration:line-through;">
+                                @Model.OriginalPrice.Value.ToString("N0")₫
+                            </span>
+                            <span style="background:#111; color:#fff; font-size:10px; font-weight:900;
+                                     padding:3px 10px; border-radius:100px;">−@discount%</span>
                         }
                     </div>
                 </div>
@@ -459,18 +507,21 @@
                     ["Rear Camera"] = "photo_camera",
                     ["Battery Capacity"] = "battery_full"
                 };
-                    var hs = Model.ProductSpecs.Where(s => highlight.Contains(s.SpecKey)).OrderBy(s => s.DisplayOrder).Take(4).ToList();
+                    var hs = Model.ProductSpecs.Where(s => highlight.Contains(s.SpecKey))
+                    .OrderBy(s => s.DisplayOrder).Take(4).ToList();
                     if (hs.Any())
                     {
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                             @foreach (var spec in hs)
                             {
                                 var ico = icons.ContainsKey(spec.SpecKey) ? icons[spec.SpecKey] : "info";
-                                <div class="spec-card">
-                                    <span class="material-symbols-outlined" style="color:#6366f1;font-size:20px;margin-top:2px;">@ico</span>
+                                <div class="spec-chip">
+                                    <span class="material-symbols-outlined"
+                                          style="color:#f97316; font-size:18px; margin-top:1px;">@ico</span>
                                     <div>
-                                        <p style="color:#9ca3af;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;margin:0 0 4px;">@spec.SpecKey</p>
-                                        <p style="color:#111827;font-weight:700;font-size:13px;margin:0;">@spec.SpecValue</p>
+                                        <p style="color:#bbb; font-size:9px; font-weight:800; text-transform:uppercase;
+                                               letter-spacing:.14em; margin:0 0 3px;">@spec.SpecKey</p>
+                                        <p style="color:#111; font-weight:800; font-size:13px; margin:0;">@spec.SpecValue</p>
                                     </div>
                                 </div>
                             }
@@ -480,87 +531,105 @@
 
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <p style="color:#6b7280;font-size:14px;line-height:1.75;margin:0;">@Model.Description</p>
+                    <p style="color:#888; font-size:13px; line-height:1.75; margin:0;">@Model.Description</p>
                 }
 
                 <!-- Quantity -->
                 @if (Model.Stock > 0)
                 {
-                    <div style="display:flex;align-items:center;gap:14px;">
-                        <span style="color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;">Số lượng</span>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="color:#bbb; font-size:11px; font-weight:800;
+                                 text-transform:uppercase; letter-spacing:.14em;">Số lượng</span>
                         <div class="qty-wrap">
                             <button type="button" id="btnMinus" class="qty-btn" onclick="changeQty(-1)">
-                                <span class="material-symbols-outlined" style="font-size:18px;">remove</span>
+                                <span class="material-symbols-outlined" style="font-size:17px;">remove</span>
                             </button>
                             <span class="qty-num" id="qtyDisplay">1</span>
                             <button type="button" id="btnPlus" class="qty-btn" onclick="changeQty(1)">
-                                <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                                <span class="material-symbols-outlined" style="font-size:17px;">add</span>
                             </button>
                         </div>
-                        <span style="color:#9ca3af;font-size:13px;">/ <span style="color:#374151;font-weight:600;">@Model.Stock</span> sản phẩm</span>
+                        <span style="color:#bbb; font-size:12px;">
+                            / <span style="color:#555; font-weight:700;">@Model.Stock</span> sản phẩm
+                        </span>
                     </div>
                 }
 
-                <!-- Buttons -->
-                <div style="display:flex;gap:12px;">
+                <!-- CTA -->
+                <div style="display:flex; gap:10px;">
                     <button id="addToCartBtn" class="btn-cart"
                             data-product-id="@Model.Id" data-max-stock="@Model.Stock"
                     @(Model.Stock <= 0 ? "disabled" : "")>
-                        <span class="material-symbols-outlined" style="font-size:20px;">add_shopping_cart</span>
+                        <span class="material-symbols-outlined" style="font-size:19px;">add_shopping_cart</span>
                         <span id="addBtnText">@(Model.Stock > 0 ? "Thêm vào giỏ" : "Hết hàng")</span>
                     </button>
                     <button class="btn-wish">
-                        <span class="material-symbols-outlined" style="font-size:22px;">favorite_border</span>
+                        <span class="material-symbols-outlined" style="font-size:21px;">favorite_border</span>
                     </button>
                 </div>
 
                 @if (!string.IsNullOrEmpty(Model.Code))
                 {
-                    <p style="color:#d1d5db;font-size:12px;margin:0;">SKU: <span style="color:#9ca3af;font-family:monospace;">@Model.Code</span></p>
+                    <p style="color:#ccc; font-size:12px; margin:0;">
+                        SKU: <span style="color:#aaa; font-family:monospace;">@Model.Code</span>
+                    </p>
                 }
             </div>
         </div>
 
-        <!-- ── TABS ── -->
+        <!-- ══ TABS ══ -->
         <div style="margin-bottom:80px;">
-            <div style="display:flex;border-bottom:1px solid #e5e7eb;margin-bottom:32px;">
-                <button id="tab-specs" class="tab-btn @(!showReviewForm ? "active" : "")" onclick="switchTab('specs')">
-                    <span class="material-symbols-outlined" style="font-size:18px;">tune</span>
+            <div style="display:flex; border-bottom:1px solid #ebebeb; margin-bottom:28px;">
+                <button id="tab-specs" class="tab-btn @(!showReviewForm ? "active" : "")"
+                        onclick="switchTab('specs')">
+                    <span class="material-symbols-outlined" style="font-size:17px;">tune</span>
                     Thông số kỹ thuật
                     @if (Model.ProductSpecs != null && Model.ProductSpecs.Any())
                     {
-                        <span style="background:#ede9fe;color:#6366f1;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">@Model.ProductSpecs.Count</span>
+                        <span id="specsBadge"
+                              style="background:#fff3e8; color:#f97316; font-size:10px; font-weight:800;
+                                 padding:2px 8px; border-radius:100px;">@Model.ProductSpecs.Count</span>
                     }
                 </button>
-                <button id="tab-reviews" class="tab-btn @(showReviewForm ? "active" : "")" onclick="switchTab('reviews')">
-                    <span class="material-symbols-outlined" style="font-size:18px;">star</span>
+                <button id="tab-reviews" class="tab-btn @(showReviewForm ? "active" : "")"
+                        onclick="switchTab('reviews')">
+                    <span class="material-symbols-outlined" style="font-size:17px;">star</span>
                     Đánh giá
                     @if (approvedCount > 0)
                     {
-                        <span id="reviewBadge" style="background:#f3f4f6;color:#9ca3af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">@approvedCount</span>
+                        <span id="reviewBadge"
+                              style="background:#f0f0f0; color:#bbb; font-size:10px; font-weight:800;
+                                 padding:2px 8px; border-radius:100px;">@approvedCount</span>
                     }
                 </button>
             </div>
 
             <!-- Panel: Thông số -->
-            <div id="panel-specs" style="display:@(!showReviewForm?"block":"none");">
+            <div id="panel-specs" style="display:@(!showReviewForm ? "block" : "none");">
                 @if (Model.ProductSpecs != null && Model.ProductSpecs.Any())
                 {
                     var groups = Model.ProductSpecs.OrderBy(s => s.DisplayOrder)
                     .GroupBy(s => string.IsNullOrEmpty(s.GroupName) ? "Thông số chung" : s.GroupName);
-                    <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex; flex-direction:column; gap:10px;">
                         @foreach (var grp in groups)
                         {
                             var specList = grp.ToList();
                             <div class="spec-group">
                                 <div class="spec-group-head"><h3>@grp.Key</h3></div>
-                                <table style="width:100%;border-collapse:collapse;">
+                                <table style="width:100%; border-collapse:collapse;">
                                     @for (int idx = 0; idx < specList.Count; idx++)
                                     {
                                         var sp = specList[idx];
-                                        <tr class="@(idx%2==0?"spec-row-even":"spec-row-odd")" style="border-bottom:1px solid #f3f4f6;">
-                                            <td style="padding:13px 24px;color:#6b7280;font-size:13px;font-weight:600;width:40%;">@sp.SpecKey</td>
-                                            <td style="padding:13px 24px;color:#111827;font-size:13px;">@sp.SpecValue</td>
+                                        <tr class="@(idx%2==0?"spec-row-even":"spec-row-odd")"
+                                            style="border-bottom:1px solid #f4f4f4;">
+                                            <td style="padding:12px 22px; color:#aaa; font-size:12px;
+                                                   font-weight:700; width:40%;">
+                                                @sp.SpecKey
+                                            </td>
+                                            <td style="padding:12px 22px; color:#111; font-size:13px;
+                                                   font-weight:600;">
+                                                @sp.SpecValue
+                                            </td>
                                         </tr>
                                     }
                                 </table>
@@ -570,22 +639,24 @@
                 }
                 else
                 {
-                    <div style="text-align:center;padding:60px 0;">
-                        <span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;">tune</span>
-                        <p style="font-size:14px;color:#9ca3af;">Chưa có thông số kỹ thuật.</p>
+                    <div style="text-align:center; padding:56px 0;">
+                        <span class="material-symbols-outlined" style="font-size:44px; display:block;
+                          margin-bottom:10px; color:#e0e0e0;">tune</span>
+                        <p style="font-size:13px; color:#bbb;">Chưa có thông số kỹ thuật.</p>
                     </div>
                 }
             </div>
 
             <!-- Panel: Đánh giá -->
-            <div id="panel-reviews" style="display:@(showReviewForm?"block":"none");">
+            <div id="panel-reviews" style="display:@(showReviewForm ? "block" : "none");">
 
-                <!-- Form đánh giá — chỉ hiện khi có orderId hợp lệ từ server -->
                 @if (showReviewForm)
                 {
                     <div class="review-form-wrap">
-                        <h3 style="font-size:1rem;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                            <span class="material-symbols-outlined" style="color:#6366f1;font-size:20px;">edit_note</span>
+                        <h3 style="font-size:14px; font-weight:900; color:#111; margin:0 0 20px;
+                               display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined"
+                                  style="color:#f97316; font-size:19px;">edit_note</span>
                             Viết đánh giá của bạn
                         </h3>
                         <form action="/Review/Create" method="post" id="reviewForm">
@@ -594,43 +665,50 @@
                             <input type="hidden" name="orderId" value="@reviewOrderId" />
 
                             <!-- Stars -->
-                            <div style="margin-bottom:20px;">
-                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:10px;">
-                                    Đánh giá *
-                                </label>
-                                <div id="starPicker" style="display:flex;gap:6px;">
+                            <div style="margin-bottom:18px;">
+                                <label style="color:#bbb; font-size:11px; font-weight:800;
+                                          text-transform:uppercase; letter-spacing:.12em;
+                                          display:block; margin-bottom:10px;">Đánh giá *</label>
+                                <div id="starPicker" style="display:flex; gap:5px;">
                                     @for (int s = 1; s <= 5; s++)
                                     {
                                         <button type="button" onclick="setRating(@s)" data-star="@s"
-                                                style="font-size:34px;background:none;border:none;cursor:pointer;
-                                                   color:#e5e7eb;transition:all .15s;line-height:1;padding:2px;">
+                                                style="font-size:32px; background:none; border:none;
+                                                   cursor:pointer; color:#e5e7eb;
+                                                   transition:all .15s; line-height:1; padding:2px;">
                                             ★
                                         </button>
                                     }
                                 </div>
                                 <input type="hidden" name="rating" id="ratingInput" value="0" />
-                                <p id="ratingError" style="color:#ef4444;font-size:12px;margin:6px 0 0;display:none;">Vui lòng chọn số sao.</p>
+                                <p id="ratingError" style="color:#ef4444; font-size:12px;
+                                                        margin:6px 0 0; display:none;">
+                                    Vui lòng chọn số sao.
+                                </p>
                             </div>
 
-                            <!-- Title -->
-                            <div style="margin-bottom:14px;">
-                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px;">Tiêu đề (tùy chọn)</label>
-                                <input type="text" name="title" maxlength="200" class="review-input" placeholder="Tóm tắt nhận xét của bạn..." />
+                            <div style="margin-bottom:12px;">
+                                <label style="color:#bbb; font-size:11px; font-weight:800;
+                                          text-transform:uppercase; letter-spacing:.12em;
+                                          display:block; margin-bottom:8px;">Tiêu đề (tùy chọn)</label>
+                                <input type="text" name="title" maxlength="200" class="review-input"
+                                       placeholder="Tóm tắt nhận xét của bạn..." />
                             </div>
 
-                            <!-- Comment -->
-                            <div style="margin-bottom:20px;">
-                                <label style="color:#6b7280;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px;">Nội dung *</label>
+                            <div style="margin-bottom:18px;">
+                                <label style="color:#bbb; font-size:11px; font-weight:800;
+                                          text-transform:uppercase; letter-spacing:.12em;
+                                          display:block; margin-bottom:8px;">Nội dung *</label>
                                 <textarea name="comment" rows="4" maxlength="1000" required
-                                          class="review-input" style="resize:vertical;min-height:110px;"
+                                          class="review-input" style="resize:vertical; min-height:100px;"
                                           placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
                             </div>
 
                             <button type="submit" onclick="return validateReview()"
-                                    style="padding:13px 28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
-                                       color:white;font-weight:700;font-size:14px;border:none;
-                                       border-radius:12px;cursor:pointer;transition:all .2s;
-                                       box-shadow:0 6px 20px rgba(99,102,241,.3);"
+                                    style="padding:12px 26px; background:#f97316; color:#fff;
+                                       font-weight:800; font-size:13px; border:none;
+                                       border-radius:12px; cursor:pointer; transition:all .2s;
+                                       box-shadow:0 6px 20px rgba(249,115,22,.3);"
                                     onmouseover="this.style.transform='translateY(-1px)'"
                                     onmouseout="this.style.transform=''">
                                 Gửi đánh giá
@@ -639,40 +717,55 @@
                     </div>
                 }
 
-                <!-- Danh sách đánh giá -->
-                <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 16px;">
+                <!-- Review list -->
+                <h3 style="font-size:14px; font-weight:900; color:#111; margin:0 0 14px;">
                     Đánh giá sản phẩm
                     @if (approvedCount > 0)
                     {
-                        <span style="color:#9ca3af;font-weight:400;font-size:14px;margin-left:6px;">(@approvedCount đánh giá)</span>
+                        <span style="color:#bbb; font-weight:500; font-size:13px;
+                                 margin-left:6px;">(@approvedCount đánh giá)</span>
                     }
                 </h3>
 
                 @if (Model.Reviews != null && Model.Reviews.Any(r => r.IsApproved))
                 {
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                        @foreach (var review in Model.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedOn))
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        @foreach (var review in Model.Reviews.Where(r => r.IsApproved)
+                       .OrderByDescending(r => r.CreatedOn))
                         {
                             <div class="review-card">
-                                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);
-                                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                            <span class="material-symbols-outlined" style="color:white;font-size:18px;">person</span>
+                                <div style="display:flex; align-items:flex-start;
+                                        justify-content:space-between; margin-bottom:10px;">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="width:36px; height:36px; border-radius:50%;
+                                                background:#fff3e8; border:1px solid #fed7aa;
+                                                display:flex; align-items:center; justify-content:center;
+                                                flex-shrink:0;">
+                                            <span class="material-symbols-outlined"
+                                                  style="color:#f97316; font-size:17px;">person</span>
                                         </div>
                                         <div>
-                                            <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 3px;">Người dùng đã xác minh</p>
-                                            <div style="display:flex;align-items:center;gap:6px;">
-                                                <div style="display:flex;gap:1px;">
+                                            <!-- Thay "Người dùng đã xác minh" -->
+                                            <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 3px;">
+                                                @(!string.IsNullOrEmpty(review.UserName) ? review.UserName : "Người dùng")
+                                            </p>
+                                            <div style="display:flex; align-items:center; gap:6px;">
+                                                <div style="display:flex; gap:1px;">
                                                     @for (int i = 1; i <= 5; i++)
                                                     {
-                                                        <span style="font-size:12px;color:@(i<=review.Rating?"#f59e0b":"#e5e7eb");">★</span>
+                                                        <span style="font-size:11px; color:@(i<=review.Rating?"#f59e0b":"#e5e7eb");">★</span>
                                                     }
                                                 </div>
-                                                <span style="color:#9ca3af;font-size:11px;">@review.CreatedOn.ToString("dd/MM/yyyy")</span>
+                                                <span style="color:#bbb; font-size:11px;">
+                                                    @review.CreatedOn.ToString("dd/MM/yyyy")
+                                                </span>
                                                 @if (review.IsVerifiedPurchase)
                                                 {
-                                                    <span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">✓ Đã mua hàng</span>
+                                                    <span style="background:#f0fdf4; color:#16a34a;
+                                                             font-size:10px; font-weight:800;
+                                                             padding:2px 8px; border-radius:100px;">
+                                                        ✓ Đã mua hàng
+                                                    </span>
                                                 }
                                             </div>
                                         </div>
@@ -680,18 +773,24 @@
                                 </div>
                                 @if (!string.IsNullOrEmpty(review.Title))
                                 {
-                                    <p style="color:#111827;font-weight:700;font-size:14px;margin:0 0 6px;">@review.Title</p>
+                                    <p style="color:#111; font-weight:800; font-size:13px;
+                                           margin:0 0 5px;">@review.Title</p>
                                 }
-                                <p style="color:#6b7280;font-size:14px;line-height:1.7;margin:0;">@review.Comment</p>
+                                <p style="color:#888; font-size:13px; line-height:1.7; margin:0;">
+                                    @review.Comment
+                                </p>
                             </div>
                         }
                     </div>
                 }
                 else
                 {
-                    <div style="text-align:center;padding:48px;background:#fafafa;border-radius:16px;border:1px solid #e5e7eb;">
-                        <p style="font-size:28px;margin:0 0 10px;">💬</p>
-                        <p style="color:#9ca3af;font-size:14px;margin:0;">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+                    <div style="text-align:center; padding:44px; background:#fff;
+                            border-radius:16px; border:1px solid #ebebeb;">
+                        <span style="font-size:26px; display:block; margin-bottom:10px;">💬</span>
+                        <p style="color:#bbb; font-size:13px; margin:0;">
+                            Chưa có đánh giá nào. Hãy là người đầu tiên!
+                        </p>
                     </div>
                 }
             </div>
@@ -702,53 +801,58 @@
 
 <!-- Toast -->
 <div id="cartToast">
-    <div id="toastIconWrap" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;background:#ede9fe;display:flex;align-items:center;justify-content:center;">
-        <span class="material-symbols-outlined" id="toastIconSymbol" style="font-size:20px;color:#6366f1;">check</span>
+    <div id="toastIconWrap"
+         style="width:38px; height:38px; border-radius:50%; flex-shrink:0;
+                background:#fff3e8; display:flex; align-items:center; justify-content:center;">
+        <span class="material-symbols-outlined" id="toastIconSymbol"
+              style="font-size:19px; color:#f97316;">check</span>
     </div>
-    <span id="toastMsg" style="color:#111827;font-size:14px;font-weight:500;flex:1;">Đã thêm vào giỏ!</span>
-    <a href="/Cart" style="color:#6366f1;font-size:12px;font-weight:700;text-decoration:none;
-                           padding:5px 12px;border:1.5px solid #c7d2fe;border-radius:8px;
-                           white-space:nowrap;background:#f5f3ff;">Xem giỏ →</a>
+    <span id="toastMsg" style="color:#111; font-size:13px; font-weight:600; flex:1;">
+        Đã thêm vào giỏ!
+    </span>
+    <a href="/Cart"
+       style="color:#f97316; font-size:12px; font-weight:800; text-decoration:none;
+              padding:5px 12px; border:1.5px solid #fed7aa; border-radius:8px;
+              white-space:nowrap; background:#fff3e8;">Xem giỏ →</a>
 </div>
 
 @section Scripts {
     <script>
-        // ── Tabs ──────────────────────────────────────────────────────────────
         function switchTab(tab) {
             var isReview = tab === 'reviews';
             document.getElementById('tab-specs').classList.toggle('active', !isReview);
             document.getElementById('tab-reviews').classList.toggle('active', isReview);
             document.getElementById('panel-specs').style.display = isReview ? 'none' : 'block';
             document.getElementById('panel-reviews').style.display = isReview ? 'block' : 'none';
-            var badge = document.getElementById('reviewBadge');
-            if (badge) {
-                badge.style.background = isReview ? '#ede9fe' : '#f3f4f6';
-                badge.style.color = isReview ? '#6366f1' : '#9ca3af';
+            var rb = document.getElementById('reviewBadge');
+            if (rb) {
+                rb.style.background = isReview ? '#fff3e8' : '#f0f0f0';
+                rb.style.color = isReview ? '#f97316' : '#bbb';
+            }
+            var sb = document.getElementById('specsBadge');
+            if (sb) {
+                sb.style.background = !isReview ? '#fff3e8' : '#f0f0f0';
+                sb.style.color = !isReview ? '#f97316' : '#bbb';
             }
         }
 
-        // Nếu được redirect từ Orders → tự động mở tab reviews
         @if (showReviewForm)
         {
             <text>document.addEventListener('DOMContentLoaded', function () { switchTab('reviews'); }); </text>
         }
 
-        // ── Star rating ───────────────────────────────────────────────────────
-        var currentRating = 0;
-
+                var currentRating = 0;
         function setRating(val) {
             currentRating = val;
             document.getElementById('ratingInput').value = val;
             document.getElementById('ratingError').style.display = 'none';
             renderStars(val);
         }
-        function hoverRating(val) { renderStars(val); }
-        function unhoverRating() { renderStars(currentRating); }
         function renderStars(val) {
             document.querySelectorAll('#starPicker button').forEach(function (btn) {
                 var s = parseInt(btn.dataset.star);
                 btn.style.color = s <= val ? '#f59e0b' : '#e5e7eb';
-                btn.style.transform = s <= val ? 'scale(1.15)' : 'scale(1)';
+                btn.style.transform = s <= val ? 'scale(1.12)' : 'scale(1)';
             });
         }
         function validateReview() {
@@ -759,7 +863,6 @@
             return true;
         }
 
-        // ── Image gallery ─────────────────────────────────────────────────────
         function changeImage(url, el) {
             var img = document.getElementById('mainImage');
             if (!img) return;
@@ -769,7 +872,6 @@
             if (el) el.classList.add('active');
         }
 
-        // ── Quantity ──────────────────────────────────────────────────────────
         var qty = 1;
         var maxStock = parseInt(document.getElementById('addToCartBtn')?.dataset.maxStock ?? '0');
         function changeQty(delta) {
@@ -782,16 +884,16 @@
         }
         changeQty(0);
 
-        // ── Add to cart ───────────────────────────────────────────────────────
         var toastTimer;
         function showToast(msg, type) {
             var toast = document.getElementById('cartToast');
             var symbol = document.getElementById('toastIconSymbol');
             var wrap = document.getElementById('toastIconWrap');
-            symbol.textContent = type === 'success' ? 'check' : 'error';
-            symbol.style.color = type === 'success' ? '#6366f1' : '#ef4444';
-            wrap.style.background = type === 'success' ? '#ede9fe' : '#fee2e2';
-            toast.style.borderColor = type === 'success' ? '#c7d2fe' : '#fecaca';
+            var isOk = type === 'success';
+            symbol.textContent = isOk ? 'check' : 'error';
+            symbol.style.color = isOk ? '#f97316' : '#ef4444';
+            wrap.style.background = isOk ? '#fff3e8' : '#fef2f2';
+            toast.style.borderColor = isOk ? '#fed7aa' : '#fecaca';
             document.getElementById('toastMsg').textContent = msg;
             toast.style.opacity = '1';
             toast.style.transform = 'translateY(0)';
@@ -799,7 +901,7 @@
             clearTimeout(toastTimer);
             toastTimer = setTimeout(function () {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(16px)';
+                toast.style.transform = 'translateY(14px)';
                 toast.style.pointerEvents = 'none';
             }, 3000);
         }
@@ -820,6 +922,10 @@
                 try {
                     var res = await fetch('/Cart/Add', { method: 'POST', body: fd });
                     var data = await res.json();
+                    if (data.requireLogin) {
+                        window.location.href = data.redirectUrl;
+                        return;
+                    }
                     if (data.success) {
                         var badge = document.getElementById('cartBadge');
                         if (badge) { badge.textContent = data.count; badge.classList.remove('hidden'); }

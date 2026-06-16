@@ -38,7 +38,7 @@
         ? Model.Count
         : Model.Count(o => o.Status.ToString() == val);
 
-    // Dynamic Razor classes — Tailwind CDN không scan được
+    var reviewed = ViewBag.ReviewedKeys as HashSet<string> ?? new HashSet<string>();
 }
 
 <style>
@@ -145,15 +145,12 @@
         <p class="text-gray-400 text-sm">@Model.Count đơn hàng</p>
     </div>
 
-    <!-- Filter tabs -->
+   
     <div class="flex gap-2 flex-wrap mb-6">
         @foreach (var tab in tabs)
         {
             var count = CountOf(tab.Val);
-            if (count == 0 && tab.Val != "all") continue;
-
             var tabCls = "tab-" + (string.IsNullOrEmpty(tab.Cls) ? "all" : tab.Cls);
-
             <button onclick="filterOrders('@tab.Val')"
                     id="tab-@tab.Val"
                     data-tab-cls="@tabCls"
@@ -227,8 +224,9 @@
                 var currentStep = StepIndex(order.Status);
                 var isCancelled = order.Status == OrderStatus.Cancelled;
                 var isDelivered = order.Status == OrderStatus.Delivered;
+                var isShipped = order.Status == OrderStatus.Shipped;
+                var canCancel = order.Status == OrderStatus.Pending || order.Status == OrderStatus.Processing;
                 var pct = currentStep > 0 ? (int)((double)currentStep / (steps.Length - 1) * 100) : 0;
-                var reviewed = ViewBag.ReviewedProductIds as HashSet<int> ?? new HashSet<int>();
 
                 <div class="order-card group bg-white rounded-2xl border border-gray-100
                             hover:border-orange-200 hover:-translate-y-0.5
@@ -254,10 +252,8 @@
                         {
                             <div class="mb-4">
                                 <div class="relative flex items-start justify-between">
-                                    <!-- Track bg -->
                                     <div class="absolute h-[2px] bg-gray-100"
                                          style="top:15px;left:10%;right:10%;"></div>
-                                    <!-- Track fill -->
                                     <div class="absolute h-[2px] bg-gradient-to-r from-orange-400 to-orange-300 transition-all duration-700"
                                          style="top:15px;left:10%;width:calc(@(pct)% * 0.8);"></div>
 
@@ -348,15 +344,50 @@
                                     <span class="material-symbols-outlined" style="font-size:13px;">arrow_forward</span>
                                 </a>
 
-                                <!-- Nút đánh giá / đã đánh giá -->
+                                <!-- Nút Hủy đơn: Pending hoặc Processing -->
+                                @if (canCancel)
+                                {
+                                    <form asp-controller="Orders" asp-action="Cancel" asp-route-id="@order.Id"
+                                          method="post" style="display:inline;"
+                                          onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold
+                                                       bg-red-50 border border-red-100 text-red-500
+                                                       hover:bg-red-100 transition-all cursor-pointer">
+                                            <span class="material-symbols-outlined" style="font-size:13px;">cancel</span>
+                                            Hủy đơn
+                                        </button>
+                                    </form>
+                                }
+
+                           
+                                @if (isShipped)
+                                {
+                                    <form asp-controller="Orders" asp-action="ConfirmReceived" asp-route-id="@order.Id"
+                                          method="post" style="display:inline;"
+                                          onsubmit="return confirm('Xác nhận bạn đã nhận được hàng?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold
+                                                       bg-green-50 border border-green-100 text-green-600
+                                                       hover:bg-green-100 transition-all cursor-pointer">
+                                            <span class="material-symbols-outlined" style="font-size:13px;font-variation-settings:'FILL' 1;">check_circle</span>
+                                            Đã nhận hàng
+                                        </button>
+                                    </form>
+                                }
+
+                                <!-- Nút Đánh giá: Delivered -->
                                 @if (isDelivered)
                                 {
                                     @foreach (var orderItem in order.OrderItems ?? new List<OrderItem>())
                                     {
                                         var pid = orderItem.ProductId ?? 0;
-                                        var alreadyReviewed = reviewed.Contains(pid);
+                                        var key = $"{pid}_{order.Id}";
+                                        var alreadyReviewed = reviewed.Contains(key);
 
-                                        @if (alreadyReviewed)
+                                        if (alreadyReviewed)
                                         {
                                             <span class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold
                                                          bg-green-50 border border-green-100 text-green-600 cursor-default">
@@ -390,9 +421,7 @@
 
 @section Scripts {
     <script>
-        // ── Tab filter ────────────────────────────────────────────────────
         function filterOrders(status) {
-            // Reset tất cả tab về default
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove(
                     'tab-all', 'tab-amber', 'tab-blue', 'tab-orange',
@@ -401,14 +430,12 @@
                 btn.classList.add('tab-default');
             });
 
-            // Active tab được chọn
             const active = document.getElementById('tab-' + status);
             if (active) {
                 active.classList.remove('tab-default');
                 active.classList.add(active.dataset.tabCls);
             }
 
-            // Show/hide cards
             let visible = 0;
             document.querySelectorAll('.order-card').forEach(card => {
                 const match = status === 'all' || card.dataset.status === status;

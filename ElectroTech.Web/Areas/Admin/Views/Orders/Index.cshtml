@@ -3,213 +3,267 @@
     Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
 }
 
-<div class="space-y-6">
+@Html.AntiForgeryToken()
+
+<div style="padding: 0; width: 100%;">
 
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;">
         <div>
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.2em;color:#f97316;margin:0 0 4px;">Admin Panel</p>
+            <h1 style="font-size:1.6rem;font-weight:900;color:#111;margin:0 0 4px;letter-spacing:-.02em;">
                 Quản lý đơn hàng
             </h1>
-            <p class="text-sm text-slate-500 mt-1">
-                Xem và cập nhật trạng thái đơn hàng
-            </p>
+            <p style="font-size:13px;color:#9ca3af;margin:0;">Xem và cập nhật trạng thái đơn hàng</p>
         </div>
     </div>
 
-    <!-- Filter tabs -->
-    <div class="flex flex-wrap gap-2">
-        @foreach (var tab in new (string Val, string Label, string Cls)[]
+    <!-- Stat cards -->
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;">
+        @foreach (var s in new (string Id, string Label, string Color)[]
         {
-        ("",          "Tất cả",       "bg-slate-100 text-slate-600 hover:bg-slate-200"),
-        ("Pending",   "Chờ xác nhận", "bg-amber-100 text-amber-700 hover:bg-amber-200"),
-        ("Confirmed", "Đã xác nhận",  "bg-blue-100 text-blue-700 hover:bg-blue-200"),
-        ("Shipping",  "Đang giao",    "bg-violet-100 text-violet-700 hover:bg-violet-200"),
-        ("Delivered", "Đã giao",      "bg-green-100 text-green-700 hover:bg-green-200"),
-        ("Cancelled", "Đã hủy",       "bg-red-100 text-red-700 hover:bg-red-200"),
+        ("statAll",       "Tất cả",       "#111"),
+        ("statPending",   "Chờ xác nhận", "#f59e0b"),
+        ("statConfirmed", "Đã xác nhận",  "#3b82f6"),
+        ("statProcessing","Đang xử lý",   "#f97316"),
+        ("statShipped",   "Đang giao",    "#8b5cf6"),
+        ("statDelivered", "Đã giao",      "#16a34a"),
+        })
+        {
+            <div style="background:#fff;border:1px solid #f0f0ee;border-radius:14px;padding:14px 16px;">
+                <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#bbb;margin:0 0 5px;">@s.Label</p>
+                <p id="@s.Id" style="font-size:1.3rem;font-weight:900;color:@s.Color;margin:0;">—</p>
+            </div>
+        }
+    </div>
+
+    <!-- Filter tabs -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        @foreach (var tab in new (string Val, string Label, string Color)[]
+        {
+        ("",           "Tất cả",       "#1f2937"),
+        ("Pending",    "Chờ xác nhận", "#f59e0b"),
+        ("Confirmed",  "Đã xác nhận",  "#3b82f6"),
+        ("Processing", "Đang xử lý",   "#f97316"),
+        ("Shipped",    "Đang giao",    "#8b5cf6"),
+        ("Delivered",  "Đã giao",      "#16a34a"),
+        ("Cancelled",  "Đã hủy",       "#ef4444"),
         })
         {
             <button onclick="filterStatus('@tab.Val')"
                     id="tab-@tab.Val"
-                    class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all
-                           cursor-pointer border-none @tab.Cls">
+                    data-color="@tab.Color"
+                    class="tab-btn"
+                    style="padding:6px 16px;border-radius:10px;font-size:12px;font-weight:700;
+                           cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;
+                           color:#6b7280;transition:all .15s;">
                 @tab.Label
             </button>
         }
     </div>
 
-    <!-- Table -->
-    <div class="bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
-        <table id="ordersTable" class="w-full text-left text-xs text-slate-600">
-            <thead>
-                <tr class="bg-slate-50 border-b border-slate-200/60 text-[11px]
-                           font-bold text-slate-400 uppercase tracking-wide select-none">
-                    <th class="px-5 py-4">Mã đơn</th>
-                    <th class="px-5 py-4">Khách hàng</th>
-                    <th class="px-5 py-4">Thanh toán</th>
-                    <th class="px-5 py-4">Tổng tiền</th>
-                    <th class="px-5 py-4 text-center">Trạng thái</th>
-                    <th class="px-5 py-4 text-center">Thanh toán</th>
-                    <th class="px-5 py-4">Ngày đặt</th>
-                    <th class="px-5 py-4 text-right" data-orderable="false">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium"></tbody>
-        </table>
+    <!-- Table Card -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+
+        <!-- Toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:16px 20px;border-bottom:1px solid #f3f4f6;">
+            <div style="position:relative;width:320px;">
+                <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                   width:15px;height:15px;color:#9ca3af;"></i>
+                <input id="searchInput" type="text" placeholder="Tìm mã đơn, khách hàng..."
+                       style="width:100%;padding:8px 12px 8px 36px;font-size:13px;
+                              border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;
+                              color:#374151;outline:none;" />
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;font-weight:600;">
+                <i data-lucide="arrow-down-narrow-wide" style="width:14px;height:14px;"></i>
+                Mới nhất trước
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x:auto;width:100%;">
+            <table id="ordersTable" style="width:100%;text-align:left;font-size:12px;color:#4b5563;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f9fafb;border-bottom:1px solid #f3f4f6;">
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;white-space:nowrap;">Mã đơn</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;white-space:nowrap;">Khách hàng</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;white-space:nowrap;">Thanh toán</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;white-space:nowrap;">Tổng tiền</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;text-align:center;white-space:nowrap;">Trạng thái</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;text-align:center;white-space:nowrap;">Thanh toán</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;white-space:nowrap;">Ngày đặt</th>
+                        <th style="padding:12px 20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;text-align:right;white-space:nowrap;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- ── Modal cập nhật ── -->
-<div id="statusModal"
-     class="fixed inset-0 z-[9999] hidden items-center justify-center
-            bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl p-8 w-full max-w-lg mx-4
-                shadow-[0_32px_64px_rgba(0,0,0,0.2)] animate-in">
+<!-- Modal cập nhật -->
+<div id="statusModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:480px;margin:0 16px;box-shadow:0 32px 64px rgba(0,0,0,.15);">
 
-        <!-- Modal header -->
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-extrabold text-slate-900">Cập nhật đơn hàng</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:#f97316;margin:0 0 3px;">Cập nhật</p>
+                <h3 style="font-size:16px;font-weight:900;color:#111;margin:0;">Đơn hàng</h3>
+            </div>
             <button onclick="closeModal()"
-                    class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg
-                           border-none cursor-pointer text-slate-500 text-base
-                           transition-colors flex items-center justify-center">
-                ✕
+                    style="width:32px;height:32px;background:#f3f4f6;border:none;border-radius:10px;
+                           cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="x" style="width:15px;height:15px;color:#6b7280;"></i>
             </button>
         </div>
 
-        <!-- Order info -->
-        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-6">
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Đơn hàng</p>
-            <p id="modalOrderId" class="text-base font-extrabold text-slate-900"></p>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 16px;margin-bottom:20px;">
+            <p style="font-size:10px;color:#f97316;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin:0 0 2px;">Mã đơn hàng</p>
+            <p id="modalOrderId" style="font-size:14px;font-weight:900;color:#111;margin:0;font-family:monospace;"></p>
         </div>
 
-        <!-- Order status -->
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-            Trạng thái đơn hàng
-        </p>
-        <div class="grid grid-cols-2 gap-2 mb-5">
-            @foreach (var s in new (string Val, string Label, string SelCls)[]
+        <p style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px;">Trạng thái đơn hàng</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+            @foreach (var s in new (string Val, string Label, string Border, string Bg)[]
             {
-            ("Pending",   "⏳ Chờ xác nhận", "peer-checked:border-amber-400 peer-checked:bg-amber-50"),
-            ("Confirmed", "✅ Đã xác nhận",  "peer-checked:border-blue-400 peer-checked:bg-blue-50"),
-            ("Shipping",  "🚚 Đang giao",    "peer-checked:border-violet-400 peer-checked:bg-violet-50"),
-            ("Delivered", "📦 Đã giao",      "peer-checked:border-green-400 peer-checked:bg-green-50"),
-            ("Cancelled", "❌ Đã hủy",       "peer-checked:border-red-400 peer-checked:bg-red-50"),
+            ("Pending",    "⏳ Chờ xác nhận", "#f59e0b", "#fffbeb"),
+            ("Confirmed",  "✅ Đã xác nhận",  "#3b82f6", "#eff6ff"),
+            ("Processing", "⚙️ Đang xử lý",   "#f97316", "#fff7ed"),
+            ("Shipped",    "🚚 Đang giao",     "#8b5cf6", "#f5f3ff"),
+            ("Delivered",  "📦 Đã giao",       "#16a34a", "#f0fdf4"),
+            ("Cancelled",  "❌ Đã hủy",        "#ef4444", "#fef2f2"),
             })
             {
-                <label id="slabel-@s.Val"
-                       class="relative flex items-center gap-3 p-3 rounded-xl
-                              border-2 border-slate-200 cursor-pointer
-                              hover:border-slate-300 transition-all">
-                    <input type="radio" name="orderStatus" value="@s.Val"
-                           class="peer sr-only"
-                           onchange="selectStatus(this.value)" />
-                    <div class="w-4 h-4 rounded-full border-2 border-slate-300
-                                flex items-center justify-center flex-shrink-0
-                                status-radio-dot" data-for="@s.Val">
-                        <div class="w-2 h-2 rounded-full hidden radio-fill"></div>
+                <label id="slabel-@s.Val" data-border="@s.Border" data-bg="@s.Bg"
+                       class="status-label"
+                       style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+                              border-radius:12px;border:2px solid #e5e7eb;cursor:pointer;
+                              background:#fff;transition:all .15s;">
+                    <input type="radio" name="orderStatus" value="@s.Val" style="display:none;" onchange="selectStatus(this.value)" />
+                    <div class="radio-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #d1d5db;
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <div class="radio-fill" style="width:8px;height:8px;border-radius:50%;display:none;"></div>
                     </div>
-                    <span class="text-sm font-semibold text-slate-700">@s.Label</span>
+                    <span style="font-size:12px;font-weight:700;color:#374151;">@s.Label</span>
                 </label>
             }
         </div>
 
-        <!-- Payment status -->
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-            Trạng thái thanh toán
-        </p>
-        <div class="flex gap-2 mb-7">
-            @foreach (var p in new (string Val, string Label)[]
+        <p style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px;">Trạng thái thanh toán</p>
+        <div style="display:flex;gap:8px;margin-bottom:24px;">
+            @foreach (var p in new (string Val, string Label, string Border, string Bg)[]
             {
-            ("Unpaid",    "⏳ Chưa TT"),
-            ("Paid",      "✅ Đã TT"),
-            ("Cancelled", "❌ Đã hủy"),
+            ("Unpaid",    "⏳ Chưa TT", "#f59e0b", "#fffbeb"),
+            ("Paid",      "✅ Đã TT",   "#16a34a", "#f0fdf4"),
+            ("Cancelled", "❌ Đã hủy",  "#ef4444", "#fef2f2"),
             })
             {
-                <label id="plabel-@p.Val"
-                       class="flex-1 flex items-center gap-2 p-3 rounded-xl
-                              border-2 border-slate-200 cursor-pointer
-                              hover:border-slate-300 transition-all justify-center">
-                    <input type="radio" name="payStatus" value="@p.Val" class="sr-only"
-                           onchange="selectPayment(this.value)" />
-                    <span class="text-xs font-bold text-slate-700">@p.Label</span>
+                <label id="plabel-@p.Val" data-border="@p.Border" data-bg="@p.Bg"
+                       class="pay-label"
+                       style="flex:1;display:flex;align-items:center;justify-content:center;
+                              padding:10px;border-radius:12px;border:2px solid #e5e7eb;
+                              cursor:pointer;background:#fff;transition:all .15s;">
+                    <input type="radio" name="payStatus" value="@p.Val" style="display:none;" onchange="selectPayment(this.value)" />
+                    <span style="font-size:12px;font-weight:700;color:#374151;">@p.Label</span>
                 </label>
             }
         </div>
 
-        <!-- Actions -->
-        <div class="flex gap-3 justify-end pt-2 border-t border-slate-100">
+        <div style="display:flex;gap:10px;padding-top:16px;border-top:1px solid #f3f4f6;">
             <button onclick="closeModal()"
-                    class="px-5 py-2.5 border border-slate-200 rounded-xl bg-white
-                           text-slate-500 font-semibold text-sm hover:bg-slate-50
-                           cursor-pointer transition-colors">
+                    style="flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:12px;
+                           background:#fff;color:#6b7280;font-weight:700;font-size:13px;cursor:pointer;">
                 Hủy
             </button>
             <button onclick="saveStatus()"
-                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl
-                           text-white font-bold text-sm border-none cursor-pointer
-                           transition-colors flex items-center gap-2">
-                💾 Lưu thay đổi
+                    style="flex:1;padding:10px;border:none;border-radius:12px;
+                           background:#f97316;color:#fff;font-weight:800;font-size:13px;
+                           cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <i data-lucide="save" style="width:15px;height:15px;"></i>
+                Lưu thay đổi
             </button>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
-        /* Override DataTables default styles */
-        #ordersTable_wrapper .dataTables_filter input {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
-            outline: none;
-        }
-
-            #ordersTable_wrapper .dataTables_filter input:focus {
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-            }
-
-        #ordersTable_wrapper .dataTables_length select {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 13px;
-        }
-
-        #ordersTable_wrapper .dataTables_info,
         #ordersTable_wrapper .dataTables_length,
         #ordersTable_wrapper .dataTables_filter {
+            display: none;
+        }
+
+        #ordersTable_wrapper .dataTables_info {
             font-size: 12px;
-            color: #94a3b8;
-            padding: 12px 20px;
+            color: #9ca3af;
+            padding: 14px 20px;
         }
 
         #ordersTable_wrapper .dataTables_paginate {
-            padding: 12px 20px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
         }
 
-            #ordersTable_wrapper .dataTables_paginate .paginate_button {
-                border-radius: 8px !important;
-                font-size: 12px !important;
-                padding: 4px 10px !important;
+        #ordersTable_wrapper .paginate_button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+            #ordersTable_wrapper .paginate_button:hover {
+                background: #fff7ed;
+                color: #f97316;
             }
 
-                #ordersTable_wrapper .dataTables_paginate .paginate_button.current {
-                    background: #3b82f6 !important;
-                    border-color: #3b82f6 !important;
-                    color: white !important;
-                }
+            #ordersTable_wrapper .paginate_button.current {
+                background: #f97316 !important;
+                color: #fff !important;
+                border: none !important;
+            }
 
-        #ordersTable tbody tr:hover td {
-            background: #f8fafc;
+            #ordersTable_wrapper .paginate_button.disabled {
+                opacity: .35;
+                cursor: not-allowed;
+            }
+
+        #ordersTable_wrapper .dataTables_info,
+        #ordersTable_wrapper .dataTables_paginate {
+            border-top: 1px solid #f3f4f6;
         }
+
+        #ordersTable_wrapper > div:last-child {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        #ordersTable tbody tr {
+            border-bottom: 1px solid #f9fafb;
+            transition: background .12s;
+        }
+
+            #ordersTable tbody tr:hover td {
+                background: #fffbf7;
+            }
 
         #ordersTable thead th {
             border-bottom: none !important;
@@ -220,218 +274,225 @@
         }
 
         #ordersTable_wrapper {
-            overflow-x: auto;
+            width: 100% !important;
+        }
+
+        .dataTables_wrapper {
+            width: 100% !important;
         }
     </style>
 
     <script>
-        var token = '';
+        var token = $('input[name="__RequestVerificationToken"]').first().val();
         var currentOrder = null;
         var currentFilter = '';
         var table;
 
         const statusMap = {
-            'Pending': { label: 'Chờ xác nhận', tw: 'bg-amber-100 text-amber-700', dot: '#f59e0b' },
-            'Confirmed': { label: 'Đã xác nhận', tw: 'bg-blue-100 text-blue-700', dot: '#3b82f6' },
-            'Shipping': { label: 'Đang giao', tw: 'bg-violet-100 text-violet-700', dot: '#8b5cf6' },
-            'Delivered': { label: 'Đã giao', tw: 'bg-green-100 text-green-700', dot: '#22c55e' },
-            'Cancelled': { label: 'Đã hủy', tw: 'bg-red-100 text-red-700', dot: '#ef4444' },
+            'Pending': { label: 'Chờ xác nhận', dot: '#f59e0b', bg: '#fffbeb', color: '#b45309' },
+            'Confirmed': { label: 'Đã xác nhận', dot: '#3b82f6', bg: '#eff6ff', color: '#1d4ed8' },
+            'Processing': { label: 'Đang xử lý', dot: '#f97316', bg: '#fff7ed', color: '#c2410c' },
+            'Shipped': { label: 'Đang giao', dot: '#8b5cf6', bg: '#f5f3ff', color: '#6d28d9' },
+            'Delivered': { label: 'Đã giao', dot: '#16a34a', bg: '#f0fdf4', color: '#15803d' },
+            'Cancelled': { label: 'Đã hủy', dot: '#ef4444', bg: '#fef2f2', color: '#b91c1c' },
         };
-
         const payMap = {
-            'Unpaid': { label: 'Chưa TT', tw: 'bg-amber-100 text-amber-700' },
-            'Paid': { label: 'Đã TT', tw: 'bg-green-100 text-green-700' },
-            'Cancelled': { label: 'Đã hủy', tw: 'bg-red-100 text-red-700' },
+            'Unpaid': { label: 'Chưa TT', dot: '#f59e0b', bg: '#fffbeb', color: '#b45309' },
+            'Paid': { label: 'Đã TT', dot: '#16a34a', bg: '#f0fdf4', color: '#15803d' },
+            'Cancelled': { label: 'Đã hủy', dot: '#ef4444', bg: '#fef2f2', color: '#b91c1c' },
         };
 
-        // Dot colors for modal radio labels
-        const sLabelColors = {
-            'Pending': { border: '#f59e0b', bg: '#fffbeb', dot: '#f59e0b' },
-            'Confirmed': { border: '#3b82f6', bg: '#eff6ff', dot: '#3b82f6' },
-            'Shipping': { border: '#8b5cf6', bg: '#f5f3ff', dot: '#8b5cf6' },
-            'Delivered': { border: '#22c55e', bg: '#f0fdf4', dot: '#22c55e' },
-            'Cancelled': { border: '#ef4444', bg: '#fef2f2', dot: '#ef4444' },
-        };
-        const pLabelColors = {
-            'Unpaid': { border: '#f59e0b', bg: '#fffbeb' },
-            'Paid': { border: '#22c55e', bg: '#f0fdf4' },
-            'Cancelled': { border: '#ef4444', bg: '#fef2f2' },
-        };
+        function statusBadge(map, key) {
+            const s = map[key] || { label: key, dot: '#aaa', bg: '#f5f5f5', color: '#666' };
+            return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;
+                                border-radius:100px;font-size:11px;font-weight:700;
+                                background:${s.bg};color:${s.color};">
+                                <span style="width:5px;height:5px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0;"></span>
+                                ${s.label}
+                            </span>`;
+        }
 
-        function badge(map, key) {
-            const s = map[key] || { label: key, tw: 'bg-slate-100 text-slate-500' };
-            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                         text-[10px] font-bold ${s.tw}">${s.label}</span>`;
+        function updateStats(data) {
+            document.getElementById('statAll').textContent = data.length;
+            document.getElementById('statPending').textContent = data.filter(r => r.status === 'Pending').length;
+            document.getElementById('statConfirmed').textContent = data.filter(r => r.status === 'Confirmed').length;
+            document.getElementById('statProcessing').textContent = data.filter(r => r.status === 'Processing').length;
+            document.getElementById('statShipped').textContent = data.filter(r => r.status === 'Shipped').length;
+            document.getElementById('statDelivered').textContent = data.filter(r => r.status === 'Delivered').length;
+        }
+
+        // ✅ Parse "dd/MM/yyyy HH:mm" → sortable string
+        function parseDateSort(d) {
+            if (!d) return '';
+            const parts = d.trim().split(' ');
+            const dp = parts[0].split('/');
+            if (dp.length !== 3) return d;
+            return `${dp[2]}-${dp[1]}-${dp[0]} ${parts[1] || '00:00'}`;
         }
 
         $(document).ready(function () {
-            token = $('input[name="__RequestVerificationToken"]').first().val();
+            lucide.createIcons();
             table = $('#ordersTable').DataTable({
-                processing: true,
+                processing: false,
                 serverSide: false,
                 ajax: {
                     url: '@Url.Action("LoadAll", "Orders", new { area = "Admin" })',
                     type: 'POST',
-                    data: function (d) { d.__RequestVerificationToken = token; d.status = currentFilter; }
+                    data: d => { d.__RequestVerificationToken = token; d.status = currentFilter; },
+                    dataSrc: function (json) {
+                        const data = json.data || [];
+                        updateStats(data);
+                        return data;
+                    }
                 },
+                order: [[6, 'desc']],
                 columns: [
                     {
                         data: 'orderCode',
                         render: (d, t, row) =>
-                            `<span class="font-mono font-extrabold text-slate-800 text-xs">
-                                        #${d || row.OrderCode || 'ET' + String(row.id).padStart(6, '0')}
-                                     </span>`
+                            `<span style="font-family:monospace;font-weight:900;font-size:12px;color:#111;">#${d || 'ET' + String(row.id).padStart(6, '0')}</span>`
                     },
                     {
                         data: 'fullName',
                         render: (d, t, row) =>
-                            `<div class="space-y-0.5">
-                                        <p class="font-bold text-slate-900 text-xs">${d || '—'}</p>
-                                        <p class="text-slate-400 text-[11px]">${row.phone || ''}</p>
-                                        <p class="text-slate-400 text-[11px]">${row.email || ''}</p>
-                                     </div>`
+                            `<div>
+                                        <p style="font-weight:700;color:#111;font-size:12px;margin:0 0 2px;">${d || '—'}</p>
+                                        <p style="color:#9ca3af;font-size:11px;margin:0;">${row.phone || ''}</p>
+                                        <p style="color:#9ca3af;font-size:11px;margin:0;">${row.email || ''}</p>
+                                    </div>`
                     },
                     {
                         data: 'paymentMethod',
                         render: d => d === 'COD'
-                            ? `<span class="text-[11px] font-bold text-slate-500">🚚 COD</span>`
-                            : `<span class="text-[11px] font-bold text-slate-500">🏦 Bank</span>`
+                            ? `<span style="font-size:11px;font-weight:700;color:#6b7280;">🚚 COD</span>`
+                            : `<span style="font-size:11px;font-weight:700;color:#6b7280;">🏦 Bank</span>`
                     },
                     {
                         data: 'totalAmount',
-                        render: d =>
-                            `<span class="font-extrabold text-slate-900 text-xs">
-                                        ${new Intl.NumberFormat('vi-VN').format(d)}₫
-                                     </span>`
+                        render: d => `<span style="font-weight:900;font-size:13px;color:#f97316;">${new Intl.NumberFormat('vi-VN').format(d)}₫</span>`
                     },
-                    { data: 'status', className: 'text-center', render: d => badge(statusMap, d) },
-                    { data: 'paymentStatus', className: 'text-center', render: d => badge(payMap, d) },
+                    { data: 'status', render: d => statusBadge(statusMap, d), className: 'text-center' },
+                    { data: 'paymentStatus', render: d => statusBadge(payMap, d), className: 'text-center' },
                     {
                         data: 'createdOn',
-                        render: d => `<span class="text-slate-500 text-[11px]">${d}</span>`
+                        render: function (d, type) {
+                            if (type === 'sort' || type === 'type') return parseDateSort(d);
+                            return `<span style="color:#9ca3af;font-size:11px;">${d}</span>`;
+                        }
                     },
                     {
-                        data: null,
-                        className: 'text-right',
+                        data: null, orderable: false,
                         render: (d, t, row) =>
-                            `<div class="flex items-center justify-end gap-2">
+                            `<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
                                         <a href="/Admin/Orders/Detail/${row.id}"
-                                           class="px-3 py-1.5 bg-blue-50 border border-blue-200
-                                                  rounded-lg text-blue-600 text-[11px] font-bold
-                                                  hover:bg-blue-100 transition-colors no-underline">
+                                           style="padding:5px 12px;background:#fff7ed;border:1px solid #fed7aa;
+                                                  border-radius:8px;color:#f97316;font-size:11px;font-weight:700;
+                                                  text-decoration:none;white-space:nowrap;">
                                             Chi tiết
                                         </a>
                                         <button onclick='openModal(${JSON.stringify(row)})'
-                                                class="px-3 py-1.5 bg-slate-50 border border-slate-200
-                                                       rounded-lg text-slate-600 text-[11px] font-bold
-                                                       hover:bg-slate-100 cursor-pointer
-                                                       transition-colors">
+                                                style="padding:5px 12px;background:#f9fafb;border:1px solid #e5e7eb;
+                                                       border-radius:8px;color:#6b7280;font-size:11px;font-weight:700;
+                                                       cursor:pointer;white-space:nowrap;">
                                             Cập nhật
                                         </button>
-                                     </div>`
+                                    </div>`
                     }
                 ],
                 language: {
-                    processing: 'Đang tải...',
-                    search: 'Tìm kiếm:',
-                    lengthMenu: 'Hiển thị _MENU_ dòng',
-                    info: '_START_ – _END_ / _TOTAL_ đơn hàng',
+                    processing: '',
+                    info: 'Hiển thị _START_ – _END_ / _TOTAL_ đơn hàng',
                     infoEmpty: 'Không có dữ liệu',
                     zeroRecords: 'Không tìm thấy kết quả',
-                    paginate: { first: 'Đầu', last: 'Cuối', next: 'Sau ›', previous: '‹ Trước' }
+                    paginate: { next: '›', previous: '‹', first: '«', last: '»' }
                 },
-                order: [[6, 'desc']],
                 columnDefs: [
-                    { targets: 0, width: '110px' },
+                    { targets: 0, width: '120px' },
                     { targets: 1, width: '180px' },
                     { targets: 2, width: '80px' },
-                    { targets: 3, width: '120px' },
-                    { targets: 4, width: '110px' },
+                    { targets: 3, width: '130px' },
+                    { targets: 4, width: '120px' },
                     { targets: 5, width: '100px' },
                     { targets: 6, width: '130px' },
-                    { targets: 7, width: '150px' },
+                    { targets: 7, width: '160px', orderable: false },
                 ],
-                scrollX: false,
-                autoWidth: false
+                autoWidth: false,
+                drawCallback: function () { lucide.createIcons(); }
             });
+
+            $('#searchInput').on('keyup', function () { table.search(this.value).draw(); });
         });
 
         function filterStatus(status) {
             currentFilter = status;
-            table.ajax.reload();
-            document.querySelectorAll('[id^="tab-"]').forEach(b => b.style.opacity = '0.5');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.style.background = '#fff';
+                b.style.color = '#6b7280';
+                b.style.borderColor = '#e5e7eb';
+            });
             const active = document.getElementById('tab-' + status);
-            if (active) active.style.opacity = '1';
+            if (active) {
+                const color = active.dataset.color;
+                active.style.background = color;
+                active.style.color = '#fff';
+                active.style.borderColor = color;
+            }
+            table.ajax.reload();
         }
 
         function openModal(order) {
             currentOrder = order;
             document.getElementById('modalOrderId').textContent =
                 '#' + (order.orderCode || 'ET' + String(order.id).padStart(6, '0')) + ' — ' + (order.fullName || '');
-
-            // Reset all labels
-            document.querySelectorAll('[id^="slabel-"]').forEach(l => {
-                l.style.borderColor = '#e2e8f0';
-                l.style.background = 'white';
-                l.querySelector('.radio-fill').style.display = 'none';
-                l.querySelector('.status-radio-dot').style.borderColor = '#cbd5e1';
-            });
-            document.querySelectorAll('[id^="plabel-"]').forEach(l => {
-                l.style.borderColor = '#e2e8f0';
-                l.style.background = 'white';
-            });
-
+            resetLabels();
             selectStatus(order.status);
             selectPayment(order.paymentStatus);
-
             const modal = document.getElementById('statusModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            lucide.createIcons();
         }
 
         function closeModal() {
-            const modal = document.getElementById('statusModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('statusModal').classList.add('hidden');
+            document.getElementById('statusModal').classList.remove('flex');
             currentOrder = null;
         }
 
-        function selectStatus(value) {
-            document.querySelectorAll('[id^="slabel-"]').forEach(l => {
-                l.style.borderColor = '#e2e8f0';
-                l.style.background = 'white';
+        function resetLabels() {
+            document.querySelectorAll('.status-label').forEach(l => {
+                l.style.borderColor = '#e5e7eb'; l.style.background = '#fff';
                 l.querySelector('.radio-fill').style.display = 'none';
-                l.querySelector('.status-radio-dot').style.borderColor = '#cbd5e1';
+                l.querySelector('.radio-dot').style.borderColor = '#d1d5db';
             });
+            document.querySelectorAll('.pay-label').forEach(l => {
+                l.style.borderColor = '#e5e7eb'; l.style.background = '#fff';
+            });
+        }
+
+        function selectStatus(value) {
+            resetLabels();
             const label = document.getElementById('slabel-' + value);
-            const colors = sLabelColors[value];
-            if (label && colors) {
-                label.style.borderColor = colors.border;
-                label.style.background = colors.bg;
-                const dot = label.querySelector('.status-radio-dot');
+            if (label) {
+                label.style.borderColor = label.dataset.border;
+                label.style.background = label.dataset.bg;
+                const dot = label.querySelector('.radio-dot');
                 const fill = label.querySelector('.radio-fill');
-                dot.style.borderColor = colors.dot;
+                dot.style.borderColor = label.dataset.border;
                 fill.style.display = 'block';
-                fill.style.background = colors.dot;
-                const radio = label.querySelector('input');
-                if (radio) radio.checked = true;
+                fill.style.background = label.dataset.border;
+                label.querySelector('input').checked = true;
             }
         }
 
         function selectPayment(value) {
-            document.querySelectorAll('[id^="plabel-"]').forEach(l => {
-                l.style.borderColor = '#e2e8f0';
-                l.style.background = 'white';
-                l.querySelector('span').style.opacity = '0.6';
+            document.querySelectorAll('.pay-label').forEach(l => {
+                l.style.borderColor = '#e5e7eb'; l.style.background = '#fff';
             });
             const label = document.getElementById('plabel-' + value);
-            const colors = pLabelColors[value];
-            if (label && colors) {
-                label.style.borderColor = colors.border;
-                label.style.background = colors.bg;
-                label.querySelector('span').style.opacity = '1';
-                const radio = label.querySelector('input');
-                if (radio) radio.checked = true;
+            if (label) {
+                label.style.borderColor = label.dataset.border;
+                label.style.background = label.dataset.bg;
+                label.querySelector('input').checked = true;
             }
         }
 
@@ -440,33 +501,17 @@
             const newStatus = document.querySelector('input[name="orderStatus"]:checked')?.value;
             const newPayment = document.querySelector('input[name="payStatus"]:checked')?.value;
             try {
-                if (newStatus && newStatus !== currentOrder.status) {
-                    await $.ajax({
-                        url: '/Admin/Orders/UpdateStatus',
-                        type: 'POST',
-                        data: { id: currentOrder.id, status: newStatus, __RequestVerificationToken: token }
-                    });
-                }
-                if (newPayment && newPayment !== currentOrder.paymentStatus) {
-                    await $.ajax({
-                        url: '/Admin/Orders/UpdatePayment',
-                        type: 'POST',
-                        data: { id: currentOrder.id, paymentStatus: newPayment, __RequestVerificationToken: token }
-                    });
-                }
+                if (newStatus && newStatus !== currentOrder.status)
+                    await $.ajax({ url: '/Admin/Orders/UpdateStatus', type: 'POST', data: { id: currentOrder.id, status: newStatus, __RequestVerificationToken: token } });
+                if (newPayment && newPayment !== currentOrder.paymentStatus)
+                    await $.ajax({ url: '/Admin/Orders/UpdatePayment', type: 'POST', data: { id: currentOrder.id, paymentStatus: newPayment, __RequestVerificationToken: token } });
                 closeModal();
                 table.ajax.reload(null, false);
-            } catch (err) {
-                alert('Lỗi: ' + err.message);
-            }
+            } catch (err) { alert('Lỗi: ' + err.message); }
         }
 
-        // Close on backdrop click
-        $(document).ready(function () {
-            document.getElementById('statusModal').addEventListener('click', function (e) {
-                if (e.target === this) closeModal();
-            });
+        document.getElementById('statusModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
         });
     </script>
-
 }

@@ -1,374 +1,260 @@
 ﻿@model Entities.ViewModel.RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Đăng ký";
     Layout = null;
 }
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ElectroTech | Register</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <script id="tailwind-config">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ElectroTech | Đăng ký</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
         tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        /* ── Blue palette (giống navbar) ── */
-                        "primary": "#adc7ff",
-                        "primary-fixed": "#d8e2ff",
-                        "primary-fixed-dim": "#adc7ff",
-                        "primary-container": "#4a8eff",
-                        "on-primary": "#002e68",
-                        "on-primary-fixed": "#001a41",
-                        "on-primary-fixed-variant": "#004493",
-                        "on-primary-container": "#00285b",
-                        "inverse-primary": "#005bc0",
-
-                        "secondary": "#c8c6c5",
-                        "secondary-container": "#474746",
-                        "secondary-fixed": "#e5e2e1",
-                        "secondary-fixed-dim": "#c8c6c5",
-                        "on-secondary": "#303030",
-                        "on-secondary-container": "#b7b5b4",
-                        "on-secondary-fixed": "#1b1c1c",
-                        "on-secondary-fixed-variant": "#474746",
-
-                        "tertiary": "#9ccaff",
-                        "tertiary-container": "#009cfc",
-                        "tertiary-fixed": "#d0e4ff",
-                        "tertiary-fixed-dim": "#9ccaff",
-                        "on-tertiary": "#003256",
-                        "on-tertiary-container": "#003155",
-                        "on-tertiary-fixed": "#001d35",
-                        "on-tertiary-fixed-variant": "#00497b",
-
-                        "error": "#ffb4ab",
-                        "error-container": "#93000a",
-                        "on-error": "#690005",
-                        "on-error-container": "#ffdad6",
-
-                        "background": "#131313",
-                        "on-background": "#e5e2e1",
-                        "surface": "#131313",
-                        "surface-dim": "#131313",
-                        "surface-bright": "#3a3939",
-                        "surface-variant": "#353534",
-                        "surface-tint": "#adc7ff",
-                        "surface-container-lowest": "#0e0e0e",
-                        "surface-container-low": "#1c1b1b",
-                        "surface-container": "#201f1f",
-                        "surface-container-high": "#2a2a2a",
-                        "surface-container-highest": "#353534",
-                        "on-surface": "#e5e2e1",
-                        "on-surface-variant": "#c1c6d7",
-                        "inverse-surface": "#e5e2e1",
-                        "inverse-on-surface": "#313030",
-
-                        "outline": "#8b90a0",
-                        "outline-variant": "#414754",
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.125rem", lg: "0.25rem",
-                        xl: "0.5rem", full: "0.75rem"
-                    },
-                    spacing: {
-                        sm: "8px", gutter: "24px", unit: "4px",
-                        md: "16px", xl: "40px",
-                        "margin-mobile": "16px", xs: "4px",
-                        lg: "24px", "margin-desktop": "48px"
-                    },
-                    fontFamily: {
-                        "label-sm": ["Inter"], "headline-lg-mobile": ["Inter"],
-                        "body-md": ["Inter"], "headline-md": ["Inter"],
-                        "body-lg": ["Inter"], "body-sm": ["Inter"],
-                        "headline-lg": ["Inter"], "label-md": ["Inter"],
-                        "headline-xl": ["Inter"]
-                    },
-                    fontSize: {
-                        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
-                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
-                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
-                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
-                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
-                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
-                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
-                        "label-md": ["14px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
-                        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }]
-                    }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['DM Sans', 'Inter', 'sans-serif'] } } }
         }
     </script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #131313;
-            color: #e5e2e1;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            min-height: max(884px, 100dvh);
+            font-family: 'DM Sans', sans-serif;
+            background: #f0efed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background-image: radial-gradient(circle, #d8d5d0 1px, transparent 1px);
+                background-size: 28px 28px;
+                opacity: .45;
+                pointer-events: none;
+                z-index: 0;
+            }
 
-        .focus-ring:focus {
+        .input-field {
+            width: 100%;
+            height: 44px;
+            background: #fff;
+            border: 1.5px solid #e8e8e6;
+            border-radius: 12px;
+            padding: 0 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #111;
             outline: none;
-            border-color: #4a8eff;
-            box-shadow: 0 0 0 1px #4a8eff;
+            transition: border-color .18s, box-shadow .18s;
         }
 
-        .canvas-grid {
-            background-image: radial-gradient(circle at 1px 1px, #222222 1px, transparent 0);
-            background-size: 40px 40px;
-        }
+            .input-field::placeholder {
+                color: #bbb;
+            }
+
+            .input-field:focus {
+                border-color: #f97316;
+                box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+            }
 
         .field-error {
-            color: #ffb4ab;
-            font-size: 12px;
+            font-size: 11px;
+            color: #ef4444;
             margin-top: 4px;
             display: block;
         }
+
+        .field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .16em;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
-<body class="bg-background selection:bg-primary-container selection:text-on-primary">
+<body>
 
-    <!-- Brand Header -->
-    <header class="fixed top-0 w-full z-50 flex justify-between items-center h-16
-                   px-margin-mobile md:px-margin-desktop bg-background/50 backdrop-blur-sm">
-        <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary"
-                  style="font-variation-settings: 'FILL' 1;">bolt</span>
-            <span class="font-black tracking-tighter text-xl text-primary">
-                ELECTROTECH
-            </span>
-        </a>
-        <a asp-controller="Account" asp-action="Login"
-           class="text-sm font-semibold tracking-widest text-on-surface-variant
-                  hover:text-primary transition-colors">
-            SIGN IN
-        </a>
-    </header>
+    <main class="relative z-10 flex-grow flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-[520px]">
 
-    <main class="relative min-h-screen flex items-center justify-center
-                 pt-20 pb-12 px-margin-mobile canvas-grid">
-
-        <!-- Background glow blobs -->
-        <div class="absolute top-1/4 -right-20 w-96 h-96 rounded-full blur-[120px]
-                    pointer-events-none"
-             style="background: rgba(74,142,255,0.08);"></div>
-        <div class="absolute bottom-1/4 -left-20 w-96 h-96 rounded-full blur-[120px]
-                    pointer-events-none"
-             style="background: rgba(173,199,255,0.05);"></div>
-
-        <section class="w-full max-w-[480px] z-10">
-
-            <div class="mb-xl">
-                <h1 class="text-headline-xl font-headline-xl text-on-background mb-sm">
-                    Create Account
-                </h1>
-                <p class="text-body-md font-body-md text-on-surface-variant">
-                    Join the high-performance ecosystem of ElectroTech.
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <a asp-controller="Home" asp-action="Index"
+                   class="text-[1.6rem] font-black tracking-tight text-[#111] no-underline">
+                    Electro<span class="text-orange-500">Tech</span>
+                </a>
+                <p class="text-[11px] font-bold uppercase tracking-[.26em] text-[#bbb] mt-1">
+                    Premium Tech Store
                 </p>
             </div>
 
-            @if (TempData["DebugError"] != null)
-            {
-                <div style="background:#7f1d1d; color:#fca5a5; padding:12px;
-                            border-radius:8px; margin-bottom:16px; font-size:13px;">
-                    ❌ @TempData["DebugError"]
-                </div>
-            }
+            <!-- Card -->
+            <div class="bg-white rounded-3xl border border-[#e8e8e6]
+                    shadow-[0_24px_64px_rgba(0,0,0,.07)] overflow-hidden">
 
-            <form asp-action="Register" asp-controller="Account" method="post"
-                  class="space-y-lg">
-                @Html.AntiForgeryToken()
+                <div class="h-1" style="background:linear-gradient(90deg,#f97316,#fb923c);"></div>
 
-                <!-- Full Name -->
-                <div class="space-y-xs">
-                    <label asp-for="FullName"
-                           class="block text-label-md font-label-md text-on-surface">
-                        FULL NAME
-                    </label>
-                    <input asp-for="FullName"
-                           class="w-full h-14 px-md bg-surface-container-low border
-                                  border-outline-variant text-on-surface rounded-lg
-                                  focus-ring transition-all placeholder:text-on-surface/20
-                                  shadow-none outline-none"
-                           placeholder="Nguyen Van A" />
-                    <span asp-validation-for="FullName" class="field-error"></span>
-                </div>
+                <div class="px-8 py-8">
 
-                <!-- Email -->
-                <div class="space-y-xs">
-                    <label asp-for="Email"
-                           class="block text-label-md font-label-md text-on-surface">
-                        EMAIL ADDRESS
-                    </label>
-                    <input asp-for="Email" type="email"
-                           class="w-full h-14 px-md bg-surface-container-low border
-                                  border-outline-variant text-on-surface rounded-lg
-                                  focus-ring transition-all placeholder:text-on-surface/20
-                                  shadow-none outline-none"
-                           placeholder="name@email.com" />
-                    <span asp-validation-for="Email" class="field-error"></span>
-                </div>
-
-                <!-- Password + Confirm -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-                    <div class="space-y-xs">
-                        <label asp-for="Password"
-                               class="block text-label-md font-label-md text-on-surface">
-                            PASSWORD
-                        </label>
-                        <input asp-for="Password" type="password"
-                               class="w-full h-14 px-md bg-surface-container-low border
-                                      border-outline-variant text-on-surface rounded-lg
-                                      focus-ring transition-all placeholder:text-on-surface/20
-                                      shadow-none outline-none"
-                               placeholder="••••••••" />
-                        <span asp-validation-for="Password" class="field-error"></span>
+                    <!-- Header -->
+                    <div class="mb-7">
+                        <p class="text-[10px] font-black uppercase tracking-[.26em] text-orange-500 mb-1">
+                            Tài khoản mới
+                        </p>
+                        <h1 class="text-[1.7rem] font-black tracking-tight text-[#111] leading-tight">
+                            Tạo tài khoản<br />
+                            <span class="text-orange-500">ElectroTech</span>
+                        </h1>
                     </div>
-                    <div class="space-y-xs">
-                        <label asp-for="ConfirmPassword"
-                               class="block text-label-md font-label-md text-on-surface">
-                            CONFIRM PASSWORD
-                        </label>
-                        <input asp-for="ConfirmPassword" type="password"
-                               class="w-full h-14 px-md bg-surface-container-low border
-                                      border-outline-variant text-on-surface rounded-lg
-                                      focus-ring transition-all placeholder:text-on-surface/20
-                                      shadow-none outline-none"
-                               placeholder="••••••••" />
-                        <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+
+                    @if (TempData["DebugError"] != null)
+                    {
+                        <div class="mb-5 p-3.5 rounded-xl flex items-start gap-2.5 bg-red-50 border border-red-200">
+                            <span class="material-symbols-outlined text-red-400 shrink-0 mt-0.5" style="font-size:16px;">error</span>
+                            <p class="text-[12px] text-red-600 font-semibold">@TempData["DebugError"]</p>
+                        </div>
+                    }
+
+                    <form asp-action="Register" asp-controller="Account" method="post"
+                          id="form-register" class="space-y-4">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Full Name -->
+                        <div>
+                            <label asp-for="FullName" class="field-label">Họ và tên</label>
+                            <input asp-for="FullName" class="input-field" placeholder="Nguyễn Văn A" />
+                            <span asp-validation-for="FullName" class="field-error"></span>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label asp-for="Email" class="field-label">Email</label>
+                            <input asp-for="Email" type="email" class="input-field" placeholder="ten@email.com" />
+                            <span asp-validation-for="Email" class="field-error"></span>
+                        </div>
+
+                        <!-- Password + Confirm — 2 cols -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label asp-for="Password" class="field-label">Mật khẩu</label>
+                                <input asp-for="Password" type="password" class="input-field" placeholder="••••••••" />
+                                <span asp-validation-for="Password" class="field-error"></span>
+                            </div>
+                            <div>
+                                <label asp-for="ConfirmPassword" class="field-label">Xác nhận</label>
+                                <input asp-for="ConfirmPassword" type="password" class="input-field" placeholder="••••••••" />
+                                <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+                            </div>
+                        </div>
+
+                        <!-- Phone + Address — 2 cols -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label asp-for="PhoneNumber" class="field-label">Số điện thoại</label>
+                                <input asp-for="PhoneNumber" type="tel" class="input-field" placeholder="0912 345 678" />
+                                <span asp-validation-for="PhoneNumber" class="field-error"></span>
+                            </div>
+                            <div>
+                                <label asp-for="Address" class="field-label">Địa chỉ</label>
+                                <input asp-for="Address" type="text" class="input-field" placeholder="123 Nguyễn Huệ..." />
+                                <span asp-validation-for="Address" class="field-error"></span>
+                            </div>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="flex items-start gap-2.5 pt-1">
+                            <input type="checkbox" id="terms"
+                                   class="w-4 h-4 mt-0.5 rounded accent-orange-500 cursor-pointer shrink-0" />
+                            <label for="terms" class="text-[12px] text-gray-400 cursor-pointer leading-relaxed">
+                                Tôi đồng ý với
+                                <a href="#" class="text-orange-500 font-bold no-underline hover:text-orange-600">Điều khoản dịch vụ</a>
+                                và
+                                <a href="#" class="text-orange-500 font-bold no-underline hover:text-orange-600">Chính sách bảo mật</a>.
+                            </label>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" id="btn-submit"
+                                class="w-full h-[46px] rounded-[14px] bg-orange-500 text-white
+                                   text-[14px] font-black tracking-wide
+                                   shadow-[0_6px_20px_rgba(249,115,22,.35)]
+                                   hover:bg-orange-600 hover:-translate-y-0.5
+                                   active:scale-[.98] transition-all duration-200
+                                   flex items-center justify-center gap-2 cursor-pointer border-none mt-2">
+                            <span id="btn-text">Tạo tài khoản</span>
+                            <span class="material-symbols-outlined" id="btn-icon" style="font-size:18px;">arrow_forward</span>
+                        </button>
+
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-3 my-6">
+                        <div class="flex-1 h-px bg-[#eeece9]"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#ccc]">hoặc</span>
+                        <div class="flex-1 h-px bg-[#eeece9]"></div>
                     </div>
+
+                    <!-- Login link -->
+                    <p class="text-center text-[13px] text-gray-400">
+                        Đã có tài khoản?
+                        <a asp-controller="Account" asp-action="Login"
+                           class="font-black text-orange-500 no-underline hover:text-orange-600 transition-colors ml-1">
+                            Đăng nhập →
+                        </a>
+                    </p>
+
                 </div>
-
-                <!-- Phone + Address -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-                    <div class="space-y-xs">
-                        <label asp-for="PhoneNumber"
-                               class="block text-label-md font-label-md text-on-surface">
-                            PHONE NUMBER
-                        </label>
-                        <input asp-for="PhoneNumber" type="tel"
-                               class="w-full h-14 px-md bg-surface-container-low border
-                                      border-outline-variant text-on-surface rounded-lg
-                                      focus-ring transition-all placeholder:text-on-surface/20
-                                      shadow-none outline-none"
-                               placeholder="0912 345 678" />
-                        <span asp-validation-for="PhoneNumber" class="field-error"></span>
-                    </div>
-                    <div class="space-y-xs">
-                        <label asp-for="Address"
-                               class="block text-label-md font-label-md text-on-surface">
-                            ADDRESS
-                        </label>
-                        <input asp-for="Address" type="text"
-                               class="w-full h-14 px-md bg-surface-container-low border
-                                      border-outline-variant text-on-surface rounded-lg
-                                      focus-ring transition-all placeholder:text-on-surface/20
-                                      shadow-none outline-none"
-                               placeholder="123 Nguyen Hue, Ho Chi Minh" />
-                        <span asp-validation-for="Address" class="field-error"></span>
-                    </div>
-                </div>
-
-                <!-- Terms -->
-                <div class="flex items-center gap-sm pt-sm">
-                    <input type="checkbox" id="terms"
-                           class="w-5 h-5 rounded bg-surface-container-low
-                                  border-outline-variant text-primary
-                                  focus:ring-primary focus:ring-offset-background" />
-                    <label class="text-body-sm font-body-sm text-on-surface-variant" for="terms">
-                        I agree to the
-                        <a class="text-primary hover:underline" href="#">Terms of Service</a>
-                        and
-                        <a class="text-primary hover:underline" href="#">Privacy Policy</a>.
-                    </label>
-                </div>
-
-                <!-- Submit button — màu xanh -->
-                <button type="submit" id="submitBtn"
-                        class="group relative w-full h-14 rounded-lg overflow-hidden
-                               font-bold tracking-widest text-label-md font-label-md
-                               active:scale-[0.98] transition-all duration-150"
-                        style="background: linear-gradient(135deg, #4a8eff 0%, #adc7ff 100%);
-                               color: #001a41;">
-                    <span class="relative z-10" id="btnText">CREATE ACCOUNT</span>
-                    <div class="absolute inset-0 bg-white/10 translate-y-full
-                                group-hover:translate-y-0 transition-transform duration-300"></div>
-                </button>
-            </form>
-
-            <!-- Bottom link -->
-            <div class="mt-xl text-center">
-                <p class="text-body-md font-body-md text-on-surface-variant">
-                    Already have an account?
-                    <a asp-controller="Account" asp-action="Login"
-                       class="text-primary font-bold hover:text-primary-fixed transition-colors ml-unit">
-                        Sign In
-                    </a>
-                </p>
             </div>
-        </section>
 
-        <!-- Decorative side panel -->
-        <aside class="hidden xl:flex fixed right-margin-desktop top-1/2
-                      -translate-y-1/2 w-80 flex-col gap-lg">
-            <div class="p-lg bg-surface-container-low border border-outline-variant rounded-xl">
-                <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-md"
-                     style="background: rgba(74,142,255,0.15);">
-                    <span class="material-symbols-outlined text-primary">speed</span>
-                </div>
-                <h3 class="text-headline-md font-headline-md text-on-surface mb-xs">
-                    Maximum Speed
-                </h3>
-                <p class="text-body-sm font-body-sm text-on-surface-variant">
-                    Experience lightning-fast interactions with our proprietary engine.
-                </p>
+            <!-- Back -->
+            <div class="text-center mt-5">
+                <a asp-controller="Home" asp-action="Index"
+                   class="text-[12px] font-bold text-[#bbb] no-underline hover:text-orange-500 transition-colors">
+                    ← Quay về trang chủ
+                </a>
             </div>
-            <div class="p-lg bg-surface-container-low border border-outline-variant
-                        rounded-xl flex items-center gap-md">
-                <div class="flex -space-x-2">
-                    <div class="w-8 h-8 rounded-full border-2 border-background
-                                flex items-center justify-center"
-                         style="background: rgba(74,142,255,0.2);">
-                        <span class="material-symbols-outlined text-xs text-primary">person</span>
-                    </div>
-                    <div class="w-8 h-8 rounded-full border-2 border-background
-                                flex items-center justify-center"
-                         style="background: rgba(173,199,255,0.2);">
-                        <span class="material-symbols-outlined text-xs text-primary">person</span>
-                    </div>
-                    <div class="w-8 h-8 rounded-full border-2 border-background
-                                flex items-center justify-center"
-                         style="background: rgba(74,142,255,0.1);">
-                        <span class="material-symbols-outlined text-xs text-primary">person</span>
-                    </div>
-                </div>
-                <p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">
-                    Join 12k+ Users
-                </p>
-            </div>
-        </aside>
+
+        </div>
     </main>
 
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-[#e8e8e6] py-5 px-6 bg-white/60 backdrop-blur-sm">
+        <div class="max-w-[520px] mx-auto flex justify-between items-center">
+            <span class="text-[11px] text-[#bbb]">© @DateTime.Now.Year ElectroTech</span>
+            <div class="flex gap-5">
+                <a href="#" class="text-[11px] text-[#bbb] no-underline hover:text-orange-500 transition-colors">Privacy</a>
+                <a href="#" class="text-[11px] text-[#bbb] no-underline hover:text-orange-500 transition-colors">Terms</a>
+            </div>
+        </div>
+    </footer>
+
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.getElementById('form-register').addEventListener('submit', function (e) {
             const terms = document.getElementById('terms');
-            if (!terms || !terms.checked) {
+            if (!terms.checked) {
                 e.preventDefault();
-                alert('Vui lòng đồng ý với điều khoản dịch vụ!');
+                terms.style.outline = '2px solid #ef4444';
+                terms.style.outlineOffset = '2px';
+                setTimeout(() => { terms.style.outline = ''; terms.style.outlineOffset = ''; }, 2000);
                 return false;
             }
-            const text = document.getElementById('btnText');
-            if (text) text.textContent = 'CREATING...';
+            const btn = document.getElementById('btn-submit');
+            const text = document.getElementById('btn-text');
+            const icon = document.getElementById('btn-icon');
+            text.textContent = 'Đang tạo tài khoản...';
+            icon.textContent = 'hourglass_empty';
+            btn.disabled = true;
+            btn.style.opacity = '.75';
         });
     </script>
 </body>

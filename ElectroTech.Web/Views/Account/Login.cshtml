@@ -1,342 +1,249 @@
 ﻿@model Entities.ViewModel.LoginViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Đăng nhập";
     Layout = null;
 }
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ElectroTech | Login</title>
+    <title>ElectroTech | Đăng nhập</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            blue: '#4a8eff',
-                            'blue-hover': '#3a7aee',
-                            'blue-glow': '#adc7ff',
-                            black: '#000000',
-                            charcoal: '#121212',
-                            elevated: '#1a1a1a',
-                            border: '#222222',
-                            'border-active': '#4a8eff',
-                            'gray-light': '#e5e2e1',
-                            'gray-dim': '#777777'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
-                    }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['DM Sans', 'Inter', 'sans-serif'] } } }
         }
     </script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000000;
-            color: #e5e2e1;
-            overflow-x: hidden;
+            font-family: 'DM Sans', sans-serif;
+            background: #f0efed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .grid-background {
-            background-image: linear-gradient(rgba(26,26,26,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.45) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
-        .kinetic-glow {
-            box-shadow: 0 0 25px 3px rgba(74,142,255,0.12);
-        }
-
-        .kinetic-glow-pulse {
-            animation: pulse-glow 5s ease-in-out infinite alternate;
-        }
-
-        @@keyframes pulse-glow {
-            0% {
-                box-shadow: 0 0 15px 1px rgba(74,142,255,0.08);
+            /* Subtle dot grid */
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background-image: radial-gradient(circle, #d8d5d0 1px, transparent 1px);
+                background-size: 28px 28px;
+                opacity: .45;
+                pointer-events: none;
+                z-index: 0;
             }
-
-            100% {
-                box-shadow: 0 0 35px 5px rgba(74,142,255,0.20);
-            }
-        }
-
-        .light-ray {
-            background: radial-gradient(circle at 50% 50%, rgba(74,142,255,0.07) 0%, transparent 70%);
-        }
-
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #070707;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #222222;
-            border-radius: 3px;
-        }
-
-            ::-webkit-scrollbar-thumb:hover {
-                background: #4a8eff;
-            }
-
-        .field-error {
-            color: #ffb4ab;
-            font-size: 11px;
-            margin-top: 3px;
-            display: block;
-        }
 
         .input-field {
             width: 100%;
-            background: #1c1b1b;
-            border: 1px solid #414754;
-            border-radius: 6px;
-            padding: 12px 16px;
-            color: white;
+            height: 44px;
+            background: #fff;
+            border: 1.5px solid #e8e8e6;
+            border-radius: 12px;
+            padding: 0 14px;
             font-size: 14px;
+            font-family: inherit;
+            color: #111;
             outline: none;
-            transition: all 0.2s;
+            transition: border-color .18s, box-shadow .18s;
         }
 
             .input-field::placeholder {
-                color: rgba(173,199,255,0.3);
+                color: #bbb;
             }
 
             .input-field:focus {
-                border-color: #4a8eff;
-                box-shadow: 0 0 0 1px #4a8eff;
+                border-color: #f97316;
+                box-shadow: 0 0 0 3px rgba(249,115,22,.1);
             }
+
+        .field-error {
+            font-size: 11px;
+            color: #ef4444;
+            margin-top: 4px;
+            display: block;
+        }
     </style>
 </head>
-<body class="min-h-screen relative flex flex-col justify-between overflow-x-hidden">
+<body>
 
-    <!-- Background -->
-    <div class="absolute inset-0 pointer-events-none z-0 bg-black">
-        <div class="absolute inset-0 grid-background opacity-20"></div>
-        <div id="radial-glow-light" class="absolute inset-0 z-0 transition-all duration-300 opacity-90 light-ray"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]
-                    rounded-full filter blur-[120px] pointer-events-none animate-pulse"
-             style="background: rgba(74,142,255,0.05); animation-duration:10s;"></div>
-    </div>
+    <main class="relative z-10 flex-grow flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-[420px]">
 
-    <main class="relative z-10 flex-grow flex items-center justify-center py-10 w-full px-4 md:px-8">
-        <div class="w-full max-w-[480px] py-4">
-
-            <!-- Brand -->
-            <div class="mb-8 text-center">
+            <!-- Logo -->
+            <div class="text-center mb-8">
                 <a asp-controller="Home" asp-action="Index"
-                   class="text-[28px] font-extrabold tracking-[-0.05em] uppercase select-none"
-                   style="color: #adc7ff;">
-                    ELECTROTECH
+                   class="text-[1.6rem] font-black tracking-tight text-[#111] no-underline">
+                    Electro<span class="text-orange-500">Tech</span>
                 </a>
-            </div>
-
-            <!-- Card -->
-            <div class="backdrop-blur-xl border border-white/10 rounded-xl p-8 md:p-10 kinetic-glow kinetic-glow-pulse"
-                 style="background: rgba(18,18,18,0.85);">
-
-                <header class="mb-8">
-                    <h2 class="text-2xl md:text-3xl font-semibold text-white tracking-tight mb-1.5">
-                        Welcome Back
-                    </h2>
-                    <p class="text-sm" style="color: rgba(173,199,255,0.6);">
-                        Access your premium performance ecosystem.
-                    </p>
-                </header>
-
-                <!-- Server error -->
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div class="mb-6 p-3 rounded flex items-center gap-3 text-xs"
-                         style="background: rgba(127,29,29,0.4); border: 1px solid rgba(153,27,27,0.6); color: #fca5a5;">
-                        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0" style="color:#f87171;"></i>
-                        <span>@Html.ValidationSummary(false, "", new { @class = "text-xs" })</span>
-                    </div>
-                }
-
-                <form asp-action="Login" asp-controller="Account" method="post"
-                      class="space-y-6" id="form-login">
-                    @Html.AntiForgeryToken()
-
-                    <!-- Email -->
-                    <div class="space-y-2">
-                        <label asp-for="Email"
-                               class="text-xs font-mono font-bold tracking-wider uppercase block"
-                               id="lbl-Email"
-                               style="color: rgba(173,199,255,0.5);">
-                            Email Address
-                        </label>
-                        <input asp-for="Email" type="email"
-                               placeholder="name@electrotech.vn"
-                               class="input-field" />
-                        <span asp-validation-for="Email" class="field-error"></span>
-                    </div>
-
-                    <!-- Password -->
-                    <div class="space-y-2">
-                        <label asp-for="Password"
-                               class="text-xs font-mono font-bold tracking-wider uppercase block"
-                               id="lbl-Password"
-                               style="color: rgba(173,199,255,0.5);">
-                            Password
-                        </label>
-                        <div class="relative">
-                            <input asp-for="Password" type="password"
-                                   id="passwordInput"
-                                   placeholder="••••••••"
-                                   class="input-field pr-12" />
-                            <button type="button" onclick="togglePassword()"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                                    style="color: rgba(173,199,255,0.4);"
-                                    onmouseover="this.style.color='#4a8eff'"
-                                    onmouseout="this.style.color='rgba(173,199,255,0.4)'">
-                                <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        <span asp-validation-for="Password" class="field-error"></span>
-                    </div>
-
-                    <!-- Remember -->
-                    <div class="flex items-center gap-3">
-                        <input asp-for="Remember" type="checkbox"
-                               class="w-4 h-4 rounded bg-[#1c1b1b]"
-                               style="accent-color: #4a8eff;" />
-                        <label asp-for="Remember"
-                               class="text-xs font-sans"
-                               style="color: rgba(173,199,255,0.5);">
-                            Ghi nho dang nhap
-                        </label>
-                    </div>
-
-                    <!-- Submit -->
-                    <button type="submit" id="btn-login-submit"
-                            class="w-full font-mono font-bold text-sm py-3.5 px-4 rounded
-                                   flex items-center justify-center gap-2 select-none
-                                   cursor-pointer transition-all duration-200 active:scale-[0.98]"
-                            style="background: linear-gradient(135deg, #4a8eff 0%, #adc7ff 100%);
-                                   color: #001a41;"
-                            onmouseover="this.style.boxShadow='0 0 30px rgba(74,142,255,0.4)'"
-                            onmouseout="this.style.boxShadow='none'">
-                        <span id="btn-text">AUTHENTICATE</span>
-                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    </button>
-                </form>
-
-                <!-- Divider -->
-                <div class="relative my-8 flex items-center">
-                    <div class="flex-grow border-t border-[#353534]"></div>
-                    <span class="mx-4 text-[10px] font-mono font-bold text-[#b7b5b4] tracking-widest uppercase">OR</span>
-                    <div class="flex-grow border-t border-[#353534]"></div>
-                </div>
-
-                <!-- Register link -->
-                <p class="text-xs font-sans text-center" style="color: rgba(173,199,255,0.5);">
-                    New to the ecosystem?
-                    <a asp-controller="Account" asp-action="Register"
-                       class="font-semibold hover:underline ml-1"
-                       style="color: #adc7ff;">
-                        Sign Up
-                    </a>
+                <p class="text-[11px] font-bold uppercase tracking-[.26em] text-[#bbb] mt-1">
+                    Premium Tech Store
                 </p>
             </div>
 
-            <!-- Back home -->
-            <div class="mt-6 text-center">
+            <!-- Card -->
+            <div class="bg-white rounded-3xl border border-[#e8e8e6]
+                    shadow-[0_24px_64px_rgba(0,0,0,.07)] overflow-hidden">
+
+                <!-- Top accent -->
+                <div class="h-1" style="background:linear-gradient(90deg,#f97316,#fb923c);"></div>
+
+                <div class="px-8 py-8">
+
+                    <!-- Header -->
+                    <div class="mb-7">
+                        <p class="text-[10px] font-black uppercase tracking-[.26em] text-orange-500 mb-1">
+                            Tài khoản
+                        </p>
+                        <h1 class="text-[1.7rem] font-black tracking-tight text-[#111] leading-tight">
+                            Chào mừng<br />trở lại!
+                        </h1>
+                    </div>
+
+                    <!-- Server error -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="mb-5 p-3.5 rounded-xl flex items-start gap-2.5
+                                bg-red-50 border border-red-200">
+                            <span class="material-symbols-outlined text-red-400 shrink-0 mt-0.5"
+                                  style="font-size:16px;">error</span>
+                            <div>
+                                @Html.ValidationSummary(false, "", new { @class = "text-[12px] text-red-600 font-semibold" })
+                            </div>
+                        </div>
+                    }
+
+                    <form asp-action="Login" asp-controller="Account" method="post"
+                          class="space-y-5" id="form-login">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Email -->
+                        <div>
+                            <label asp-for="Email"
+                                   class="block text-[11px] font-black uppercase tracking-[.16em] text-[#aaa] mb-1.5">
+                                Email
+                            </label>
+                            <input asp-for="Email" type="email"
+                                   placeholder="ten@email.com"
+                                   class="input-field" />
+                            <span asp-validation-for="Email" class="field-error"></span>
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label asp-for="Password"
+                                   class="block text-[11px] font-black uppercase tracking-[.16em] text-[#aaa] mb-1.5">
+                                Mật khẩu
+                            </label>
+                            <div class="relative">
+                                <input asp-for="Password" type="password"
+                                       id="passwordInput"
+                                       placeholder="••••••••"
+                                       class="input-field pr-11" />
+                                <button type="button" onclick="togglePassword()"
+                                        class="absolute right-3.5 top-1/2 -translate-y-1/2
+                                           text-gray-300 hover:text-orange-500 transition-colors">
+                                    <span class="material-symbols-outlined" id="eye-icon"
+                                          style="font-size:18px;">visibility</span>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="field-error"></span>
+                        </div>
+
+                        <!-- Remember -->
+                        <div class="flex items-center gap-2.5">
+                            <input asp-for="Remember" type="checkbox"
+                                   class="w-4 h-4 rounded accent-orange-500 cursor-pointer" />
+                            <label asp-for="Remember"
+                                   class="text-[12px] font-semibold text-gray-400 cursor-pointer">
+                                Ghi nhớ đăng nhập
+                            </label>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" id="btn-submit"
+                                class="w-full h-[46px] rounded-[14px] bg-orange-500 text-white
+                                   text-[14px] font-black tracking-wide
+                                   shadow-[0_6px_20px_rgba(249,115,22,.35)]
+                                   hover:bg-orange-600 hover:-translate-y-0.5
+                                   active:scale-[.98] transition-all duration-200
+                                   flex items-center justify-center gap-2 cursor-pointer border-none">
+                            <span id="btn-text">Đăng nhập</span>
+                            <span class="material-symbols-outlined" id="btn-icon" style="font-size:18px;">arrow_forward</span>
+                        </button>
+
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-3 my-6">
+                        <div class="flex-1 h-px bg-[#eeece9]"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#ccc]">hoặc</span>
+                        <div class="flex-1 h-px bg-[#eeece9]"></div>
+                    </div>
+
+                    <!-- Register -->
+                    <p class="text-center text-[13px] text-gray-400">
+                        Chưa có tài khoản?
+                        <a asp-controller="Account" asp-action="Register"
+                           class="font-black text-orange-500 no-underline hover:text-orange-600 transition-colors ml-1">
+                            Đăng ký ngay →
+                        </a>
+                    </p>
+
+                </div>
+            </div>
+
+            <!-- Back -->
+            <div class="text-center mt-5">
                 <a asp-controller="Home" asp-action="Index"
-                   class="text-xs font-mono transition-colors"
-                   style="color: rgba(173,199,255,0.4);"
-                   onmouseover="this.style.color='#adc7ff'"
-                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">
-                    ← Quay ve trang chu
+                   class="text-[12px] font-bold text-[#bbb] no-underline hover:text-orange-500 transition-colors">
+                    ← Quay về trang chủ
                 </a>
             </div>
+
         </div>
     </main>
 
-    <footer class="relative z-20 w-full backdrop-blur-md border-t border-[#1a1a1a] py-6 px-6"
-            style="background: rgba(10,10,10,0.6);">
-        <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-4 text-center">
-            <span class="text-xs font-mono font-medium" style="color: rgba(173,199,255,0.4);">
-                &copy; @DateTime.Now.Year ElectroTech. All rights reserved.
-            </span>
-            <div class="flex gap-6">
-                <a href="#" class="text-xs font-sans transition-colors"
-                   style="color: rgba(173,199,255,0.4);"
-                   onmouseover="this.style.color='#adc7ff'"
-                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">Privacy Policy</a>
-                <a href="#" class="text-xs font-sans transition-colors"
-                   style="color: rgba(173,199,255,0.4);"
-                   onmouseover="this.style.color='#adc7ff'"
-                   onmouseout="this.style.color='rgba(173,199,255,0.4)'">Terms of Service</a>
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-[#e8e8e6] py-5 px-6 bg-white/60 backdrop-blur-sm">
+        <div class="max-w-[420px] mx-auto flex justify-between items-center">
+            <span class="text-[11px] text-[#bbb]">© @DateTime.Now.Year ElectroTech</span>
+            <div class="flex gap-5">
+                <a href="#" class="text-[11px] text-[#bbb] no-underline hover:text-orange-500 transition-colors">Privacy</a>
+                <a href="#" class="text-[11px] text-[#bbb] no-underline hover:text-orange-500 transition-colors">Terms</a>
             </div>
         </div>
     </footer>
 
     <script>
-        lucide.createIcons();
-
-        // Mouse glow - mau xanh
-        window.addEventListener('mousemove', (e) => {
-            const glow = document.getElementById('radial-glow-light');
-            if (glow) {
-                const x = (e.clientX / window.innerWidth) * 100;
-                const y = (e.clientY / window.innerHeight) * 100;
-                glow.style.background = `radial-gradient(circle at ${x}% ${y}%,
-                            rgba(74,142,255,0.11) 0%, transparent 60%)`;
-            }
-        });
-
-        // Label glow on focus
-        document.querySelectorAll('input[type=email], input[type=password]').forEach(input => {
-            const labelId = 'lbl-' + input.id;
-            input.addEventListener('focus', () => {
-                const lbl = document.getElementById(labelId);
-                if (lbl) lbl.style.color = '#adc7ff';
-            });
-            input.addEventListener('blur', () => {
-                const lbl = document.getElementById(labelId);
-                if (lbl) lbl.style.color = '';
-            });
-        });
-
-        // Toggle password
         function togglePassword() {
             const input = document.getElementById('passwordInput');
             const icon = document.getElementById('eye-icon');
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
+                icon.textContent = 'visibility_off';
             } else {
                 input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
+                icon.textContent = 'visibility';
             }
-            lucide.createIcons();
         }
 
-        // Submit loading
         document.getElementById('form-login').addEventListener('submit', () => {
-            const btn = document.getElementById('btn-login-submit');
+            const btn = document.getElementById('btn-submit');
             const text = document.getElementById('btn-text');
-            if (btn && text) {
-                text.textContent = 'AUTHENTICATING...';
-                btn.disabled = true;
-                btn.style.opacity = '0.8';
-            }
+            const icon = document.getElementById('btn-icon');
+            text.textContent = 'Đang đăng nhập...';
+            icon.textContent = 'hourglass_empty';
+            btn.disabled = true;
+            btn.style.opacity = '.75';
         });
     </script>
 </body>

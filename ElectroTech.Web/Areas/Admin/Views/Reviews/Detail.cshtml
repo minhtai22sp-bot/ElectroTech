@@ -1,0 +1,144 @@
+﻿
+@{
+    ViewData["Title"] = "Chi tiết đánh giá";
+    Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
+}
+
+<div class="space-y-6 max-w-2xl">
+
+    <div class="flex items-center gap-3">
+        <a href="/Admin/Reviews"
+           class="text-slate-400 hover:text-slate-600 transition-colors">
+            ← Quay lại
+        </a>
+        <h1 class="text-2xl font-display font-black text-slate-900">
+            Chi tiết đánh giá
+        </h1>
+    </div>
+
+    <div class="bg-white border border-slate-200/50 rounded-2xl shadow-sm p-6 space-y-4">
+
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase">Sản phẩm</p>
+                <p class="text-slate-800 font-bold mt-0.5">@ViewBag.ProductName</p>
+            </div>
+            <div>
+                @if (Model.IsApproved)
+                {
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                        ✓ Đã duyệt
+                    </span>
+                }
+                else
+                {
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                        ⏳ Chờ duyệt
+                    </span>
+                }
+            </div>
+        </div>
+
+        <hr class="border-slate-100" />
+
+        <div>
+            <p class="text-xs text-slate-400 font-semibold uppercase">Đánh giá sao</p>
+            <div class="flex gap-0.5 mt-1">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <span style="color: @(i <= Model.Rating ? "#f59e0b" : "#e5e7eb"); font-size: 20px;">★</span>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase">Tiêu đề</p>
+                <p class="text-slate-800 font-bold mt-0.5">@Model.Title</p>
+            </div>
+        }
+
+        <div>
+            <p class="text-xs text-slate-400 font-semibold uppercase">Nội dung</p>
+            <p class="text-slate-600 mt-0.5 leading-relaxed">
+                @(Model.Comment ?? "—")
+            </p>
+        </div>
+
+        <div class="flex gap-8">
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase">Ngày tạo</p>
+                <p class="text-slate-700 mt-0.5">@Model.CreatedOn.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase">Mua hàng xác thực</p>
+                <p class="text-slate-700 mt-0.5">@(Model.IsVerifiedPurchase ? "✓ Có" : "✗ Không")</p>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-3 pt-2">
+            @Html.AntiForgeryToken()
+            @if (!Model.IsApproved)
+            {
+                <button onclick="approveReview(@Model.Id)"
+                        class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm
+                               font-bold hover:bg-green-600 transition-colors cursor-pointer border-none">
+                    ✓ Duyệt đánh giá
+                </button>
+            }
+            else
+            {
+                <button onclick="rejectReview(@Model.Id)"
+                        class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm
+                               font-bold hover:bg-amber-600 transition-colors cursor-pointer border-none">
+                    Ẩn đánh giá
+                </button>
+            }
+            <button onclick="deleteReview(@Model.Id)"
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm
+                           font-bold hover:bg-red-600 transition-colors cursor-pointer border-none">
+                Xóa đánh giá
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        async function approveReview(id) {
+            var res = await $.post({
+                url: '/Admin/Reviews/Approve',
+                data: { id },
+                headers: { 'RequestVerificationToken': token }
+            });
+            if (res.success) { alert('Đã duyệt!'); location.reload(); }
+            else alert(res.message);
+        }
+
+        async function rejectReview(id) {
+            var res = await $.post({
+                url: '/Admin/Reviews/Reject',
+                data: { id },
+                headers: { 'RequestVerificationToken': token }
+            });
+            if (res.success) { alert('Đã ẩn!'); location.reload(); }
+            else alert(res.message);
+        }
+
+        function deleteReview(id) {
+            if (!confirm('Xóa đánh giá này?')) return;
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Admin/Reviews/Delete';
+            form.innerHTML =
+                `<input name="id" value="${id}" />
+                 <input name="__RequestVerificationToken" value="${token}" />`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

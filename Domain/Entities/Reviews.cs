@@ -12,8 +12,11 @@ namespace Entities
     public class Review : AuditableEntity
     {
         public int ProductId { get; set; }
+        [MaxLength(100)]
+        public string? UserName { get; set; }  
         public Guid UserId { get; set; }
         public int? OrderItemId { get; set; }
+        public int? OrderId { get; set; }
 
         [Range(1, 5)]
         public byte Rating { get; set; }

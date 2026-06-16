@@ -60,6 +60,7 @@ namespace ElectroTech.Application.Features.Auth.Commands
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Name,           user.UserName ?? ""),
             new(ClaimTypes.Email,          user.Email    ?? ""),
+               new(ClaimTypes.GivenName,      user.FullName ?? user.UserName ?? ""),
         };
                 var roles = await _userManager.GetRolesAsync(user);
                 foreach (var role in roles)

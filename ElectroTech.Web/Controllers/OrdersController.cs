@@ -17,7 +17,6 @@ namespace ElectroTech.Web.Controllers
             _reviewRepo = reviewRepo;
         }
 
-        // GET /Orders
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -26,25 +25,25 @@ namespace ElectroTech.Web.Controllers
 
             if (Guid.TryParse(userId, out var uid))
             {
-                var reviewedProductIds = new HashSet<int>();
-
+                var reviewedKeys = new HashSet<string>();
                 foreach (var order in orders)
                 {
                     foreach (var item in order.OrderItems ?? new List<Entities.OrderItem>())
                     {
                         if (item.ProductId == null) continue;
-                        var already = await _reviewRepo.HasReviewedAsync(item.ProductId.Value, uid);
-                        if (already) reviewedProductIds.Add(item.ProductId.Value);
+                     
+                        var already = await _reviewRepo
+      .HasReviewedAsync(item.ProductId.Value, uid, order.Id);
+                        if (already)
+                            reviewedKeys.Add($"{item.ProductId}_{order.Id}");
                     }
-                } // ← đóng foreach order
-
-                ViewBag.ReviewedProductIds = reviewedProductIds;
-            } // ← đóng if
+                }
+                ViewBag.ReviewedKeys = reviewedKeys;
+            }
 
             return View(orders);
         }
 
-        // GET /Orders/Detail/{id}
         public async Task<IActionResult> Detail(int id)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

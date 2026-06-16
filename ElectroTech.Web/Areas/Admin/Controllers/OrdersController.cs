@@ -19,21 +19,12 @@ public class OrdersController : BaseController<OrdersController>
         {
             var draw = Request.Form["draw"].FirstOrDefault();
             var search = Request.Form["search[value]"].FirstOrDefault();
-
             var response = await _mediator.Send(
                 new GetAllOrdersQuery { Status = status });
-
             if (!response.Succeeded)
-                return Json(new
-                {
-                    draw,
-                    recordsFiltered = 0,
-                    recordsTotal = 0,
-                    data = ""
-                });
+                return Json(new { draw, recordsFiltered = 0, recordsTotal = 0, data = "" });
 
             var data = response.Data;
-
             if (!string.IsNullOrEmpty(search))
                 data = data.Where(o =>
                     (o.FullName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true) ||
@@ -72,16 +63,13 @@ public class OrdersController : BaseController<OrdersController>
 
     public async Task<IActionResult> Detail(int id)
     {
-        // Admin không cần filter theo UserId → truyền null
         var response = await _mediator.Send(
             new GetOrderByIdQuery { Id = id, UserId = null });
-
         if (!response.Succeeded)
         {
             _notify.Error("Không tìm thấy đơn hàng.");
             return RedirectToAction(nameof(Index));
         }
-
         return View(response.Data);
     }
 
@@ -90,28 +78,35 @@ public class OrdersController : BaseController<OrdersController>
     {
         var response = await _mediator.Send(
             new UpdateOrderStatusCommand { Id = id, Status = status });
-
-        return Json(new
-        {
-            success = response.Succeeded,
-            message = response.Message
-        });
+        return Json(new { success = response.Succeeded, message = response.Message });
     }
 
     [HttpPost]
     public async Task<IActionResult> UpdatePayment(int id, string paymentStatus)
     {
         var response = await _mediator.Send(
-            new UpdatePaymentStatusCommand
+            new UpdatePaymentStatusCommand { Id = id, PaymentStatus = paymentStatus });
+        return Json(new { success = response.Succeeded, message = response.Message });
+    }
+
+    // ── Recent orders cho Dashboard ──────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> Recent()
+    {
+        var response = await _mediator.Send(new GetAllOrdersQuery { Status = null });
+        if (!response.Succeeded) return Ok(Array.Empty<object>());
+
+        var recent = response.Data
+            .OrderByDescending(o => o.CreatedOn)
+            .Take(8)
+            .Select(o => new
             {
-                Id = id,
-                PaymentStatus = paymentStatus
+                id = o.Id,
+                orderCode = o.OrderCode,
+                status = o.Status.ToString(),
+                totalAmount = o.TotalAmount
             });
 
-        return Json(new
-        {
-            success = response.Succeeded,
-            message = response.Message
-        });
+        return Ok(recent);
     }
 }

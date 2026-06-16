@@ -1,5 +1,4 @@
 ﻿using ElectroTech.Application.Features.Reviews.Commands;
-
 using ElectroTech.Web.Abstractions;
 using Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -24,17 +23,15 @@ public class ReviewController : BaseController<ReviewController>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        int productId, byte rating, string? title, string comment)
+        int productId, byte rating, string? title, string comment, int? orderId) // ✅ Thêm orderId
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-
         if (!Guid.TryParse(userIdStr, out var userId))
         {
             _notify.Error("Phiên đăng nhập không hợp lệ.");
             return RedirectToAction("Detail", "Products", new { id = productId });
         }
 
-        // Double-check ở controller trước khi gửi command
         var hasDelivered = await _orderRepo.HasDeliveredProductAsync(userId, productId);
         if (!hasDelivered)
         {
@@ -42,17 +39,25 @@ public class ReviewController : BaseController<ReviewController>
             return RedirectToAction("Detail", "Products", new { id = productId });
         }
 
-        var alreadyReviewed = await _reviewRepo.HasReviewedAsync(productId, userId);
+       
+        var alreadyReviewed = await _reviewRepo.HasReviewedAsync(productId, userId, orderId.Value);
+
         if (alreadyReviewed)
         {
             _notify.Error("Bạn đã đánh giá sản phẩm này rồi.");
             return RedirectToAction("Detail", "Products", new { id = productId });
         }
 
+        var userName = User.FindFirstValue(ClaimTypes.GivenName)
+                    ?? User.FindFirstValue(ClaimTypes.Name)
+                    ?? "Ẩn danh";
+
         var response = await _mediator.Send(new CreateReviewCommand
         {
             ProductId = productId,
             UserId = userIdStr,
+            UserName = userName,
+            OrderId = orderId,     // ✅ Thêm
             Rating = rating,
             Title = title,
             Comment = comment
@@ -66,7 +71,6 @@ public class ReviewController : BaseController<ReviewController>
         return RedirectToAction("Detail", "Products", new { id = productId });
     }
 
-    // GET: kiểm tra user có quyền đánh giá không (dùng cho JS check)
     [HttpGet]
     public async Task<IActionResult> CanReview(int productId)
     {

@@ -12,6 +12,6 @@ public interface ICartRepository
     Task<int> GetCountAsync(string userId);
     Task<decimal> GetTotalAsync(string userId);
 
-    // Merge cookie cart vào DB khi login
+
     Task MergeFromCookieAsync(string userId, List<CartItem> cookieItems);
 }

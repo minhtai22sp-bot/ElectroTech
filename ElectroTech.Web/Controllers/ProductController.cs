@@ -25,7 +25,21 @@ public class ProductsController : BaseController<ProductsController>
         model.currentPage = model.currentPage > 0 ? model.currentPage : 1;
         model.skip = (model.currentPage - 1) * model.pageSize;
 
+       
         var response = await _mediator.Send(new GetAllPaginatedListQuery { model = model });
+        var statsResponse = await _mediator.Send(new GetSidebarStatsQuery { Keyword = model.keyword });
+
+        if (statsResponse.Succeeded)
+            ViewBag.SidebarStats = statsResponse.Data;
+        ViewBag.CategoryId = model.categoryId;
+        ViewBag.SearchQuery = model.keyword;
+        ViewBag.SortBy = model.sortBy;
+        ViewBag.InStock = model.inStock;
+        ViewBag.OnSale = model.onSale;
+        ViewBag.Featured = model.featured;
+        ViewBag.Brand = model.brand;
+        ViewBag.MinPrice = model.minPrice;
+        ViewBag.MaxPrice = model.maxPrice;
 
         if (response.Succeeded)
             return View(response.Data);
@@ -42,6 +56,7 @@ public class ProductsController : BaseController<ProductsController>
 
         ViewBag.ShowReviewForm = false;
         ViewBag.AlreadyReviewed = false;
+        ViewBag.OrderId = null;
 
         if (orderId.HasValue)
         {
@@ -49,11 +64,12 @@ public class ProductsController : BaseController<ProductsController>
             if (Guid.TryParse(userIdStr, out var userId))
             {
                 var hasDelivered = await _orderRepo.HasDeliveredProductAsync(userId, id);
-                var alreadyReviewed = await _reviewRepo.HasReviewedAsync(id, userId);
+
+                var alreadyReviewed = await _reviewRepo.HasReviewedAsync(id, userId, orderId.Value);
 
                 ViewBag.ShowReviewForm = hasDelivered && !alreadyReviewed;
                 ViewBag.AlreadyReviewed = hasDelivered && alreadyReviewed;
-                ViewBag.OrderId = orderId;
+                ViewBag.OrderId = orderId.Value;
             }
         }
 

@@ -10,14 +10,15 @@ namespace ElectroTech.Web.Areas.Admin.Controllers;
 public class ReviewsController : BaseController<ReviewsController>
 {
     private IReviewRepository ReviewRepo
-        => HttpContext.RequestServices
-            .GetRequiredService<IReviewRepository>();
+        => HttpContext.RequestServices.GetRequiredService<IReviewRepository>();
 
- 
+    private IProductRepository ProductRepo
+        => HttpContext.RequestServices.GetRequiredService<IProductRepository>();
+
     public IActionResult Index() => View();
 
-   
     [HttpPost]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> LoadAll()
     {
         try
@@ -27,14 +28,14 @@ public class ReviewsController : BaseController<ReviewsController>
 
             var reviews = await ReviewRepo.GetAllAsync();
 
+            var productDict = ProductRepo.Entities
+                .ToDictionary(p => p.Id, p => p.Name);
+
             if (!string.IsNullOrEmpty(search))
                 reviews = reviews.Where(r =>
-                    (r.Product?.Name?.Contains(search,
-                        StringComparison.OrdinalIgnoreCase) == true) ||
-                    (r.Comment?.Contains(search,
-                        StringComparison.OrdinalIgnoreCase) == true) ||
-                    (r.Title?.Contains(search,
-                        StringComparison.OrdinalIgnoreCase) == true))
+                    (r.Comment?.Contains(search, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (r.Title?.Contains(search, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (r.UserName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true))
                     .ToList();
 
             return Json(new
@@ -45,7 +46,9 @@ public class ReviewsController : BaseController<ReviewsController>
                 data = reviews.Select(r => new
                 {
                     r.Id,
-                    ProductName = r.Product?.Name ?? "—",
+                    ProductName = productDict.TryGetValue(r.ProductId, out var name)
+                        ? name : $"Sản phẩm #{r.ProductId}",
+                    UserName = r.UserName ?? "Ẩn danh",
                     r.Rating,
                     r.Title,
                     r.Comment,
@@ -58,12 +61,34 @@ public class ReviewsController : BaseController<ReviewsController>
         catch (Exception ex)
         {
             _logger.LogError(ex.ToString());
-            throw;
+            return Json(new
+            {
+                draw = "",
+                recordsFiltered = 0,
+                recordsTotal = 0,
+                data = new object[] { },
+                error = ex.Message
+            });
         }
     }
 
-    
+    [HttpGet]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var review = await ReviewRepo.GetByIdAsync(id);
+        if (review is null) return NotFound();
+
+        var productDict = ProductRepo.Entities
+            .ToDictionary(p => p.Id, p => p.Name);
+
+        ViewBag.ProductName = productDict.TryGetValue(review.ProductId, out var name)
+            ? name : $"Sản phẩm #{review.ProductId}";
+
+        return View(review);
+    }
+
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(int id)
     {
         var review = await ReviewRepo.GetByIdAsync(id);
@@ -75,8 +100,8 @@ public class ReviewsController : BaseController<ReviewsController>
         return Json(new { success = true, message = "Đã duyệt." });
     }
 
- 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reject(int id)
     {
         var review = await ReviewRepo.GetByIdAsync(id);
@@ -88,7 +113,6 @@ public class ReviewsController : BaseController<ReviewsController>
         return Json(new { success = true, message = "Đã ẩn." });
     }
 
-   
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)

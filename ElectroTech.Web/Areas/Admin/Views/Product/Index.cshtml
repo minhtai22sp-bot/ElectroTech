@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Danh sách sản phẩm";
 }
 
 @Html.AntiForgeryToken()
@@ -10,24 +10,46 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Products List</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Track your store's progress to boost your sales.</p>
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;
+                      letter-spacing:.2em;color:#f97316;margin:0 0 4px;">Admin Panel</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Danh sách sản phẩm</h1>
+            <p class="text-sm text-gray-400 mt-0.5">Quản lý toàn bộ sản phẩm trong cửa hàng.</p>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="exportProducts()"
                     class="flex items-center gap-2 px-4 py-2 text-sm font-semibold
-                           text-gray-700 bg-white border border-gray-300 rounded-lg
+                           text-gray-600 bg-white border border-gray-200 rounded-xl
                            hover:bg-gray-50 transition-colors shadow-sm">
                 <i data-lucide="download" class="w-4 h-4"></i>
-                Export
+                Xuất file
             </button>
             <a asp-area="Admin" asp-controller="Product" asp-action="Create"
                class="flex items-center gap-2 px-4 py-2 text-sm font-bold
-                      text-white bg-blue-500 hover:bg-blue-600 rounded-lg
-                      transition-colors shadow-sm">
+                      text-white rounded-xl transition-colors shadow-sm"
+               style="background:#f97316;">
                 <i data-lucide="plus" class="w-4 h-4"></i>
-                Add Product
+                Thêm sản phẩm
             </a>
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="background:#fff;border:1px solid #f0f0ee;border-radius:14px;padding:16px 18px;">
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#aaa;margin:0 0 6px;">Tổng sản phẩm</p>
+            <p id="statTotal" style="font-size:1.4rem;font-weight:900;color:#111;margin:0;">—</p>
+        </div>
+        <div style="background:#fff;border:1px solid #f0f0ee;border-radius:14px;padding:16px 18px;">
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#aaa;margin:0 0 6px;">Còn hàng</p>
+            <p id="statInStock" style="font-size:1.4rem;font-weight:900;color:#16a34a;margin:0;">—</p>
+        </div>
+        <div style="background:#fff;border:1px solid #f0f0ee;border-radius:14px;padding:16px 18px;">
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#aaa;margin:0 0 6px;">Sắp hết hàng</p>
+            <p id="statLow" style="font-size:1.4rem;font-weight:900;color:#f59e0b;margin:0;">—</p>
+        </div>
+        <div style="background:#fff;border:1px solid #f0f0ee;border-radius:14px;padding:16px 18px;">
+            <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#aaa;margin:0 0 6px;">Hết hàng</p>
+            <p id="statOut" style="font-size:1.4rem;font-weight:900;color:#ef4444;margin:0;">—</p>
         </div>
     </div>
 
@@ -38,24 +60,32 @@
         <!-- Table toolbar -->
         <div class="flex items-center justify-between px-6 py-4
                     border-b border-gray-100 dark:border-gray-800 gap-4">
-            <!-- Search -->
-            <div class="relative w-72">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2
-                                                w-4 h-4 text-gray-400"></i>
-                <input id="searchInput" type="text" placeholder="Search products..."
+            <div class="relative w-80">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                <input id="searchInput" type="text" placeholder="Tìm kiếm sản phẩm..."
                        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200
-                              dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800
+                              dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800
                               text-gray-700 dark:text-gray-300 focus:outline-none
-                              focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                              focus:ring-2 focus:border-transparent"
+                       style="focus:ring-color:#f97316;" />
             </div>
-
-            <!-- Filter -->
-            <button class="flex items-center gap-2 px-3 py-2 text-sm font-semibold
-                           text-gray-600 border border-gray-200 rounded-lg
-                           hover:bg-gray-50 transition-colors">
-                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                Filter
-            </button>
+            <div class="flex items-center gap-2">
+                <select id="stockFilter"
+                        class="px-3 py-2 text-sm border border-gray-200 rounded-xl
+                               bg-gray-50 text-gray-600 focus:outline-none cursor-pointer">
+                    <option value="">Tất cả tồn kho</option>
+                    <option value="instock">Còn hàng</option>
+                    <option value="low">Sắp hết</option>
+                    <option value="out">Hết hàng</option>
+                </select>
+                <select id="statusFilter"
+                        class="px-3 py-2 text-sm border border-gray-200 rounded-xl
+                               bg-gray-50 text-gray-600 focus:outline-none cursor-pointer">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
         </div>
 
         <!-- Table -->
@@ -65,68 +95,47 @@
                     <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
                         <th class="w-10 px-6 py-3">
                             <input type="checkbox" id="selectAll"
-                                   class="rounded border-gray-300 text-blue-500
-                                          focus:ring-blue-500 cursor-pointer" />
+                                   class="rounded border-gray-300 text-orange-500 focus:ring-orange-500 cursor-pointer" />
                         </th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Products</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Category</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Brand</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Price</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Stock</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-500
-                                   uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sản phẩm</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Danh mục</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Thương hiệu</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Giá</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tồn kho</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
-                    <!-- DataTables fills this -->
                 </tbody>
             </table>
-        </div>
-
-        <!-- Loading state -->
-        <div id="loadingState" class="flex items-center justify-center py-16 hidden">
-            <div class="flex items-center gap-3 text-gray-400">
-                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span class="text-sm font-medium">Dang tai du lieu...</span>
-            </div>
         </div>
     </div>
 </div>
 
 <!-- Delete confirm modal -->
 <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-         onclick="closeDeleteModal()"></div>
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
     <div class="relative bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
         <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <i data-lucide="trash-2" class="w-6 h-6 text-red-500"></i>
+            <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i>
             </div>
             <div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Xoa san pham</h3>
-                <p class="text-sm text-gray-500">Hanh dong nay khong the hoan tac.</p>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Xóa sản phẩm</h3>
+                <p class="text-sm text-gray-400 mt-0.5">Hành động này không thể hoàn tác.</p>
             </div>
         </div>
         <div class="flex gap-3 mt-6">
             <button onclick="closeDeleteModal()"
-                    class="flex-1 px-4 py-2 text-sm font-semibold text-gray-700
-                           border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                Huy
+                    class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600
+                           border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                Hủy
             </button>
             <button id="confirmDeleteBtn"
-                    class="flex-1 px-4 py-2 text-sm font-bold text-white
-                           bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
-                Xoa
+                    class="flex-1 px-4 py-2.5 text-sm font-bold text-white
+                           bg-red-500 hover:bg-red-600 rounded-xl transition-colors">
+                Xóa
             </button>
         </div>
     </div>
@@ -138,73 +147,28 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
-        /* Override DataTables default styles */
         #productsTable_wrapper .dataTables_length,
-        #productsTable_wrapper .dataTables_filter {
-            display: none;
-        }
-        /* dung search/length rieng */
+        #productsTable_wrapper .dataTables_filter { display: none; }
 
         #productsTable_wrapper .dataTables_info {
-            font-size: 12px;
-            color: #6b7280;
-            padding: 12px 24px;
+            font-size: 12px; color: #9ca3af; padding: 14px 24px;
         }
-
         #productsTable_wrapper .dataTables_paginate {
-            padding: 12px 24px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 4px;
+            padding: 14px 24px; display: flex; justify-content: flex-end; gap: 4px;
         }
-
         #productsTable_wrapper .paginate_button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 8px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.15s;
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 32px; height: 32px; padding: 0 8px; border-radius: 8px;
+            font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s;
         }
-
-            #productsTable_wrapper .paginate_button:hover {
-                background: #f3f4f6;
-                color: #374151;
-            }
-
-            #productsTable_wrapper .paginate_button.current {
-                background: #3b82f6;
-                color: white !important;
-            }
-
-            #productsTable_wrapper .paginate_button.disabled {
-                opacity: 0.4;
-                cursor: not-allowed;
-            }
-
-        /* Bottom bar */
+        #productsTable_wrapper .paginate_button:hover { background:#fff7ed; color:#f97316; }
+        #productsTable_wrapper .paginate_button.current { background:#f97316; color:#fff !important; }
+        #productsTable_wrapper .paginate_button.disabled { opacity:.35; cursor:not-allowed; }
         #productsTable_wrapper .dataTables_info,
-        #productsTable_wrapper .dataTables_paginate {
-            border-top: 1px solid #f3f4f6;
-        }
-
-        #productsTable_wrapper > div:last-child {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        /* Row hover */
-        #productsTable tbody tr:hover {
-            background: #f9fafb;
-        }
+        #productsTable_wrapper .dataTables_paginate { border-top: 1px solid #f3f4f6; }
+        #productsTable_wrapper > div:last-child { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+        #productsTable tbody tr:hover { background:#fffbf7; }
+        #productsTable tbody tr { transition: background .12s; }
     </style>
 
     <script>
@@ -221,193 +185,138 @@
                     beforeSend: function (xhr) {
                         xhr.setRequestHeader('RequestVerificationToken',
                             $('input[name="__RequestVerificationToken"]').val());
+                    },
+                    dataSrc: function (json) {
+                        var data = json.data;
+                        var total = data.length;
+                        var inStock = data.filter(r => r.stock > 5).length;
+                        var low = data.filter(r => r.stock > 0 && r.stock <= 5).length;
+                        var out = data.filter(r => r.stock === 0).length;
+                        document.getElementById('statTotal').textContent = json.recordsTotal ?? total;
+                        document.getElementById('statInStock').textContent = inStock;
+                        document.getElementById('statLow').textContent = low;
+                        document.getElementById('statOut').textContent = out;
+                        return data;
                     }
                 },
                 columns: [
-                    // Checkbox
                     {
-                        data: 'id',
-                        orderable: false,
-                        render: function (data) {
-                            return `<input type="checkbox" value="${data}"
-                                                   class="row-check rounded border-gray-300
-                                                          text-blue-500 focus:ring-blue-500 cursor-pointer" />`;
-                        }
+                        data: 'id', orderable: false,
+                        render: d => `<input type="checkbox" value="${d}" class="row-check rounded border-gray-300 cursor-pointer" />`
                     },
-                    // Product name + image
                     {
                         data: 'name',
                         render: function (data, type, row) {
                             const img = row.thumbnailUrl
-                                ? `<img src="${row.thumbnailUrl}" alt="${data}"
-                                                class="w-10 h-10 rounded-lg object-cover bg-gray-100 border border-gray-200/50"
-                                                onerror="this.src='/images/no-image.png'">`
-                                : `<div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200
-                                                      flex items-center justify-center">
-                                               <i data-lucide="image" class="w-4 h-4 text-gray-400"></i>
-                                           </div>`;
-                            return `<div class="flex items-center gap-3">
-                                                ${img}
-                                                <div>
-                                                    <p class="font-semibold text-gray-800 text-sm leading-tight">${data}</p>
-                                                    <p class="text-xs text-gray-400 mt-0.5">${row.code ?? ''}</p>
-                                                </div>
-                                            </div>`;
+                                ? `<img src="${row.thumbnailUrl}" alt="${data}" class="w-10 h-10 rounded-xl object-cover bg-gray-100 border border-gray-100" onerror="this.src='/images/no-image.png'">`
+                                : `<div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center"><i data-lucide="package" class="w-4 h-4 text-orange-300"></i></div>`;
+                            return `<div class="flex items-center gap-3">${img}<div><p class="font-semibold text-gray-800 text-sm leading-tight">${data}</p><p class="text-xs text-gray-400 mt-0.5 font-mono">${row.code ?? ''}</p></div></div>`;
                         }
                     },
-                    // Category
                     {
-                        data: 'categoryName',
-                        defaultContent: '—',
-                        render: function (data) {
-                            return `<span class="text-gray-600 text-sm">${data ?? '—'}</span>`;
-                        }
+                        data: 'categoryName', defaultContent: '—',
+                        render: d => `<span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gray-50 text-gray-500 border border-gray-100">${d ?? '—'}</span>`
                     },
-                    // Brand
                     {
-                        data: 'brand',
-                        defaultContent: '—',
-                        render: function (data) {
-                            return `<span class="text-gray-600 text-sm">${data ?? '—'}</span>`;
-                        }
+                        data: 'brand', defaultContent: '—',
+                        render: d => `<span class="text-gray-500 text-sm">${d ?? '—'}</span>`
                     },
-                    // Price
                     {
                         data: 'price',
-                        render: function (data) {
-                            return `<span class="font-bold text-gray-900 text-sm">
-                                                ${new Intl.NumberFormat('vi-VN').format(data)}d
-                                            </span>`;
-                        }
+                        render: d => `<span class="font-bold text-gray-900 text-sm">${new Intl.NumberFormat('vi-VN').format(d)}₫</span>`
                     },
-                    // Stock
                     {
                         data: 'stock',
-                        render: function (data) {
-                            if (data === 0) {
-                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                                              text-xs font-bold bg-red-50 text-red-600">
-                                                    Out of Stock
-                                                </span>`;
-                            } else if (data < 5) {
-                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                                              text-xs font-bold bg-amber-50 text-amber-600">
-                                                    Low (${data})
-                                                </span>`;
-                            } else {
-                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                                              text-xs font-bold bg-green-50 text-green-600">
-                                                    In Stock
-                                                </span>`;
-                            }
+                        render: function (d) {
+                            if (d === 0)
+                                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-500 border border-red-100"><span style="width:5px;height:5px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Hết hàng</span>`;
+                            if (d < 5)
+                                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-100"><span style="width:5px;height:5px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Còn ${d}</span>`;
+                            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100"><span style="width:5px;height:5px;border-radius:50%;background:#16a34a;display:inline-block;"></span>${d}</span>`;
                         }
                     },
-                    // Status (Active/Inactive)
                     {
                         data: 'isActive',
-                        render: function (data, type, row) {
-                            const checked = data ? 'checked' : '';
-                            const label = data ? 'Active' : 'Inactive';
-                            const color = data ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500';
-                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full
-                                                          text-xs font-bold ${color}">
-                                                ${label}
-                                            </span>`;
-                        }
+                        render: d => d
+                            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100">Active</span>`
+                            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-400">Inactive</span>`
                     },
-                    // Actions
                     {
-                        data: 'id',
-                        orderable: false,
-                        render: function (data) {
-                            return `<div class="flex items-center justify-end gap-1">
-                                                <a href="/Admin/Product/Edit/${data}"
-                                                   class="p-2 text-gray-400 hover:text-blue-500
-                                                          hover:bg-blue-50 rounded-lg transition-all"
-                                                   title="Chinh sua">
-                                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                                </a>
-                                                <button onclick="openDeleteModal(${data})"
-                                                        class="p-2 text-gray-400 hover:text-red-500
-                                                               hover:bg-red-50 rounded-lg transition-all"
-                                                        title="Xoa">
-                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                </button>
-                                            </div>`;
-                        }
+                        data: 'id', orderable: false,
+                        render: d => `<div class="flex items-center justify-end gap-1">
+                            <a href="/Admin/Product/Edit/${d}" class="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="Chỉnh sửa"><i data-lucide="edit-3" class="w-4 h-4"></i></a>
+                            <button onclick="openDeleteModal(${d})" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Xóa"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>`
                     }
                 ],
                 language: {
                     processing: "",
-                    info: "Hien thi _START_ - _END_ / _TOTAL_ san pham",
-                    infoEmpty: "Khong co du lieu",
-                    zeroRecords: "Khong tim thay ket qua",
+                    info: "Hiển thị _START_ - _END_ / _TOTAL_ sản phẩm",
+                    infoEmpty: "Không có dữ liệu",
+                    zeroRecords: "Không tìm thấy kết quả",
                     paginate: { next: "›", previous: "‹", first: "«", last: "»" }
                 },
-                drawCallback: function () {
-                    lucide.createIcons();
-                },
-                columnDefs: [
-                    { targets: [0, 7], orderable: false }
-                ]
+                drawCallback: function () { lucide.createIcons(); },
+                columnDefs: [{ targets: [0, 7], orderable: false }]
             });
 
-            // Custom search
-            $('#searchInput').on('keyup', function () {
-                table.search(this.value).draw();
+            $('#searchInput').on('keyup', function () { table.search(this.value).draw(); });
+            $('#selectAll').on('change', function () { $('.row-check').prop('checked', this.checked); });
+
+            $('#stockFilter').on('change', function () {
+                $.fn.dataTable.ext.search.pop();
+                var val = this.value;
+                if (val) {
+                    $.fn.dataTable.ext.search.push(function (s, d, i, row) {
+                        if (val === 'out') return row.stock === 0;
+                        if (val === 'low') return row.stock > 0 && row.stock <= 5;
+                        if (val === 'instock') return row.stock > 5;
+                        return true;
+                    });
+                }
+                table.draw();
             });
 
-            // Select all checkbox
-            $('#selectAll').on('change', function () {
-                $('.row-check').prop('checked', this.checked);
+            $('#statusFilter').on('change', function () {
+                var val = this.value;
+                $.fn.dataTable.ext.search.pop();
+                if (val) {
+                    $.fn.dataTable.ext.search.push(function (s, d, i, row) {
+                        if (val === 'active') return row.isActive === true;
+                        if (val === 'inactive') return row.isActive === false;
+                        return true;
+                    });
+                }
+                table.draw();
             });
         });
 
-        // Delete modal
         function openDeleteModal(id) {
             deleteId = id;
             const modal = document.getElementById('deleteModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
             lucide.createIcons();
         }
 
         function closeDeleteModal() {
             deleteId = null;
             const modal = document.getElementById('deleteModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
         }
 
         document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
             if (!deleteId) return;
             const btn = this;
-            btn.textContent = 'Dang xoa...';
-            btn.disabled = true;
-
+            btn.textContent = 'Đang xóa...'; btn.disabled = true;
             $.ajax({
-                url: '/Admin/Product/Delete/' + deleteId,
-                type: 'POST',
-                headers: {
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                },
+                url: '/Admin/Product/Delete/' + deleteId, type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                 data: { id: deleteId },
-                success: function () {
-                    closeDeleteModal();
-                    table.ajax.reload(null, false);
-                    btn.textContent = 'Xoa';
-                    btn.disabled = false;
-                },
-                error: function () {
-                    alert('Co loi xay ra, vui long thu lai.');
-                    btn.textContent = 'Xoa';
-                    btn.disabled = false;
-                }
+                success: function () { closeDeleteModal(); table.ajax.reload(null, false); btn.textContent = 'Xóa'; btn.disabled = false; },
+                error: function () { alert('Có lỗi xảy ra, vui lòng thử lại.'); btn.textContent = 'Xóa'; btn.disabled = false; }
             });
         });
 
-        function exportProducts() {
-            alert('Tinh nang export dang phat trien.');
-        }
+        function exportProducts() { alert('Tính năng export đang phát triển.'); }
     </script>
 }
