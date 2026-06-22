@@ -2,6 +2,7 @@
 @model Library.PaginatedList<ProductIndexModel>
 
 @{
+    ViewData["Title"] = "Sản phẩm";
     // ── ViewBag ────────────────────────────────────────────────────────────────
     var currentCat      = ViewBag.CategoryId as int? ?? 0;
     var currentQ        = ViewBag.SearchQuery as string ?? "";
@@ -476,43 +477,7 @@
                 </div>
             </div>
 
-            <!-- ── BRANDS ── -->
-            <div class="bg-white border border-[#ebebeb] rounded-[20px] overflow-hidden">
-                <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #f4f4f2;">
-                    <div style="width:28px;height:28px;border-radius:9px;background:#fff3e8;
-                                display:flex;align-items:center;justify-content:center;">
-                        <span class="material-symbols-outlined" style="font-size:15px;color:#f97316;">verified</span>
-                    </div>
-                    <span style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#111;">Thương hiệu</span>
-                </div>
-                <div style="padding:14px;display:flex;flex-wrap:wrap;gap:7px;">
-                    @if (stats.BrandCounts.Any())
-                    {
-                        @foreach (var b in stats.BrandCounts)
-                        {
-                            bool isOn = currentBrand == b.Brand;
-                            string brandUrl = isOn ? BuildUrl(brand: "") : BuildUrl(brand: b.Brand);
-                            <a href="@brandUrl"
-                               style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;
-                                      border-radius:999px;font-size:12px;font-weight:700;
-                                      text-decoration:none;transition:all .15s;
-                                      background:@(isOn?"#f97316":"#fff");
-                                      border:1.5px solid @(isOn?"#f97316":"#e5e5e5");
-                                      color:@(isOn?"#fff":"#555");
-                                      @(isOn?"box-shadow:0 2px 10px rgba(249,115,22,.25);":"")"
-                               onmouseover="if('@isOn'!='True'){this.style.borderColor='#f97316';this.style.color='#f97316';}"
-                               onmouseout="if('@isOn'!='True'){this.style.borderColor='#e5e5e5';this.style.color='#555';}">
-                                @b.Brand
-                                <span style="font-size:10px;opacity:.6;">(@b.Count)</span>
-                            </a>
-                        }
-                    }
-                    else
-                    {
-                        <p style="font-size:12px;color:#ccc;margin:0;">Chưa có thương hiệu.</p>
-                    }
-                </div>
-            </div>
+  
 
             <!-- ── CLEAR ALL ── -->
             @if (hasAnyFilter)

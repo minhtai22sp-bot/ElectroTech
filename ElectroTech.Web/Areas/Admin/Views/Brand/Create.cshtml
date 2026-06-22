@@ -1,37 +1,38 @@
 ﻿@model Entities.Brand
 @{
-    ViewData["Title"] = "Sửa thương hiệu";
+    ViewData["Title"] = "Thêm thương hiệu";
     Layout = "~/Areas/Admin/Views/Admin/_LayoutAdmin.cshtml";
-
-    var id = Model?.Id ?? 0;
-    var name = Model?.Name ?? "";
-    var description = Model?.Description ?? "";
-    var logoUrl = Model?.LogoUrl ?? "";
-    var website = Model?.Website ?? "";
-    var displayOrder = Model?.DisplayOrder ?? 0;
-    var isActive = Model?.IsActive ?? true;
 }
 
-@* Delete form — ngoài form chính *@
-<form id="deleteForm" action="/Admin/Brand/Delete" method="post"
-      onsubmit="return confirm('Bạn có chắc muốn xóa thương hiệu này?')">
+<form action="/Admin/Brand/Create" method="post" id="brandForm">
     @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@id" />
-</form>
-
-<form action="/Admin/Brand/Edit" method="post" id="brandForm">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="Id" value="@id" />
 
     <div class="min-h-screen bg-gray-100 font-sans">
         <div class="max-w-7xl mx-auto px-10 py-8 pb-16 space-y-7">
+
+            @if (ViewBag.DebugErrors != null)
+            {
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-5">
+                    <p class="text-[10px] font-black uppercase tracking-[.14em] text-red-600 mb-3">⚠️ Lỗi validation:</p>
+                    @foreach (var kvp in (Dictionary<string, List<string>>)ViewBag.DebugErrors)
+                    {
+                        <div class="mb-1">
+                            <span class="text-xs font-bold text-red-600 font-mono">[@kvp.Key]</span>
+                            @foreach (var err in kvp.Value)
+                            {
+                                <span class="text-xs text-red-500 ml-2">→ @err</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
 
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-[.22em] text-orange-500 mb-1.5">Admin Panel</p>
-                    <h1 class="text-3xl font-black text-gray-900 tracking-tight">Sửa thương hiệu</h1>
-                    <p class="text-xs text-gray-400 mt-1.5">ID: #@id — @name</p>
+                    <h1 class="text-3xl font-black text-gray-900 tracking-tight">Thêm thương hiệu mới</h1>
+                    <p class="text-xs text-gray-400 mt-1.5">Điền thông tin thương hiệu sản phẩm</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-gray-400">@DateTime.Now.ToString("dddd, dd/MM/yyyy")</span>
@@ -44,7 +45,7 @@
                             class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600
                                    rounded-xl text-white text-xs font-extrabold cursor-pointer
                                    border-none transition-colors shadow-[0_4px_14px_rgba(249,115,22,.32)]">
-                        💾 Lưu thay đổi
+                        💾 Lưu thương hiệu
                     </button>
                 </div>
             </div>
@@ -64,7 +65,8 @@
                                 <label class="block text-[10px] font-bold uppercase tracking-[.14em] text-gray-400 mb-2">
                                     Tên thương hiệu *
                                 </label>
-                                <input type="text" name="Name" value="@name"
+                                <input type="text" name="Name" id="Name"
+                                       placeholder="VD: Samsung, Apple, Sony..."
                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
                                               text-sm text-gray-900 bg-gray-50 focus:outline-none
                                               focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all" />
@@ -75,28 +77,20 @@
                                     Mô tả
                                 </label>
                                 <textarea name="Description" rows="4"
+                                          placeholder="Mô tả ngắn về thương hiệu..."
                                           class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
                                                  text-sm text-gray-900 bg-gray-50 focus:outline-none
                                                  focus:border-orange-400 focus:ring-2 focus:ring-orange-100
-                                                 transition-all resize-y">@description</textarea>
+                                                 transition-all resize-y"></textarea>
                             </div>
 
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-[.14em] text-gray-400 mb-2">
-                                    Website
-                                </label>
-                                <input type="text" name="Website" value="@website"
-                                       placeholder="VD: https://samsung.com"
-                                       class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
-                                              text-sm text-gray-900 bg-gray-50 focus:outline-none
-                                              focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all" />
-                            </div>
+                          
 
                             <div>
                                 <label class="block text-[10px] font-bold uppercase tracking-[.14em] text-gray-400 mb-2">
                                     Thứ tự hiển thị
                                 </label>
-                                <input type="number" name="DisplayOrder" value="@displayOrder" min="0"
+                                <input type="number" name="DisplayOrder" value="0" min="0"
                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
                                               text-sm text-gray-900 bg-gray-50 focus:outline-none
                                               focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all" />
@@ -123,25 +117,18 @@
                                         border-gray-200 rounded-2xl flex items-center
                                         justify-center overflow-hidden cursor-pointer
                                         hover:border-orange-400 transition-colors">
-                                @if (!string.IsNullOrEmpty(logoUrl))
-                                {
-                                    <img src="@logoUrl" class="w-full h-full object-cover" />
-                                }
-                                else
-                                {
-                                    <div class="text-center text-gray-300">
-                                        <div class="text-4xl mb-2">🏷️</div>
-                                        <div class="text-xs font-semibold">Click để chọn logo</div>
-                                    </div>
-                                }
+                                <div class="text-center text-gray-300">
+                                    <div class="text-4xl mb-2">🏷️</div>
+                                    <div class="text-xs font-semibold">Click để chọn logo</div>
+                                </div>
                             </div>
 
                             <input type="file" id="fileInput" accept="image/*" class="hidden"
                                    onchange="uploadImage(this)" />
-                            <input type="hidden" name="LogoUrl" id="LogoUrl" value="@logoUrl" />
+                            <input type="hidden" name="LogoUrl" id="LogoUrl" />
 
                             <div class="relative">
-                                <input type="text" id="LogoUrlDisplay" value="@logoUrl"
+                                <input type="text" id="LogoUrlDisplay"
                                        placeholder="URL logo hoặc upload từ máy"
                                        oninput="syncUrl(this.value)"
                                        class="w-full px-4 py-2.5 pr-20 border border-gray-200 rounded-xl
@@ -180,8 +167,7 @@
                                     <p class="text-xs text-gray-400 mt-0.5">Hiển thị trên store</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="IsActive" value="true"
-                                    @(isActive ? "checked" : "")
+                                    <input type="checkbox" name="IsActive" value="true" checked
                                            class="sr-only peer" />
                                     <div class="w-11 h-6 bg-gray-200 rounded-full
                                                 peer peer-checked:bg-orange-500
@@ -196,43 +182,11 @@
                         </div>
                     </div>
 
-                    <!-- Thông tin -->
-                    <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-100">
-                            <p class="text-[13px] font-extrabold text-gray-900">📊 Thông tin</p>
-                        </div>
-                        <div class="p-6 space-y-1">
-                            <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
-                                <span class="text-xs text-gray-400 font-semibold">ID</span>
-                                <span class="font-extrabold text-gray-900 text-xs bg-orange-50
-                                             text-orange-500 px-2.5 py-0.5 rounded-full">#@id</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2.5">
-                                <span class="text-xs text-gray-400 font-semibold">Thứ tự</span>
-                                <span class="font-extrabold text-gray-900 text-xs bg-orange-50
-                                             text-orange-500 px-2.5 py-0.5 rounded-full">@displayOrder</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Xóa -->
-                    <div class="bg-white rounded-2xl border border-red-100 overflow-hidden">
-                        <div class="p-5">
-                            <p class="text-xs text-gray-400 mb-3 text-center">Xóa thương hiệu này vĩnh viễn</p>
-                            <button type="submit" form="deleteForm"
-                                    class="w-full py-2.5 bg-red-50 hover:bg-red-100
-                                           border border-red-200 rounded-xl text-red-500
-                                           font-extrabold text-xs transition-colors cursor-pointer">
-                                🗑️ Xóa thương hiệu
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" form="brandForm"
+                    <button type="submit"
                             class="w-full py-3.5 bg-orange-500 hover:bg-orange-600 rounded-2xl
                                    text-white font-extrabold text-sm transition-colors
                                    border-none cursor-pointer shadow-[0_4px_14px_rgba(249,115,22,.32)]">
-                        💾 Lưu thay đổi
+                        💾 Lưu thương hiệu
                     </button>
                 </div>
             </div>

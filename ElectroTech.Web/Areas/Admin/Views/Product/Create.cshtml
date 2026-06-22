@@ -103,12 +103,16 @@
                                 <label class="block text-[10px] font-bold uppercase tracking-[.14em] text-gray-400 mb-2">
                                     Thương hiệu
                                 </label>
-                                <input type="text" id="Brand" name="Brand" value="@Model.Brand"
-                                       placeholder="Apple"
-                                       class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
-                                              text-sm text-gray-900 bg-gray-50
-                                              focus:outline-none focus:border-orange-400
-                                              focus:ring-2 focus:ring-orange-100 transition-all" />
+                                <select name="BrandId" asp-for="BrandId"
+                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl
+               text-sm text-gray-900 bg-gray-50 focus:outline-none
+               focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all">
+                                    <option value="0">-- Chọn thương hiệu --</option>
+                                    @foreach (var b in ViewBag.Brands as List<Entities.Brand> ?? new())
+                                    {
+                                        <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
+                                    }
+                                </select>
                             </div>
 
                             <!-- Category -->

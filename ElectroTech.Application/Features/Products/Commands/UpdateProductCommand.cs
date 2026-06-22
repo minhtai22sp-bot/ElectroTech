@@ -22,8 +22,8 @@ public class UpdateProductCommand : IRequest<IResult<int>>
     [MaxLength(50)]
     public string? Code { get; set; }
 
-    [MaxLength(100)]
-    public string? Brand { get; set; }
+    // ✅ đổi từ string Brand -> int? BrandId
+    public int? BrandId { get; set; }
 
     [Required]
     public int CategoryId { get; set; }
@@ -68,7 +68,7 @@ public class UpdateProductCommand : IRequest<IResult<int>>
                 product.Name = command.Name;
                 product.Slug = GenerateSlug(command.Name);
                 product.Code = command.Code ?? "";
-                product.Brand = command.Brand ?? "";
+                product.BrandId = command.BrandId;   // ✅ đổi từ product.Brand = command.Brand ?? ""
                 product.CategoryId = command.CategoryId;
                 product.Price = command.Price;
                 product.OriginalPrice = command.OriginalPrice;

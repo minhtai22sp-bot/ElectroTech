@@ -223,6 +223,12 @@
                                         Danh mục
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="@Url.Action("Index", "Brand", new { area = "Admin" })"
+                                       class="menu-dropdown-item group @SubActive("Brand","Index")">
+                                        Thương hiệu
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -253,12 +259,7 @@
                                         Tất cả đơn hàng
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="@Url.Action("Pending","Orders",   new { area = "Admin" })"
-                                       class="menu-dropdown-item group @SubActive("Orders","Pending")">
-                                        Chờ xử lý
-                                    </a>
-                                </li>
+                                
                             </ul>
                         </div>
                     </li>
@@ -337,21 +338,23 @@
                     </li>
 
                     <li>
-                        <form asp-controller="Account" asp-action="Logout" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="menu-item group menu-item-inactive w-full text-left">
-                                <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                          d="M15.2414 3.24142C15.5343 2.94853 16.0092 2.94853 16.3021 3.24142L21.2414 8.18074C21.3789 8.31826 21.4561 8.50503 21.4561 8.69982C21.4561 8.8946 21.3789 9.08138 21.2414 9.2189L16.3021 14.1582C16.0092 14.4511 15.5343 14.4511 15.2414 14.1582C14.9485 13.8653 14.9485 13.3905 15.2414 13.0976L18.8288 9.51017H9C8.58579 9.51017 8.25 9.17438 8.25 8.76017C8.25 8.34595 8.58579 8.01017 9 8.01017H18.8288L15.2414 4.42274C14.9485 4.12985 14.9485 3.65497 15.2414 3.36208V3.24142ZM3 4.75C3 4.33579 3.33579 4 3.75 4H9C9.41421 4 9.75 4.33579 9.75 4.75C9.75 5.16421 9.41421 5.5 9 5.5H4.5V18.5H9C9.41421 18.5 9.75 18.8358 9.75 19.25C9.75 19.6642 9.41421 20 9 20H3.75C3.33579 20 3 19.6642 3 19.25V4.75Z"
-                                          fill="" />
-                                </svg>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Đăng xuất</span>
-                            </button>
-                        </form>
+                        <button type="button"
+                                onclick="document.getElementById('__logout_form').submit()"
+                                class="menu-item group menu-item-inactive w-full text-left">
+                            <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                      d="M15.2414 3.24142C15.5343 2.94853 16.0092 2.94853 16.3021 3.24142L21.2414 8.18074C21.3789 8.31826 21.4561 8.50503 21.4561 8.69982C21.4561 8.8946 21.3789 9.08138 21.2414 9.2189L16.3021 14.1582C16.0092 14.4511 15.5343 14.4511 15.2414 14.1582C14.9485 13.8653 14.9485 13.3905 15.2414 13.0976L18.8288 9.51017H9C8.58579 9.51017 8.25 9.17438 8.25 8.76017C8.25 8.34595 8.58579 8.01017 9 8.01017H18.8288L15.2414 4.42274C14.9485 4.12985 14.9485 3.65497 15.2414 3.36208V3.24142ZM3 4.75C3 4.33579 3.33579 4 3.75 4H9C9.41421 4 9.75 4.33579 9.75 4.75C9.75 5.16421 9.41421 5.5 9 5.5H4.5V18.5H9C9.41421 18.5 9.75 18.8358 9.75 19.25C9.75 19.6642 9.41421 20 9 20H3.75C3.33579 20 3 19.6642 3 19.25V4.75Z"
+                                      fill="" />
+                            </svg>
+                            <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Đăng xuất</span>
+                        </button>
                     </li>
 
                 </ul>
             </div>
         </nav>
     </div>
+    <form id="__logout_form" action="/Account/Logout" method="post" style="display:none">
+        @Html.AntiForgeryToken()
+    </form>
 </aside>

@@ -1,6 +1,6 @@
 ﻿@model Entities.Product
 @{
-    ViewData["Title"] = Model.Name;
+    ViewData["Title"] = "Chi Tiết sản phẩm";
     var approvedCount = Model.Reviews?.Count(r => r.IsApproved) ?? 0;
     var showReviewForm = ViewBag.ShowReviewForm == true;
     var reviewOrderId = ViewBag.OrderId as int?;
@@ -446,9 +446,9 @@
                     }
                 </div>
 
-                @if (!string.IsNullOrEmpty(Model.Brand))
+                @if (Model.Brand != null && !string.IsNullOrEmpty(Model.Brand.Name))
                 {
-                    <p class="eyebrow">@Model.Brand</p>
+                    <p class="eyebrow">@Model.Brand.Name</p>
                 }
 
                 <h1 style="font-size:1.9rem; font-weight:900; color:#111; line-height:1.15; margin:0; letter-spacing:-.03em;">

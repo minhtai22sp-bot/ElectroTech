@@ -46,7 +46,7 @@ namespace ElectroTech.Infrastructure.DbContexts
         public DbSet<Customer> Customer { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<TopProductDto> TopProductDto { get; set; }
-
+        public DbSet<Brand> Brands { get; set; }
         public void BeginTransaction()
         {
             _transaction = Database.BeginTransaction();

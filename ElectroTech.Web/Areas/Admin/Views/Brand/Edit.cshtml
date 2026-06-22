@@ -181,7 +181,7 @@
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="IsActive" value="true"
-                                    @(isActive ? "checked" : "")
+                                           @(isActive ? "checked" : "")
                                            class="sr-only peer" />
                                     <div class="w-11 h-6 bg-gray-200 rounded-full
                                                 peer peer-checked:bg-orange-500
@@ -243,13 +243,8 @@
 @section Scripts {
     <style>
         @@keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
     <script>

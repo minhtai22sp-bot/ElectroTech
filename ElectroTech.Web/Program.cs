@@ -90,6 +90,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IBrandRepository, BrandRepository>();
+
 // ── Email ────────────────────────────────────────────────────────────────────────
 builder.Services.Configure<MailSettings>(
     builder.Configuration.GetSection("MailSettings"));
@@ -137,7 +139,7 @@ builder.Services.AddAuthentication(options =>
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     options.LoginPath = new PathString("/Identity/Account/Login");
-    options.LogoutPath = new PathString("/Identity/Account/Logout");
+    options.LogoutPath = new PathString("/Account/Logout");
     options.AccessDeniedPath = new PathString("/Identity/Account/AccessDenied");
     options.Cookie.Name = "ElectroTech.AdminAuth";
     options.Cookie.HttpOnly = true;

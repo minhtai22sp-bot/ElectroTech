@@ -3,10 +3,7 @@
 
 @{
     var categories = ViewBag.Categories as List<Entities.Categories> ?? new();
-    var productCount = ViewBag.ProductCount as int? ?? 0;
-    var customerCount = ViewBag.CustomerCount as int? ?? 0;
-    var avgRating = ViewBag.AvgRating as decimal? ?? 4.8m;
-    var orderCount = ViewBag.OrderCount as int? ?? 0;
+    ViewData["Title"] = "Trang chủ";
 }
 
 <div class="bg-[#f0efed] min-h-screen font-sans text-[#111]">
@@ -52,38 +49,7 @@
         </div>
     </section>
 
-    <!-- ══ STATS ROW ══ -->
-    <div class="max-w-[1280px] mx-auto px-10 pb-12">
-        <div class="flex gap-3">
-            @* Stat chip: bg-white border rounded-[14px] p-4 text-center flex-1 hover:shadow-lg hover:-translate-y-0.5 transition-all *@
-            <div class="bg-white border border-[#ebebeb] rounded-[14px] px-5 py-4 text-center flex-1
-                        hover:shadow-[0_6px_20px_rgba(0,0,0,.07)] hover:-translate-y-0.5 transition-all">
-                <div class="text-[1.45rem] font-black text-[#111] leading-none">@avgRating.ToString("0.0")★</div>
-                <div class="text-[10px] text-[#aaa] font-semibold mt-1 uppercase tracking-[.1em]">Avg. Rating</div>
-            </div>
-            <div class="bg-white border border-[#ebebeb] rounded-[14px] px-5 py-4 text-center flex-1
-                        hover:shadow-[0_6px_20px_rgba(0,0,0,.07)] hover:-translate-y-0.5 transition-all">
-                <div class="text-[1.45rem] font-black text-[#111] leading-none">
-                    @(productCount > 1000 ? (productCount / 1000) + "K+" : productCount.ToString())
-                </div>
-                <div class="text-[10px] text-[#aaa] font-semibold mt-1 uppercase tracking-[.1em]">Sản phẩm</div>
-            </div>
-            <div class="bg-white border border-[#ebebeb] rounded-[14px] px-5 py-4 text-center flex-1
-                        hover:shadow-[0_6px_20px_rgba(0,0,0,.07)] hover:-translate-y-0.5 transition-all">
-                <div class="text-[1.45rem] font-black text-[#111] leading-none">
-                    @(customerCount > 1000 ? (customerCount / 1000) + "K+" : customerCount.ToString())
-                </div>
-                <div class="text-[10px] text-[#aaa] font-semibold mt-1 uppercase tracking-[.1em]">Khách hàng</div>
-            </div>
-            <div class="bg-white border border-[#ebebeb] rounded-[14px] px-5 py-4 text-center flex-1
-                        hover:shadow-[0_6px_20px_rgba(0,0,0,.07)] hover:-translate-y-0.5 transition-all">
-                <div class="text-[1.45rem] font-black text-[#111] leading-none">
-                    @(orderCount > 1000 ? (orderCount / 1000) + "K+" : orderCount.ToString())
-                </div>
-                <div class="text-[10px] text-[#aaa] font-semibold mt-1 uppercase tracking-[.1em]">Đơn hàng</div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- ══ CATEGORIES ══ -->
     @if (categories.Any())
@@ -147,22 +113,7 @@
                     Lọc theo danh mục để tìm thiết bị phù hợp.
                 </p>
             </div>
-            <div class="flex gap-2 flex-wrap items-center justify-end pt-1">
-                <a asp-controller="Products" asp-action="Index"
-                   class="bg-orange-500 text-white shadow-[0_4px_14px_rgba(249,115,22,.32)]
-                          px-4 py-2 rounded-full text-[11px] font-black transition-all no-underline">
-                    Tất cả
-                </a>
-                @foreach (var cat in categories.Take(4))
-                {
-                    <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
-                       class="bg-white text-[#555] border border-[#e5e5e5]
-                              hover:border-[#111] hover:text-[#111]
-                              px-4 py-2 rounded-full text-[11px] font-bold transition-all no-underline">
-                        @cat.Name
-                    </a>
-                }
-            </div>
+           
         </div>
 
         @if (Model != null && Model.Items.Any())

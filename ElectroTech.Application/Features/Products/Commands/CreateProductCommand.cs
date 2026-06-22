@@ -24,8 +24,8 @@ public class CreateProductCommand : IRequest<IResult<int>>
     [MaxLength(50)]
     public string? Code { get; set; }
 
-    [MaxLength(100)]
-    public string? Brand { get; set; }
+    // ✅ đổi từ string Brand -> int? BrandId (chọn từ dropdown thương hiệu)
+    public int? BrandId { get; set; }
 
     // ✅ nullable — tránh lỗi binding khi ô trống
     [Required(ErrorMessage = "Vui lòng nhập giá bán")]
@@ -67,7 +67,7 @@ public class CreateProductCommand : IRequest<IResult<int>>
                     Name = command.Name,
                     Slug = GenerateSlug(command.Name),
                     Code = command.Code ?? "",
-                    Brand = command.Brand ?? "",
+                    BrandId = command.BrandId,   // ✅ đổi từ Brand = command.Brand ?? ""
                     CategoryId = command.CategoryId,
                     Price = command.Price ?? 0,  // ✅ unbox
                     OriginalPrice = command.OriginalPrice,

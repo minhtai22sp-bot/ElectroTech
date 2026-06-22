@@ -32,6 +32,7 @@ public class ProductRepository : IProductRepository
     public async Task<Product> GetById(int id)
         => await _productreporitory.Entities
             .Include(x => x.Categories)
+            .Include(x => x.Brand)
             .Include(x => x.ProductImages)
             .Include(x => x.ProductSpecs)
             .Include(x => x.Reviews)
@@ -61,6 +62,7 @@ public class ProductRepository : IProductRepository
     {
         var query = _productreporitory.Entities
             .Include(x => x.Categories)
+            .Include(x => x.Brand)
             .Include(x => x.Reviews)
             .AsQueryable();
 
@@ -68,7 +70,7 @@ public class ProductRepository : IProductRepository
             query = query.Where(x =>
                 x.Name.Contains(model.keyword) ||
                 x.Code.Contains(model.keyword) ||
-                x.Brand.Contains(model.keyword));
+                (x.Brand != null && x.Brand.Name.Contains(model.keyword)));
 
         if (model.isFeatured.HasValue)
             query = query.Where(x => x.IsFeatured == model.isFeatured.Value);
@@ -91,7 +93,7 @@ public class ProductRepository : IProductRepository
             Name = x.Name,
             Slug = x.Slug,
             Code = x.Code,
-            Brand = x.Brand,
+            Brand = x.Brand != null ? x.Brand.Name : "",
             Price = x.Price,
             OriginalPrice = x.OriginalPrice,
             Stock = x.Stock,
@@ -117,15 +119,11 @@ public class ProductRepository : IProductRepository
     {
         var query = _productreporitory.Entities
             .Include(x => x.Categories)
+            .Include(x => x.Brand)
             .AsQueryable();
 
-        // Chỉ giữ filter keyword, KHÔNG lọc category/brand/stock
-        // để sidebar luôn hiển thị số đếm toàn bộ
         if (!string.IsNullOrEmpty(keyword))
-            query = query.Where(x =>
-                x.Name.Contains(keyword) ||
-                x.Code.Contains(keyword) ||
-                x.Brand.Contains(keyword));
+            query = query.Where(x => x.Brand != null && x.Brand.Name.Contains(keyword));
 
         var stats = new ProductSidebarStats
         {
@@ -148,11 +146,11 @@ public class ProductRepository : IProductRepository
                 .ToListAsync(),
 
             BrandCounts = await query
-                .Where(x => !string.IsNullOrEmpty(x.Brand))
-                .GroupBy(x => x.Brand!)
+                .Where(x => x.Brand != null)
+                .GroupBy(x => new { x.BrandId, x.Brand!.Name })
                 .Select(g => new BrandCount
                 {
-                    Brand = g.Key,
+                    Brand = g.Key.Name,
                     Count = g.Count()
                 })
                 .OrderByDescending(x => x.Count)

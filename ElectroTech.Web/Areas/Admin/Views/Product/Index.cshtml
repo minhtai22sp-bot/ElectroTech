@@ -23,9 +23,9 @@
                 <i data-lucide="download" class="w-4 h-4"></i>
                 Xuất file
             </button>
-            <a asp-area="Admin" asp-controller="Product" asp-action="Create"
+            <a href="@Url.Action("Create", "Product", new { area = "Admin" })"
                class="flex items-center gap-2 px-4 py-2 text-sm font-bold
-                      text-white rounded-xl transition-colors shadow-sm"
+          text-white rounded-xl transition-colors shadow-sm"
                style="background:#f97316;">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Thêm sản phẩm

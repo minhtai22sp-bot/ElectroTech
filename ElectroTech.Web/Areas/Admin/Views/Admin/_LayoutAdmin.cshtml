@@ -262,16 +262,14 @@
                             </a>
 
                             <div class="border-t border-gray-100 dark:border-gray-800">
-                                <form asp-controller="Account" asp-action="Logout" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit"
-                                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm
-                                                   text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30
-                                                   transition-colors text-left">
-                                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                                        Đăng xuất
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        onclick="document.getElementById('__logout_form_2').submit()"
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                   text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30
+                   transition-colors text-left">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    Đăng xuất
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -349,6 +347,8 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
-
+    <form id="__logout_form_2" action="/Account/Logout" method="post" style="display:none">
+        @Html.AntiForgeryToken()
+    </form>
 </body>
 </html>

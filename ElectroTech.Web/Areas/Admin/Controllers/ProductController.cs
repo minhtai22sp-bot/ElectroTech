@@ -18,6 +18,10 @@ public class ProductController : BaseController<ProductController>
         => HttpContext.RequestServices
             .GetRequiredService<IProductRepository>();
 
+    private IBrandRepository BrandRepo
+        => HttpContext.RequestServices
+            .GetRequiredService<IBrandRepository>();
+
     // GET /Admin/Product
     public IActionResult Index() => View();
 
@@ -72,6 +76,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> Create()
     {
         await LoadCategories();
+        await LoadBrands();
         return View(new CreateProductViewModel());
     }
 
@@ -99,6 +104,7 @@ public class ProductController : BaseController<ProductController>
                     _logger.LogWarning("ModelState [{Key}]: {Err}", kvp.Key, err);
 
             await LoadCategories();
+            await LoadBrands();
             return View(vm);
         }
 
@@ -106,7 +112,7 @@ public class ProductController : BaseController<ProductController>
         {
             Name = vm.Name,
             Code = vm.Code,
-            Brand = vm.Brand,
+            BrandId = vm.BrandId,
             CategoryId = vm.CategoryId,
             Description = vm.Description,
             Price = vm.GetPrice(),
@@ -132,6 +138,7 @@ public class ProductController : BaseController<ProductController>
 
         _notify.Error(response.Message);
         await LoadCategories();
+        await LoadBrands();
         return View(vm);
     }
 
@@ -158,7 +165,7 @@ public class ProductController : BaseController<ProductController>
             Id = product.Id,
             Name = product.Name,
             Code = product.Code,
-            Brand = product.Brand,
+            BrandId = product.BrandId ?? 0,
             CategoryId = product.CategoryId,
             Description = product.Description,
             PriceInput = ((long)product.Price).ToString("N0", enUS),
@@ -181,6 +188,7 @@ public class ProductController : BaseController<ProductController>
         };
 
         await LoadCategories();
+        await LoadBrands();
         return View(vm);
     }
 
@@ -208,6 +216,7 @@ public class ProductController : BaseController<ProductController>
                     _logger.LogWarning("ModelState [{Key}]: {Err}", kvp.Key, err);
 
             await LoadCategories();
+            await LoadBrands();
             return View(vm);
         }
 
@@ -217,7 +226,7 @@ public class ProductController : BaseController<ProductController>
             Id = vm.Id,
             Name = vm.Name,
             Code = vm.Code,
-            Brand = vm.Brand,
+            BrandId = vm.BrandId,
             CategoryId = vm.CategoryId,
             Description = vm.Description,
             Price = vm.GetPrice(),
@@ -242,6 +251,7 @@ public class ProductController : BaseController<ProductController>
 
         _notify.Error(response.Message);
         await LoadCategories();
+        await LoadBrands();
         return View(vm);
     }
 
@@ -273,7 +283,7 @@ public class ProductController : BaseController<ProductController>
             Id = product.Id,
             Name = product.Name,
             Code = product.Code,
-            Brand = product.Brand,
+            BrandId = product.BrandId,
             CategoryId = product.CategoryId,
             Price = product.Price,
             OriginalPrice = product.OriginalPrice,
@@ -343,5 +353,11 @@ public class ProductController : BaseController<ProductController>
     {
         var cats = await _mediator.Send(new GetAllCategoryQuery());
         ViewBag.Categories = cats.Data ?? new List<Categories>();
+    }
+
+    private async Task LoadBrands()
+    {
+        var brands = await BrandRepo.GetAllAsync();
+        ViewBag.Brands = brands ?? new List<Brand>();
     }
 }

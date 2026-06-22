@@ -1,7 +1,7 @@
 ﻿@using Entities
 @model List<CartItem>
 @{
-    ViewData["Title"] = "Cart";
+    ViewData["Title"] = "Giỏ hàng";
     var total = Model?.Sum(i => i.Subtotal) ?? 0;
     var count = Model?.Sum(i => i.Quantity) ?? 0;
 }

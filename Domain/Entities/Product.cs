@@ -11,35 +11,35 @@ namespace Entities
 {
     public class Product : AuditableEntity
     {
-
         public int CategoryId { get; set; }
-
         [MaxLength(200)]
         public string Name { get; set; }
-
         [MaxLength(200)]
         public string Slug { get; set; }
         [MaxLength(50)]
-        public string Code { get; set; } 
-
+        public string Code { get; set; }
         public string Description { get; set; }
 
-        [MaxLength(100)]
-        public string Brand { get; set; }
+        
+
+        public int? BrandId { get; set; }                 
 
         public decimal Price { get; set; }
         public decimal? OriginalPrice { get; set; }
         public int Stock { get; set; }
-
         [MaxLength(500)]
         public string ThumbnailUrl { get; set; }
-
         public decimal Rating { get; set; }
         public int ReviewCount { get; set; }
         public bool IsFeatured { get; set; }
         public bool IsActive { get; set; } = true;
+
         [ForeignKey("CategoryId")]
         public virtual Categories Categories { get; set; }
+
+        [ForeignKey("BrandId")]
+        public virtual Brand Brand { get; set; }          
+
         public virtual ICollection<ProductImage> ProductImages { get; set; }
         public virtual ICollection<Review> Reviews { get; set; }
         public virtual ICollection<ProductSpec> ProductSpecs { get; set; }
